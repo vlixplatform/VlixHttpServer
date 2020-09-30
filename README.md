@@ -15,7 +15,7 @@ These features allow the Vlix Http Server to serve thousands of request with eas
 
 
 
-Vlix Http Server targets the **DotNet Framework**, which lacks a dedicated web server like Kestrel in DotNet Core.
+Vlix Http Server targets the **DotNet Framework**, which lacks a dedicated web server like Kestrel for DotNet Core.
 
 
 

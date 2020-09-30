@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30406.217
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VlixHttpServer", "VlixHttpServer.csproj", "{403741EA-55A2-4EE6-8F81-C49D139C0F5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServerLib", "HttpServerLib\HttpServerLib.csproj", "{403741EA-55A2-4EE6-8F81-C49D139C0F5E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServer", "HttpServer\HttpServer.csproj", "{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{403741EA-55A2-4EE6-8F81-C49D139C0F5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{403741EA-55A2-4EE6-8F81-C49D139C0F5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{403741EA-55A2-4EE6-8F81-C49D139C0F5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

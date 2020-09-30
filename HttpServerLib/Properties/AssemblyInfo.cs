@@ -5,13 +5,13 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TestHttpServer")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Vlix Http Server")]
+[assembly: AssemblyDescription("A lightweight, multi-threaded, and cache enabled HTTP Server for static content. Turn any folder directory into a website.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TestHttpServer")]
+[assembly: AssemblyCompany("Vlix")]
+[assembly: AssemblyProduct("VlixHttpServer")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyTrademark("Vlix")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible

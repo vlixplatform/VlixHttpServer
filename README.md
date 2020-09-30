@@ -19,6 +19,38 @@ Vlix Http Server targets the **DotNet Framework**, which lacks a dedicated web s
 
 
 
+## Embedding it in your project
+
+Install the [VlixHttpServer Package](https://www.nuget.org/packages/VlixHttpServer/) via Nuget:
+
+```powershell
+Install-Package VlixHttpServer
+```
+
+In your project, to create a Http Server simply use:
+
+```c#
+VlixHttpServer vlixHttpServer = new VlixHttpServer("C:\\YourDirectory\\Name",8080,true);
+vlixHttpServer.Start();
+```
+
+You can catch also handle exceptions. Example:
+
+```C#
+VlixHttpServer vlixHttpServer = new VlixHttpServer(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\Vlix\\SimpleHttpServer\\", 8080, true, (Ex) => 
+            {
+                string ExceptionString = Ex.ToString();
+                SomeLogFunction(ExceptionString);
+            });
+            vlixHttpServer.Start();
+```
+
+To stop the server simply call
+
+```C#
+vlixHttpServer.Stop();
+```
+
 ## Licence
 
 MIT

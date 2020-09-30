@@ -88,7 +88,7 @@ namespace Vlix
     #endregion
         private Thread _serverThread;
         private HttpListener _listener;
-
+        public Action<Exception> OnError { get; set; }
         class CacheFiles: ConcurrentDictionary<string, HttpCache>, IDisposable
         {
             Thread clearCache;
@@ -115,20 +115,23 @@ namespace Vlix
         }        
         class HttpCache
         {
-            public HttpCache(MemoryStream memoryStream,DateTime expiryTime) { this.MemoryStream = memoryStream; this.ExpiryTime = expiryTime; }
+            public HttpCache(MemoryStream memoryStream,DateTime expiryTime) { this.MemoryStream = memoryStream; this.ExpiryTime = expiryTime;  }
             public DateTime ExpiryTime { get; set; }
             public MemoryStream MemoryStream { get; set; }
+            
         }
 
-        public VlixHttpServer(string path, int port = 8080, bool enableCache = true)
+        public VlixHttpServer(string path, int port = 8080, bool enableCache = true, Action<Exception> onError = null)
         {
             if (path.Length < 1) throw new Exception("path cannot be empty!");
             if (path.Substring(path.Length-1,1)=="\\") path = path.Substring(0, path.Length - 1);
             this.Path = path;
             this.Port = port;
+            this.OnError = onError;
             this.EnableCache = enableCache;
             _serverThread = new Thread(() => {                
                 (_listener = new HttpListener()).Prefixes.Add("http://*:" + this.Port.ToString() + "/");
+                
                 _listener.Start();
                 while (true)
                 {
@@ -204,7 +207,7 @@ namespace Vlix
                             }
                             else context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                         }
-                        catch { }
+                        catch (Exception Ex) { this.OnError.Invoke(Ex); }
                         finally { context?.Response?.OutputStream?.Close(); }
                     }, newContext);
                 }

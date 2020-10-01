@@ -1,15 +1,17 @@
 Vlix Http Server
 ================
 
-**Vlix Http Server** is a simple yet production ready http server used to serve static file content. This means any directory on your PC can be turned into a web server to serve files such as 'html'. Even though it is very lightweight Vlix Http Server is  production ready, as it supports:
+<img align="left" width="64" height="64" src="https://cdn.vlix.me/vlixicon-128x128.png">
 
-- Multi threaded request processing.
+**Vlix Http Server** is a simple and high performance http server used to serve static file content. This means any directory on your PC can be turned into a web server to serve files such as 'html','png','jpeg','avi' and etc. Although very lightweight, Vlix Http Server is  production ready as it:
 
-- Content Caching and management.
+- Works Multi threaded.
+
+- Has content caching.
 
 - Prevents parent directory look ups, such as http://myfolder/../mysecret.txt
 
-- Logging
+- Logs all calls (Default log directory is *C:\ProgramData\Vlix\HttpServer\Logs*)
 
   
 
@@ -19,11 +21,11 @@ These features allow the Vlix Http Server to serve **thousands of requests** wit
 
 
 
-Vlix Http Server targets the **DotNet Framework**, which lacks a dedicated web server like Kestrel for DotNet Core.
+Vlix Http Server targets the **DotNet Framework**, which lacks a dedicated high performance web server like Kestrel for DotNet Core.
 
 
 
-## Embedding it in your project
+## Embedding in your project
 
 Install the [VlixHttpServer Package](https://www.nuget.org/packages/VlixHttpServer/) via Nuget:
 
@@ -48,7 +50,7 @@ vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);
 vlixHttpServer.Start();
 ```
 
-To stop the server simply call
+To stop the server simply call:
 
 ```C#
 vlixHttpServer.Stop();
@@ -58,7 +60,40 @@ vlixHttpServer.Stop();
 
 ## Installing as a Service
 
-For every first caller that makes a HTTP request to a file
+To install Vlix Http Server as a windows service, simply run the MSI Installer which can be obtained at:
+
+https://github.com/vlixplatform/VlixHttpServer/releases
+
+<img align="left" height="300" src="https://cdn.vlix.me/res/install.png">
+
+After installation, Vlix Http Server should be seen running as a windows service:
+
+<img align="left" height="300" src="https://cdn.vlix.me/res/httpserverservice.png">
+
+
+
+To configure the port (default *8080*) and directory (default *C:\ProgramData\Vlix\HttpServer\www*), edit the config file at:
+
+**C:\Program Files\Vlix\HttpServer\VlixHttpServerService.exe.config**
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <appSettings>
+    <add key="Port" value="8080" />
+    <add key="EnableCache" value="True" />
+    <add key="LogDirectory" value="[ProgramDataDirectory]\Vlix\HttpServer\Logs" />
+    <add key="WWWDirectory" value="[ProgramDataDirectory]\Vlix\HttpServer\www" />
+  </appSettings>
+    <startup> 
+        <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.5.2" />
+    </startup>
+</configuration>
+```
+
+** [ProgramDataDirectory] map to C:\ProgramData\
+
+Make sure to **restart the service** after updating this file.
 
 
 

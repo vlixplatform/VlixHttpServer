@@ -3,7 +3,7 @@ Vlix Http Server
 
 <img align="left" width="64" height="64" src="https://cdn.vlix.me/vlixicon-128x128.png">
 
-**Vlix Http Server** is a simple and high performance http server used to serve static file content. This means any directory on your PC can be turned into a web server to serve files such as 'html','png','jpeg','avi' and etc. Although very lightweight, Vlix Http Server is  a high performance server. Vlix:
+<br />**Vlix Http Server** is a simple and high performance http server used to serve static file content. This means any directory on your PC can be turned into a web server to serve files such as 'html','png','jpeg','avi' and etc. Although very lightweight, Vlix Http Server is  a high performance server. Vlix:
 
 - Works Multi threaded.
 
@@ -15,13 +15,13 @@ Vlix Http Server
 
   
 
-These features allow Vlix Http Server to serve **thousands of requests** with ease, without latency.
+<br />These features allow Vlix Http Server to serve **thousands of requests** with ease, without latency.
 
 > The Vlix Http Server is part of **Vlix** (http://vlix.me). **Vlix** overall is an Industrial Data Platform which uses this Http Server to serve content from it's back end. It's therefore industrial grade! 😃
 
 
 
-Vlix Http Server targets the **DotNet Framework**. Unlike DotNet Core, the DotNet Framework lacks a dedicated high performance web server like Kestrel.
+<br />Vlix Http Server targets the **DotNet Framework**. Unlike DotNet Core, the DotNet Framework lacks a dedicated high performance web server like Kestrel.
 
 
 
@@ -62,21 +62,21 @@ vlixHttpServer.Stop();
 
 To install Vlix Http Server as a windows service, simply run the MSI Installer which can be obtained from
 
-https://github.com/vlixplatform/VlixHttpServer/releases
+https://github.com/vlixplatform/VlixHttpServer/releases<br />
 
 <img align="left" height="300" src="https://cdn.vlix.me/res/install.png">
 
+<br />
 
-
-After installation, Vlix Http Server should be seen running as a windows service:
+After installation, Vlix Http Server should be seen running as a windows service:<br />
 
 <img align="left" width="auto" height="auto" src="https://cdn.vlix.me/res/httpserverservice.png">
 
+<br />
 
+The default port for the server is *8080* and the default directory is *C:\ProgramData\Vlix\HttpServer\www*. To use a different port and directory, edit the config found in the installation directory:<br />
 
-The default port for the server is *8080* and the default directory is *C:\ProgramData\Vlix\HttpServer\www*. To use a different port and directory, edit the config found in the installation directory:
-
-**C:\Program Files\Vlix\HttpServer\VlixHttpServerService.exe.config**
+**C:\Program Files\Vlix\HttpServer\VlixHttpServerService.exe.config**<br />
 
 ```xml
 <?xml version="1.0" encoding="utf-8" ?>
@@ -93,9 +93,9 @@ The default port for the server is *8080* and the default directory is *C:\Progr
 </configuration>
 ```
 
-**Note: Using ''[ProgramDataDirectory]' will map to C:\ProgramData\
+<br />**Note: Using ''[ProgramDataDirectory]' will map to *C:\ProgramData*
 
-Make sure to **restart the service** after updating this file.
+<br />Make sure to **restart the service** after updating this file.
 
 
 

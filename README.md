@@ -66,9 +66,11 @@ https://github.com/vlixplatform/VlixHttpServer/releases
 
 <img align="left" height="300" src="https://cdn.vlix.me/res/install.png">
 
+
+
 After installation, Vlix Http Server should be seen running as a windows service:
 
-<img align="left" height="300" src="https://cdn.vlix.me/res/httpserverservice.png">
+<img align="left" width="auto" height="auto" src="https://cdn.vlix.me/res/httpserverservice.png">
 
 
 

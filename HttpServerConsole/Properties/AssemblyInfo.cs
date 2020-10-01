@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Vlix Http Server")]
+[assembly: AssemblyTitle("Vlix Http Server Console")]
 [assembly: AssemblyDescription("Vlix Http Server Console, that can be run as a service")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Vlix")]

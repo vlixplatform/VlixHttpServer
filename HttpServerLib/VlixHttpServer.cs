@@ -89,6 +89,8 @@ namespace Vlix
         private Thread _serverThread;
         private HttpListener _listener;
         public Action<Exception> OnError { get; set; }
+        public Action<string> OnWarningLog { get; set; }
+        public Action<string> OnInfoLog { get; set; }
         class CacheFiles: ConcurrentDictionary<string, HttpCache>, IDisposable
         {
             Thread clearCache;
@@ -121,18 +123,18 @@ namespace Vlix
             
         }
 
-        public VlixHttpServer(string path, int port = 8080, bool enableCache = true, Action<Exception> onError = null)
+        public VlixHttpServer(string path, int port = 8080, bool enableCache = true)
         {
             if (path.Length < 1) throw new Exception("path cannot be empty!");
             if (path.Substring(path.Length-1,1)=="\\") path = path.Substring(0, path.Length - 1);
             this.Path = path;
             this.Port = port;
-            this.OnError = onError;
             this.EnableCache = enableCache;
             _serverThread = new Thread(() => {                
                 (_listener = new HttpListener()).Prefixes.Add("http://*:" + this.Port.ToString() + "/");
                 
                 _listener.Start();
+                this.OnInfoLog?.Invoke("listening to port " + this.Port + ", Directory = '" + this.Path + "'");
                 while (true)
                 {
                     HttpListenerContext newContext = _listener.GetContext(); //The thread stops here waiting for content to come
@@ -145,13 +147,19 @@ namespace Vlix
                             string fileToRead = null, fileToReadDir = null;
                             context = passedIn as HttpListenerContext;
                             if (context == null) return;
-                            string AbsolutePath = context.Request.Url.AbsolutePath; //this gives=> "/afolder/afile.html", "/",  "/afolder" 
-                            if (AbsolutePath.Contains("..")) { context.Response.StatusCode = (int)HttpStatusCode.NotFound; return; }
-                            string LastURLPortion = AbsolutePath.Split('/').Last(); //this gives=> "afile.html",          "",   "afolder"
-                            if (!string.IsNullOrEmpty(LastURLPortion) && LastURLPortion != "/" && !LastURLPortion.Contains(".")) //handles "/afolder"
+                            string callerIP = context.Request.RemoteEndPoint.ToString();
+                            string absolutePath = context.Request.Url.AbsolutePath; //this gives=> "/afolder/afile.html", "/",  "/afolder" 
+                            
+                            if (absolutePath.Contains("..")) 
                             {
-                                AbsolutePath = AbsolutePath + "/"; // "/afolder" ==> "/afolder/"
-                                LastURLPortion = "";
+                                this.OnWarningLog?.Invoke(callerIP + " requested '" + absolutePath + "'. ILLEGAL CHARACTER '..'. Returning NOT FOUND.");
+                                context.Response.StatusCode = (int)HttpStatusCode.NotFound; return; 
+                            }
+                            string lastURLPortion = absolutePath.Split('/').Last(); //this gives=> "afile.html",          "",   "afolder"
+                            if (!string.IsNullOrEmpty(lastURLPortion) && lastURLPortion != "/" && !lastURLPortion.Contains(".")) //handles "/afolder"
+                            {
+                                absolutePath = absolutePath + "/"; // "/afolder" ==> "/afolder/"
+                                lastURLPortion = "";
                                 fileToReadDir = this.Path + context.Request.Url.AbsolutePath.Replace('/', '\\');
                             } 
                             else
@@ -160,7 +168,7 @@ namespace Vlix
                                 fileToReadDir = System.IO.Path.GetDirectoryName(fileToRead);
                             }
 
-                            if (string.IsNullOrEmpty(LastURLPortion))
+                            if (string.IsNullOrEmpty(lastURLPortion))
                             {
                                 bool found = false;
                                 foreach (string indexFile in DefaultDocuments)
@@ -173,18 +181,42 @@ namespace Vlix
                                         break;
                                     }
                                 }
-                                if (!found) { context.Response.StatusCode = (int)HttpStatusCode.NotFound; return; }
+                                if (!found) 
+                                {
+                                    this.OnWarningLog?.Invoke(callerIP + " requested '" + absolutePath + "'. File to read => '" + fileToRead + "' does not exist. Returning NOT FOUND");
+                                    context.Response.StatusCode = (int)HttpStatusCode.NotFound; return; 
+                                }
                             }
-
+                            this.OnInfoLog?.Invoke(callerIP + " requested '" + absolutePath + "'. File to read => '" + fileToRead + "'");
                             if (string.IsNullOrEmpty(fileToRead)) { context.Response.StatusCode = (int)HttpStatusCode.NotFound; return; }
                             if (!fileExists) fileExists = File.Exists(fileToRead);
                             if (fileExists)
                             {                                
                                 try
                                 {
-                                    if (!this.cacheFiles.TryGetValue(fileToRead, out HttpCache httpCache))
+                                    if (this.EnableCache)
                                     {
-                                        httpCache = new HttpCache(new MemoryStream(), DateTime.Now.AddMinutes(1));
+                                        if (!this.cacheFiles.TryGetValue(fileToRead, out HttpCache httpCache))
+                                        {
+                                            httpCache = new HttpCache(new MemoryStream(), DateTime.Now.AddMinutes(1));
+                                            using (Stream input = new FileStream(fileToRead, FileMode.Open))
+                                            {
+                                                string mime;
+                                                context.Response.ContentType = _mimeTypeMappings.TryGetValue(System.IO.Path.GetExtension(fileToRead), out mime) ? mime : "application/octet-stream";
+                                                context.Response.ContentLength64 = input.Length;
+                                                context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
+                                                context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(fileToRead).ToString("r"));
+                                                byte[] buffer = new byte[4096]; //byte[] buffer = new byte[1024 * 32]; //4096 faster than 32K
+                                                int nbytes;
+                                                while ((nbytes = input.Read(buffer, 0, buffer.Length)) > 0) httpCache.MemoryStream.Write(buffer, 0, nbytes);
+                                                this.cacheFiles.TryAdd(fileToRead, httpCache);
+                                            }
+                                        }
+                                        httpCache.MemoryStream.Position = 0;
+                                        httpCache.MemoryStream.CopyTo(context.Response.OutputStream);
+                                    }
+                                    else
+                                    {
                                         using (Stream input = new FileStream(fileToRead, FileMode.Open))
                                         {
                                             string mime;
@@ -194,12 +226,10 @@ namespace Vlix
                                             context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(fileToRead).ToString("r"));
                                             byte[] buffer = new byte[4096]; //byte[] buffer = new byte[1024 * 32]; //4096 faster than 32K
                                             int nbytes;
-                                            while ((nbytes = input.Read(buffer, 0, buffer.Length)) > 0) httpCache.MemoryStream.Write(buffer, 0, nbytes);
-                                            this.cacheFiles.TryAdd(fileToRead, httpCache);
-                                        }                                        
+                                            while ((nbytes = input.Read(buffer, 0, buffer.Length)) > 0) context.Response.OutputStream.Write(buffer, 0, nbytes);
+                                        }
                                     }
-                                    httpCache.MemoryStream.Position = 0;
-                                    httpCache.MemoryStream.CopyTo(context.Response.OutputStream);
+
                                     context.Response.OutputStream.Flush();
                                     context.Response.StatusCode = (int)HttpStatusCode.OK;
                                 }
@@ -207,7 +237,7 @@ namespace Vlix
                             }
                             else context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                         }
-                        catch (Exception Ex) { this.OnError.Invoke(Ex); }
+                        catch (Exception Ex) { this.OnError?.Invoke(Ex); }
                         finally { context?.Response?.OutputStream?.Close(); }
                     }, newContext);
                 }
@@ -215,8 +245,8 @@ namespace Vlix
             //_serverThread.SetApartmentState(ApartmentState.STA);
         }
 
-        public void Start() { _serverThread.Start(); }
-        public void Stop() { _serverThread.Abort(); _listener.Stop(); cacheFiles.Dispose(); }
+        public void Start() { this.OnInfoLog?.Invoke("Starting Vlix Http Server..."); _serverThread.Start(); this.OnInfoLog?.Invoke("Vlix Http Server Started!"); }
+        public void Stop() { this.OnInfoLog?.Invoke("Stopping Vlix Http Server..."); _serverThread.Abort(); _listener.Stop(); cacheFiles.Dispose(); this.OnInfoLog?.Invoke("Vlix Http Server Stopped!"); }
 
     }
 

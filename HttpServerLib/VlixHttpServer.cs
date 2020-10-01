@@ -134,7 +134,7 @@ namespace Vlix
                 (_listener = new HttpListener()).Prefixes.Add("http://*:" + this.Port.ToString() + "/");
                 
                 _listener.Start();
-                this.OnInfoLog?.Invoke("listening to port " + this.Port + ", Directory = '" + this.Path + "'");
+                this.OnInfoLog?.Invoke("Listening to port " + this.Port + ", Directory = '" + this.Path + "'");
                 while (true)
                 {
                     HttpListenerContext newContext = _listener.GetContext(); //The thread stops here waiting for content to come

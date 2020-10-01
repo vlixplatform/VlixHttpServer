@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServerConsole", "HttpSe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServerService", "HttpServerService\HttpServerService.csproj", "{B55A6AFD-3620-4026-99E6-50B0BBF81EF5}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "VlixHttpServerX64-setup", "HttpServerInstaller\VlixHttpServer-Setup.vdproj", "{543DBAFE-DCEF-4C38-AABC-DB64CE67A361}"
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "VlixHttpServerX64-setup", "HttpServerInstaller\HttpServer-Setup.vdproj", "{543DBAFE-DCEF-4C38-AABC-DB64CE67A361}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

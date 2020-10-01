@@ -6,10 +6,10 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Vlix Http Server")]
-[assembly: AssemblyDescription("A lightweight, multi-threaded, and cache enabled HTTP Server for static content. Turn any folder directory into a website.")]
+[assembly: AssemblyDescription("A high performance, lightweight, multi-threaded, and cache enabled HTTP Web Server for static content. Turn any folder into a website. Just specify a port and directory")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Vlix")]
-[assembly: AssemblyProduct("VlixHttpServer")]
+[assembly: AssemblyProduct("Vlix Http Server")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("Vlix")]
 [assembly: AssemblyCulture("")]

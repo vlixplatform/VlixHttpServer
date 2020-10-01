@@ -45,6 +45,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_5F1DC329AAE042244B2C6B3DCFCDC4A4"
+        "OwnerKey" = "8:_AB80A42EBD79490881C8DFAD37ABC8FE"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_AB80A42EBD79490881C8DFAD37ABC8FE"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -69,14 +75,14 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_FBC2C5AC91C95B6302EDE855FD62C260"
-        "OwnerKey" = "8:_AB80A42EBD79490881C8DFAD37ABC8FE"
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_F94D4F092BAC42E7AE25260F767DDAD0"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_F94D4F092BAC42E7AE25260F767DDAD0"
+        "OwnerKey" = "8:_5F1DC329AAE042244B2C6B3DCFCDC4A4"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -103,12 +109,6 @@
         "OwnerKey" = "8:_43BEFA9E3DEFAF311658CD217FAE18EE"
         "MsmSig" = "8:_UNDEFINED"
         }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_FBC2C5AC91C95B6302EDE855FD62C260"
-        "MsmSig" = "8:_UNDEFINED"
-        }
     }
     "Configurations"
     {
@@ -117,7 +117,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:..\\bin\\Debug\\VlixHttpServerX64-setup.msi"
+        "OutputFilename" = "8:..\\VlixHttpServerX64-setup.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -149,7 +149,7 @@
         "DisplayName" = "8:Release"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:TRUE"
-        "OutputFilename" = "8:..\\bin\\Release\\VlixHttpServerX64-setup.msi"
+        "OutputFilename" = "8:..\\VlixHttpServerX64-setup.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -362,20 +362,15 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C40105CAE304718F153922831A70D55F"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5F1DC329AAE042244B2C6B3DCFCDC4A4"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+            "AssemblyAsmDisplayName" = "8:VlixHttpServer, Version=1.1.7579.24700, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_C40105CAE304718F153922831A70D55F"
-                    {
-                    "Name" = "8:System.Net.Http.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
-            "SourcePath" = "8:System.Net.Http.dll"
+            "SourcePath" = "8:VlixHttpServer.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_897A2C603BE34CFF8B25337DF11E54E0"
@@ -393,20 +388,20 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_FBC2C5AC91C95B6302EDE855FD62C260"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C40105CAE304718F153922831A70D55F"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:VlixHttpServer, Version=1.1.7579.22942, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
                 "ScatterAssemblies"
                 {
-                    "_FBC2C5AC91C95B6302EDE855FD62C260"
+                    "_C40105CAE304718F153922831A70D55F"
                     {
-                    "Name" = "8:VlixHttpServer.dll"
+                    "Name" = "8:System.Net.Http.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:VlixHttpServer.dll"
+            "SourcePath" = "8:System.Net.Http.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_897A2C603BE34CFF8B25337DF11E54E0"
@@ -481,7 +476,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Vlix Http Server"
         "ProductCode" = "8:{AEE4EE17-8DCE-4085-86BD-4BCD521C12B2}"
-        "PackageCode" = "8:{A5E0113A-FE41-49D0-A8D2-B0DD7A85A7FD}"
+        "PackageCode" = "8:{315191B1-9A70-4DF7-B8EB-15BB6AACADBF}"
         "UpgradeCode" = "8:{C454E052-E6D2-41B1-89A4-DC607FEEA14E}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -1048,7 +1043,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_AB80A42EBD79490881C8DFAD37ABC8FE"
             {
-            "SourcePath" = "8:..\\HttpServerService\\obj\\Debug\\VlixHttpServerService.exe"
+            "SourcePath" = "8:..\\HttpServerService\\obj\\Release\\VlixHttpServerService.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_897A2C603BE34CFF8B25337DF11E54E0"
@@ -1104,7 +1099,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_F94D4F092BAC42E7AE25260F767DDAD0"
             {
-            "SourcePath" = "8:..\\HttpServerLib\\obj\\Debug\\VlixHttpServer.dll"
+            "SourcePath" = "8:..\\HttpServerLib\\obj\\Release\\VlixHttpServer.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_897A2C603BE34CFF8B25337DF11E54E0"

@@ -132,7 +132,6 @@ namespace Vlix
             this.EnableCache = enableCache;
             _serverThread = new Thread(() => {                
                 (_listener = new HttpListener()).Prefixes.Add("http://*:" + this.Port.ToString() + "/");
-                
                 _listener.Start();
                 this.OnInfoLog?.Invoke("Listening to port " + this.Port + ", Directory = '" + this.Path + "'");
                 while (true)

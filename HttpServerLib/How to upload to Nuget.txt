@@ -1,5 +1,0 @@
-﻿First Edit the HttpServerLib.nuspec file
-Run at Command Prompt where httpserverlib.csproj:
-	$ nuget pack HttpServerLib.csproj -Build -Symbols -Properties Configuration=Release
-	$ nuget push nuget pack HttpServerLib.csproj -Build -Symbols -Properties Configuration=Release APIKEY -Source https://api.nuget.org/v3/index.json
-	

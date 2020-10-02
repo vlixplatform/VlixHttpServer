@@ -6,6 +6,7 @@ using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 
 namespace Vlix
 {
@@ -126,7 +127,11 @@ namespace Vlix
 
         public bool TryParseAbsolutePath(string absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg)
         {
-            errorMsg = null; 
+            errorMsg = null;
+            absolutePath = absolutePath.TrimEnd();
+            if (Regex.IsMatch(absolutePath, "^\\s+/")) absolutePath = absolutePath.TrimStart();
+            //if (!absolutePath.StartsWith("/")) absolutePath =  "/" + absolutePath;
+            if (!absolutePath.StartsWith("/")) absolutePath =  "/" + absolutePath;
             if (absolutePath.Contains(".."))
             {
                 errorMsg = "ILLEGAL CHARACTER '..'. Returning NOT FOUND.";
@@ -140,14 +145,18 @@ namespace Vlix
             {
                 //absolutePath = absolutePath + "/"; // "/afolder" ==> "/afolder/"
                 fileToRead = "";
-                fileToReadDir = this.Path + absolutePath.Replace('/', '\\');
+                string Temp = absolutePath.Replace('/', '\\');
+                //fileToReadDir = this.Path + absolutePath.Replace('/', '\\');
+                fileToReadDir = this.Path + System.IO.Path.GetDirectoryName(Temp + "\\");
                 if (fileToReadDir.EndsWith("\\")) fileToReadDir = fileToReadDir.Substring(0, fileToReadDir.Length - 1);
                 //fileToReadDir = this.Path + absolutePath.Replace('/', '\\');
             }
             else
             {
-                fileToRead = this.Path + absolutePath.Replace('/', '\\');
-                fileToReadDir = System.IO.Path.GetDirectoryName(fileToRead);
+                string Temp = absolutePath.Replace('/', '\\');
+                fileToReadDir = this.Path + System.IO.Path.GetDirectoryName(Temp);
+                if (fileToReadDir.EndsWith("\\")) fileToReadDir = fileToReadDir.Substring(0, fileToReadDir.Length - 1);
+                fileToRead = fileToReadDir + "\\" + System.IO.Path.GetFileName(Temp);                                
             }
             return true;
         }

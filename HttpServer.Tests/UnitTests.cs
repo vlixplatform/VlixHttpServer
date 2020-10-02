@@ -62,10 +62,9 @@ namespace HttpServer.Tests
             VlixHttpServer vlixHttpServer = new VlixHttpServer("C:\\www");
             output.WriteLine("absolutePath  = " + absolutePath);
             vlixHttpServer.TryParseAbsolutePath(absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg);
-
-            
             output.WriteLine("fileToRead    = " + fileToRead);
             output.WriteLine("fileToReadDir = " + fileToReadDir);
+            output.WriteLine("errorMsg      = " + errorMsg);
             Assert.Equal(xFileToRead, fileToRead);
             Assert.Equal(xFileToReadDir, fileToReadDir);
             Assert.Equal(ErrorMsgIsNull, errorMsg==null);

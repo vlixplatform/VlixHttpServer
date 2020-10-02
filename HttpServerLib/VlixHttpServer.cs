@@ -123,6 +123,36 @@ namespace Vlix
             
         }
 
+
+        public bool TryParseAbsolutePath(string absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg)
+        {
+            errorMsg = null; 
+            if (absolutePath.Contains(".."))
+            {
+                errorMsg = "ILLEGAL CHARACTER '..'. Returning NOT FOUND.";
+                fileToRead = null;
+                fileToReadDir = null;
+                return false;
+            }
+            string lastURLPortion = absolutePath.Split('/').Last(); //this gives=> "afile.html",          "",   "afolder"
+            var sss = lastURLPortion.Contains(".");
+            if (!lastURLPortion.Contains(".")) //handles "/afolder"
+            {
+                //absolutePath = absolutePath + "/"; // "/afolder" ==> "/afolder/"
+                fileToRead = "";
+                fileToReadDir = this.Path + absolutePath.Replace('/', '\\');
+                if (fileToReadDir.EndsWith("\\")) fileToReadDir = fileToReadDir.Substring(0, fileToReadDir.Length - 1);
+                //fileToReadDir = this.Path + absolutePath.Replace('/', '\\');
+            }
+            else
+            {
+                fileToRead = this.Path + absolutePath.Replace('/', '\\');
+                fileToReadDir = System.IO.Path.GetDirectoryName(fileToRead);
+            }
+            return true;
+        }
+
+
         public VlixHttpServer(string path, int port = 8080, bool enableCache = true)
         {
             if (path.Length < 1) throw new Exception("path cannot be empty!");
@@ -143,31 +173,18 @@ namespace Vlix
                         try
                         {
                             bool fileExists = false; //this flag is to avoid checking file exists twice
-                            string fileToRead = null, fileToReadDir = null;
                             context = passedIn as HttpListenerContext;
                             if (context == null) return;
                             string callerIP = context.Request.RemoteEndPoint.ToString();
                             string absolutePath = context.Request.Url.AbsolutePath; //this gives=> "/afolder/afile.html", "/",  "/afolder" 
-                            
-                            if (absolutePath.Contains("..")) 
+
+                            if (!this.TryParseAbsolutePath(absolutePath, out string fileToRead, out string fileToReadDir, out string ErrorMsg))
                             {
-                                this.OnWarningLog?.Invoke(callerIP + " requested '" + absolutePath + "'. ILLEGAL CHARACTER '..'. Returning NOT FOUND.");
-                                context.Response.StatusCode = (int)HttpStatusCode.NotFound; return; 
-                            }
-                            string lastURLPortion = absolutePath.Split('/').Last(); //this gives=> "afile.html",          "",   "afolder"
-                            if (!string.IsNullOrEmpty(lastURLPortion) && lastURLPortion != "/" && !lastURLPortion.Contains(".")) //handles "/afolder"
-                            {
-                                absolutePath = absolutePath + "/"; // "/afolder" ==> "/afolder/"
-                                lastURLPortion = "";
-                                fileToReadDir = this.Path + context.Request.Url.AbsolutePath.Replace('/', '\\');
-                            } 
-                            else
-                            {
-                                fileToRead = this.Path + context.Request.Url.AbsolutePath.Replace('/', '\\');
-                                fileToReadDir = System.IO.Path.GetDirectoryName(fileToRead);
+                                this.OnWarningLog?.Invoke(callerIP + " requested '" + absolutePath + "'. " + ErrorMsg);
+                                context.Response.StatusCode = (int)HttpStatusCode.NotFound; return;
                             }
 
-                            if (string.IsNullOrEmpty(lastURLPortion))
+                            if (string.IsNullOrEmpty(fileToRead))
                             {
                                 bool found = false;
                                 foreach (string indexFile in DefaultDocuments)

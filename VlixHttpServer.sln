@@ -9,7 +9,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServerConsole", "HttpSe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServerService", "HttpServerService\HttpServerService.csproj", "{B55A6AFD-3620-4026-99E6-50B0BBF81EF5}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "VlixHttpServerX64-setup", "HttpServerInstaller\HttpServer-Setup.vdproj", "{543DBAFE-DCEF-4C38-AABC-DB64CE67A361}"
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "HttpServerX64-setup", "HttpServerInstaller\HttpServer-Setup.vdproj", "{543DBAFE-DCEF-4C38-AABC-DB64CE67A361}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServer.Tests", "HttpServer.Tests\HttpServer.Tests.csproj", "{3062F5A1-64E7-40A4-BABF-F6D20D00BEBE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{543DBAFE-DCEF-4C38-AABC-DB64CE67A361}.Debug|Any CPU.Build.0 = Debug
 		{543DBAFE-DCEF-4C38-AABC-DB64CE67A361}.Release|Any CPU.ActiveCfg = Release
 		{543DBAFE-DCEF-4C38-AABC-DB64CE67A361}.Release|Any CPU.Build.0 = Release
+		{3062F5A1-64E7-40A4-BABF-F6D20D00BEBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3062F5A1-64E7-40A4-BABF-F6D20D00BEBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3062F5A1-64E7-40A4-BABF-F6D20D00BEBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3062F5A1-64E7-40A4-BABF-F6D20D00BEBE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

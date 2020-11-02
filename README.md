@@ -3,7 +3,7 @@ Vlix Http Server
 
 <img align="left" width="64" height="64" src="https://cdn.vlix.me/vlixicon-128x128.png">
 
-<br />**Vlix Http Server** is a simple and high performance http server used to serve static file content. This means any directory on your PC can be turned into a web server to serve files such as 'html','png','jpeg','avi' and etc. Although very lightweight, Vlix Http Server is  a high performance server. Vlix:
+<br />**Vlix Http Server** is a simple and high performance http server used to serve static file content. This means any directory on your PC can be turned into a web server to serve files such as 'html','png','jpeg','avi' and etc. Although very lightweight, Vlix Http Server is  a high performance server:
 
 - Works Multi threaded.
 
@@ -15,17 +15,17 @@ Vlix Http Server
 
   
 
-<br />These features allow Vlix Http Server to serve **thousands of requests** with ease, without latency.
+<br />Vlix Http Server can serve **thousands of requests** with ease, without latency.
 
 > The Vlix Http Server is part of **Vlix** (http://vlix.me). **Vlix** overall is an Industrial Data Platform which uses this Http Server to serve content from it's back end. It's therefore industrial grade! 😃
 
 
 
-<br />Vlix Http Server targets the **DotNet Framework**. Unlike DotNet Core, the DotNet Framework lacks a dedicated high performance web server like Kestrel.
+<br />Vlix Http Server targets the **DotNet Standard ** framework. It can thus be used in DotNet Core and Dotnet Framework.
 
 
 
-## Embedding in your project
+## Embedding in your project / Consuming DLL
 
 Install the [VlixHttpServer Package](https://www.nuget.org/packages/VlixHttpServer/) via Nuget:
 
@@ -40,7 +40,7 @@ VlixHttpServer vlixHttpServer = new VlixHttpServer("C:\\YourDirectory",8080);
 vlixHttpServer.Start();
 ```
 
-You can also handle logs and exceptions by via delegates. Example:
+You can also handle logs and exceptions via delegates. Example:
 
 ```C#
 VlixHttpServer vlixHttpServer = new VlixHttpServer("C:\\YourDirectory", 8080);

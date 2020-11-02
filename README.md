@@ -3,9 +3,9 @@ Vlix Http Server
 
 <img align="left" width="64" height="64" src="https://cdn.vlix.me/vlixicon-128x128.png"><br><br>
   
-**Vlix Http Server** is a simple and high performance http server used to serve static file content. This means any directory on your PC can be turned into a web server to serve files such as 'html','png','jpeg','avi' and etc. Although very lightweight, Vlix Http Server is  a high performance server:
+**Vlix Http Server** is a simple and high performance http server used to serve static file content. This means any directory on your PC can be turned into a web server to serve web documents such as HTML files. Other files include as 'png','jpeg','avi','mp4' and etc. Although very lightweight, Vlix Http Server is high performance, as it:
 
-- Works Multi threaded.
+- Works multi threaded.
 
 - Has content caching.
 

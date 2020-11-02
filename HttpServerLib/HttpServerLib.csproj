@@ -16,6 +16,13 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
+    <PackageIcon>vlixicon-128x128.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/vlixplatform/VlixHttpServer</PackageProjectUrl>
+    <PackageLicenseExpression>sMIT</PackageLicenseExpression>
+    <PackageTags>vlix, webserver, httpserver, http, server, staticfile</PackageTags>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/vlixplatform/VlixHttpServer</RepositoryUrl>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <PackageReference Include="System.Net.Http">
@@ -31,5 +38,11 @@
     <PackageReference Include="System.Net.Http">
       <Version>4.3.4</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\vlixicon-128x128.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 </Project>

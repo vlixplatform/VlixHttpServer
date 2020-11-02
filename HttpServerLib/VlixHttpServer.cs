@@ -269,7 +269,7 @@ namespace Vlix
                         context.Response.OutputStream.Flush();
                         context.Response.StatusCode = (int)HttpStatusCode.OK;   
                     }
-                    catch(Exception ex) {  context.Response.StatusCode = (int)HttpStatusCode.InternalServerError; }
+                    catch {  context.Response.StatusCode = (int)HttpStatusCode.InternalServerError; }
                 }
                 else context.Response.StatusCode = (int)HttpStatusCode.NotFound;
             }

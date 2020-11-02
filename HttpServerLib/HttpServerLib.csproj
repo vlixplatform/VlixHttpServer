@@ -3,6 +3,7 @@
     <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Vlix</RootNamespace>
+    <Version>1.2.0</Version>
     <AssemblyName>VlixHttpServer</AssemblyName>
     <Deterministic>false</Deterministic>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -18,7 +19,7 @@
     <StartupObject />
     <PackageIcon>vlixicon-128x128.png</PackageIcon>
     <PackageProjectUrl>https://github.com/vlixplatform/VlixHttpServer</PackageProjectUrl>
-    <PackageLicenseExpression>sMIT</PackageLicenseExpression>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>vlix, webserver, httpserver, http, server, staticfile</PackageTags>
     <PackageReleaseNotes></PackageReleaseNotes>
     <RepositoryUrl>https://github.com/vlixplatform/VlixHttpServer</RepositoryUrl>

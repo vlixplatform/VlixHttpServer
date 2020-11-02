@@ -3,15 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30406.217
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServerLib", "HttpServerLib\HttpServerLib.csproj", "{403741EA-55A2-4EE6-8F81-C49D139C0F5E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServerConsole", "HttpServerConsole\HttpServerConsole.csproj", "{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpServerLib", "HttpServerLib\HttpServerLib.csproj", "{403741EA-55A2-4EE6-8F81-C49D139C0F5E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServerService", "HttpServerService\HttpServerService.csproj", "{B55A6AFD-3620-4026-99E6-50B0BBF81EF5}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "HttpServerX64-setup", "HttpServerInstaller\HttpServer-Setup.vdproj", "{543DBAFE-DCEF-4C38-AABC-DB64CE67A361}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServer.Tests", "HttpServer.Tests\HttpServer.Tests.csproj", "{3062F5A1-64E7-40A4-BABF-F6D20D00BEBE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Console (For Testing)", "Console (For Testing)", "{3B88F723-44E2-45BF-99DB-AAD5DED420A3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Console DotNet Core", "Console DotNet Core\Console DotNet Core.csproj", "{7B793D4A-16D7-45C6-ACC7-489B0BEFA8A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Console DotNet Fx 452", "Console DotNet Fx 4.52\Console DotNet Fx 452.csproj", "{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +27,6 @@ Global
 		{403741EA-55A2-4EE6-8F81-C49D139C0F5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{403741EA-55A2-4EE6-8F81-C49D139C0F5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{403741EA-55A2-4EE6-8F81-C49D139C0F5E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B55A6AFD-3620-4026-99E6-50B0BBF81EF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B55A6AFD-3620-4026-99E6-50B0BBF81EF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B55A6AFD-3620-4026-99E6-50B0BBF81EF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -39,9 +39,21 @@ Global
 		{3062F5A1-64E7-40A4-BABF-F6D20D00BEBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3062F5A1-64E7-40A4-BABF-F6D20D00BEBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3062F5A1-64E7-40A4-BABF-F6D20D00BEBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B793D4A-16D7-45C6-ACC7-489B0BEFA8A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B793D4A-16D7-45C6-ACC7-489B0BEFA8A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B793D4A-16D7-45C6-ACC7-489B0BEFA8A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B793D4A-16D7-45C6-ACC7-489B0BEFA8A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7B793D4A-16D7-45C6-ACC7-489B0BEFA8A0} = {3B88F723-44E2-45BF-99DB-AAD5DED420A3}
+		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE} = {3B88F723-44E2-45BF-99DB-AAD5DED420A3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {76C9B292-6490-4A51-B81F-17E3B7A203BC}

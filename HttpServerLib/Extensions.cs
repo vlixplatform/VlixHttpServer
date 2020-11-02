@@ -9,7 +9,6 @@ namespace Vlix
 {
     public static partial class Extensions
     {
-
         public static bool ToBool(this object value, bool ValueIfError = false, bool? ValueIfNotAString = null)
         {
             try
@@ -29,28 +28,6 @@ namespace Vlix
                 }
             }
             catch { return ValueIfError; }
-        }
-
-        public static Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
-        {
-            return task.IsCompleted
-                ? task
-                : task.ContinueWith(
-                    completedTask => completedTask.GetAwaiter().GetResult(),
-                    cancellationToken,
-                    TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
-        }
-
-        public static Task WithCancellation(this Task task, CancellationToken cancellationToken)
-        {
-            return task.IsCompleted
-                ? task
-                : task.ContinueWith(
-                    completedTask => completedTask.GetAwaiter().GetResult(),
-                    cancellationToken,
-                    TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
         }
     }
 }

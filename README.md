@@ -21,7 +21,7 @@ Vlix Http Server
 
 
 
-<br />Vlix Http Server targets the **DotNet Standard ** framework. It can thus be used in DotNet Core and Dotnet Framework.
+<br />Vlix Http Server targets the **DotNet 4.5.2 and DotNet Standard  ** framework.
 
 
 

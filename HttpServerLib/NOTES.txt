@@ -1,0 +1,7 @@
+﻿
+HOW TO UPLOAD TO NUGET
+	First Edit the HttpServerLib.nuspec file
+	Run at Command Prompt where httpserverlib.csproj:
+		$ cd "c:\my\src\VlixHttpServer\HttpServerLib"
+		$ nuget pack HttpServerLib.csproj -Build -Symbols -Properties Configuration=Release
+		$ nuget push VlixHttpServer.1.1.7611.25938.nupkg oy2pmvcx2t3pgpgyveoaasg663rvuctulkgoob42eepleu -Source https://api.nuget.org/v3/index.json

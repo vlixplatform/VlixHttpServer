@@ -17,6 +17,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Console DotNet Core", "Cons
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Console DotNet Fx 452", "Console DotNet Fx 4.52\Console DotNet Fx 452.csproj", "{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F9BF2CC5-5A11-4A50-8FA3-5433ED40EA88}"
+	ProjectSection(SolutionItems) = preProject
+		NOTES.txt = NOTES.txt
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Windows Installer", "Windows Installer", "{9454950D-C946-438A-9016-E96DD1E8D8B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +60,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{B55A6AFD-3620-4026-99E6-50B0BBF81EF5} = {9454950D-C946-438A-9016-E96DD1E8D8B9}
+		{543DBAFE-DCEF-4C38-AABC-DB64CE67A361} = {9454950D-C946-438A-9016-E96DD1E8D8B9}
 		{7B793D4A-16D7-45C6-ACC7-489B0BEFA8A0} = {3B88F723-44E2-45BF-99DB-AAD5DED420A3}
 		{3A196588-8F2A-4E0E-AA30-9BBCBDDFC1EE} = {3B88F723-44E2-45BF-99DB-AAD5DED420A3}
 	EndGlobalSection

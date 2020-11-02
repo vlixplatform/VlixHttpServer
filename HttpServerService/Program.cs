@@ -33,7 +33,7 @@ namespace Vlix
             InitializeComponent();
         }
 
-        VlixHttpServer vlixHttpServer;
+        VlixHttpServer vlixHttpServer = null;
         protected override void OnStart(string[] args)
         {
             string Port = ConfigurationManager.AppSettings.Get("Port");
@@ -42,19 +42,30 @@ namespace Vlix
             string LogDirectory = ConfigurationManager.AppSettings.Get("LogDirectory");
             WWWDirectory = WWWDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
             LogDirectory = LogDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
-            Directory.CreateDirectory(WWWDirectory);
-
-
-            //string directory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\Vlix\\HttpServer"; //This translates to => C:\ProgramData\Vlix\HttpServer
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.File(LogDirectory + "\\HttpServer.log", rollingInterval: RollingInterval.Day)
-                .CreateLogger();
-            vlixHttpServer = new VlixHttpServer(WWWDirectory, Convert.ToInt32(Port), EnableCache.ToBool());
-            vlixHttpServer.OnError = (ex) => Log.Error(ex.ToString());
-            vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
-            vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);
-            vlixHttpServer.Start();
+                   .MinimumLevel.Debug()
+                   .WriteTo.File(LogDirectory + "\\HttpServer.log", rollingInterval: RollingInterval.Day)
+                   .CreateLogger();
+            try
+            {
+                Directory.CreateDirectory(WWWDirectory);
+                string[] myFiles = Directory.GetFiles(WWWDirectory);
+                var AppDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "index.html") == null) File.Copy(AppDir + "\\Sample\\index.html", WWWDirectory + "\\index.html");
+                if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "test.html") == null) File.Copy(AppDir + "\\Sample\\test.html", WWWDirectory + "\\test.html");
+                
+                
+                vlixHttpServer = new VlixHttpServer(WWWDirectory, Convert.ToInt32(Port), EnableCache.ToBool());
+                vlixHttpServer.OnError = (ex) => Log.Error(ex.ToString());
+                vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
+                vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);
+                vlixHttpServer.Start();
+            }
+            catch (Exception ex)
+            {
+                var AppDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                Log.Error(ex.ToString() + "\r\n\r\nApp Directory = " + AppDir);
+            }
         }
 
         protected override void OnStop()

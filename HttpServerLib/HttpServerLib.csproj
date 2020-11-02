@@ -17,9 +17,6 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
-  <ItemGroup>
-    <Content Include="NOTES.txt" />
-  </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <PackageReference Include="System.Net.Http">
       <Version>4.3.4</Version>

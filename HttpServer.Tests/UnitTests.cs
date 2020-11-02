@@ -20,7 +20,7 @@ namespace HttpServer.Tests
         }
 
 
-        [Theory]
+        [Theory(Skip ="No Need")]        
         [InlineData("/questions/9122708/unit-sharp.html", "C:\\www\\questions\\9122708\\unit-sharp.html", "C:\\www\\questions\\9122708",true)]                
         [InlineData("/questions/aaa/test.html", "C:\\www\\questions\\aaa\\test.html", "C:\\www\\questions\\aaa", true)]
         [InlineData("/questions/aaa/unit", "", "C:\\www\\questions\\aaa\\unit", true)]

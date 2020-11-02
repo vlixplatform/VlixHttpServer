@@ -161,7 +161,7 @@ namespace Vlix
             return true;
         }
 
-
+        CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         public VlixHttpServer(string path, int port = 8080, bool enableCache = true)
         {
             if (path.Length < 1) throw new Exception("path cannot be empty!");
@@ -173,105 +173,227 @@ namespace Vlix
                 (_listener = new HttpListener()).Prefixes.Add("http://*:" + this.Port.ToString() + "/");
                 _listener.Start();
                 this.OnInfoLog?.Invoke("Listening to port " + this.Port + ", Directory = '" + this.Path + "'");
+                
                 while (true)
                 {
                     HttpListenerContext newContext = _listener.GetContext(); //The thread stops here waiting for content to come
-                    ThreadPool.QueueUserWorkItem(passedIn =>
-                    {
-                        HttpListenerContext context = null;
-                        try
-                        {
-                            bool fileExists = false; //this flag is to avoid checking file exists twice
-                            context = passedIn as HttpListenerContext;
-                            if (context == null) return;
-                            string callerIP = context.Request.RemoteEndPoint.ToString();
-                            string absolutePath = context.Request.Url.AbsolutePath; //this gives=> "/afolder/afile.html", "/",  "/afolder" 
-
-                            if (!this.TryParseAbsolutePath(absolutePath, out string fileToRead, out string fileToReadDir, out string ErrorMsg))
-                            {
-                                this.OnWarningLog?.Invoke(callerIP + " requested '" + absolutePath + "'. " + ErrorMsg);
-                                context.Response.StatusCode = (int)HttpStatusCode.NotFound; return;
-                            }
-
-                            if (string.IsNullOrEmpty(fileToRead))
-                            {
-                                bool found = false;
-                                foreach (string indexFile in DefaultDocuments)
-                                {
-                                    if (File.Exists(fileToReadDir + "\\" + indexFile))
-                                    {
-                                        fileExists = true;
-                                        fileToRead = fileToReadDir + "\\" + indexFile;
-                                        found = true;
-                                        break;
-                                    }
-                                }
-                                if (!found) 
-                                {
-                                    this.OnWarningLog?.Invoke(callerIP + " requested '" + absolutePath + "'. File to read => '" + fileToRead + "' does not exist. Returning NOT FOUND");
-                                    context.Response.StatusCode = (int)HttpStatusCode.NotFound; return; 
-                                }
-                            }
-                            this.OnInfoLog?.Invoke(callerIP + " requested '" + absolutePath + "'. File to read => '" + fileToRead + "'");
-                            if (string.IsNullOrEmpty(fileToRead)) { context.Response.StatusCode = (int)HttpStatusCode.NotFound; return; }
-                            if (!fileExists) fileExists = File.Exists(fileToRead);
-                            if (fileExists)
-                            {                                
-                                try
-                                {
-                                    if (this.EnableCache)
-                                    {
-                                        if (!this.cacheFiles.TryGetValue(fileToRead, out HttpCache httpCache))
-                                        {
-                                            httpCache = new HttpCache(new MemoryStream(), DateTime.Now.AddMinutes(1));
-                                            using (Stream input = new FileStream(fileToRead, FileMode.Open))
-                                            {
-                                                string mime;
-                                                context.Response.ContentType = _mimeTypeMappings.TryGetValue(System.IO.Path.GetExtension(fileToRead), out mime) ? mime : "application/octet-stream";
-                                                context.Response.ContentLength64 = input.Length;
-                                                context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
-                                                context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(fileToRead).ToString("r"));
-                                                byte[] buffer = new byte[4096]; //byte[] buffer = new byte[1024 * 32]; //4096 faster than 32K
-                                                int nbytes;
-                                                while ((nbytes = input.Read(buffer, 0, buffer.Length)) > 0) httpCache.MemoryStream.Write(buffer, 0, nbytes);
-                                                this.cacheFiles.TryAdd(fileToRead, httpCache);
-                                            }
-                                        }
-                                        httpCache.MemoryStream.Position = 0;
-                                        httpCache.MemoryStream.CopyTo(context.Response.OutputStream);
-                                    }
-                                    else
-                                    {
-                                        using (Stream input = new FileStream(fileToRead, FileMode.Open))
-                                        {
-                                            string mime;
-                                            context.Response.ContentType = _mimeTypeMappings.TryGetValue(System.IO.Path.GetExtension(fileToRead), out mime) ? mime : "application/octet-stream";
-                                            context.Response.ContentLength64 = input.Length;
-                                            context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
-                                            context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(fileToRead).ToString("r"));
-                                            byte[] buffer = new byte[4096]; //byte[] buffer = new byte[1024 * 32]; //4096 faster than 32K
-                                            int nbytes;
-                                            while ((nbytes = input.Read(buffer, 0, buffer.Length)) > 0) context.Response.OutputStream.Write(buffer, 0, nbytes);
-                                        }
-                                    }
-
-                                    context.Response.OutputStream.Flush();
-                                    context.Response.StatusCode = (int)HttpStatusCode.OK;
-                                }
-                                catch { context.Response.StatusCode = (int)HttpStatusCode.InternalServerError; }
-                            }
-                            else context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                        }
-                        catch (Exception Ex) { this.OnError?.Invoke(Ex); }
-                        finally { context?.Response?.OutputStream?.Close(); }
-                    }, newContext);
+                    Task.Run(() => Process(newContext, cancellationTokenSource.Token)); //.WithCancellation(cancellationTokenSource.Token);
                 }
             });
             //_serverThread.SetApartmentState(ApartmentState.STA);
         }
 
+        public void Process(HttpListenerContext context, CancellationToken cancellationToken)
+        {
+            try
+            {
+                bool fileExists = false; //this flag is to avoid checking file exists twice
+                if (context == null) return;
+                string callerIP = context.Request.RemoteEndPoint.ToString();
+                string absolutePath = context.Request.Url.AbsolutePath; //this gives=> "/afolder/afile.html", "/",  "/afolder" 
+
+                if (!this.TryParseAbsolutePath(absolutePath, out string fileToRead, out string fileToReadDir, out string ErrorMsg))
+                {
+                    this.OnWarningLog?.Invoke(callerIP + " requested '" + absolutePath + "'. " + ErrorMsg);
+                    context.Response.StatusCode = (int)HttpStatusCode.NotFound; return;// Task.CompletedTask;
+                }
+
+                if (string.IsNullOrEmpty(fileToRead))
+                {
+                    bool found = false;
+                    foreach (string indexFile in DefaultDocuments)
+                    {
+                        if (File.Exists(fileToReadDir + "\\" + indexFile))
+                        {
+                            fileExists = true;
+                            fileToRead = fileToReadDir + "\\" + indexFile;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        this.OnWarningLog?.Invoke(callerIP + " requested '" + absolutePath + "'. File to read => '" + fileToRead + "' does not exist. Returning NOT FOUND");
+                        context.Response.StatusCode = (int)HttpStatusCode.NotFound; return;// Task.CompletedTask;
+                    }
+                }
+                this.OnInfoLog?.Invoke(callerIP + " requested '" + absolutePath + "'. File to read => '" + fileToRead + "'");
+                if (string.IsNullOrEmpty(fileToRead)) { context.Response.StatusCode = (int)HttpStatusCode.NotFound; return; };// Task.CompletedTask; }
+                if (!fileExists) fileExists = File.Exists(fileToRead);
+                if (fileExists)
+                {
+                    try
+                    {
+                        if (this.EnableCache)
+                        {
+                            context.Response.ContentType = _mimeTypeMappings.TryGetValue(System.IO.Path.GetExtension(fileToRead), out string mime) ? mime : "application/octet-stream";
+                            context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
+                            context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(fileToRead).ToString("r"));
+                            if (!this.cacheFiles.TryGetValue(fileToRead, out HttpCache httpCache))
+                            {
+                                httpCache = new HttpCache(new MemoryStream(), DateTime.Now.AddMinutes(1));
+                                using (Stream input = new FileStream(fileToRead, FileMode.Open))
+                                {
+                                    context.Response.ContentLength64 = input.Length;
+                                    byte[] buffer = new byte[4096]; //byte[] buffer = new byte[1024 * 32]; //4096 faster than 32K
+                                    int nbytes;
+                                    while ((nbytes = input.Read(buffer, 0, buffer.Length)) > 0)
+                                    {
+                                        if (cancellationToken.IsCancellationRequested) return;
+                                        httpCache.MemoryStream.Write(buffer, 0, nbytes);
+                                    }
+                                    this.cacheFiles.TryAdd(fileToRead, httpCache);
+                                }
+                            }
+                            httpCache.MemoryStream.Position = 0;
+                            httpCache.MemoryStream.CopyTo(context.Response.OutputStream);
+                        }
+                        else
+                        {
+                            using (Stream input = new FileStream(fileToRead, FileMode.Open))
+                            {
+                                string mime;
+                                context.Response.ContentType = _mimeTypeMappings.TryGetValue(System.IO.Path.GetExtension(fileToRead), out mime) ? mime : "application/octet-stream";
+                                context.Response.ContentLength64 = input.Length;
+                                context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
+                                context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(fileToRead).ToString("r"));
+                                byte[] buffer = new byte[4096]; //byte[] buffer = new byte[1024 * 32]; //4096 faster than 32K
+                                int nbytes;
+                                while ((nbytes = input.Read(buffer, 0, buffer.Length)) > 0)
+                                {
+                                    if (cancellationToken.IsCancellationRequested) return;
+                                    context.Response.OutputStream.Write(buffer, 0, nbytes);
+                                }
+                            }
+                        }
+                        context.Response.OutputStream.Flush();
+                        context.Response.StatusCode = (int)HttpStatusCode.OK;   
+                    }
+                    catch(Exception ex) {  context.Response.StatusCode = (int)HttpStatusCode.InternalServerError; }
+                }
+                else context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+            }
+            catch (Exception Ex) { this.OnError?.Invoke(Ex); }
+            finally 
+            { 
+                context?.Response?.OutputStream?.Close();
+            }
+            return;// Task.CompletedTask;
+        }
+
+
+
+        //public VlixHttpServer(string path, int port = 8080, bool enableCache = true)
+        //{
+        //    if (path.Length < 1) throw new Exception("path cannot be empty!");
+        //    if (path.Substring(path.Length - 1, 1) == "\\") path = path.Substring(0, path.Length - 1);
+        //    this.Path = path;
+        //    this.Port = port;
+        //    this.EnableCache = enableCache;
+        //    _serverThread = new Thread(() => {
+        //        (_listener = new HttpListener()).Prefixes.Add("http://*:" + this.Port.ToString() + "/");
+        //        _listener.Start();
+        //        this.OnInfoLog?.Invoke("Listening to port " + this.Port + ", Directory = '" + this.Path + "'");
+        //        while (true)
+        //        {
+        //            HttpListenerContext newContext = _listener.GetContext(); //The thread stops here waiting for content to come
+        //            ThreadPool.QueueUserWorkItem(passedIn =>
+        //            {
+        //                HttpListenerContext context = null;
+        //                try
+        //                {
+        //                    bool fileExists = false; //this flag is to avoid checking file exists twice
+        //                    context = passedIn as HttpListenerContext;
+        //                    if (context == null) return;
+        //                    string callerIP = context.Request.RemoteEndPoint.ToString();
+        //                    string absolutePath = context.Request.Url.AbsolutePath; //this gives=> "/afolder/afile.html", "/",  "/afolder" 
+
+        //                    if (!this.TryParseAbsolutePath(absolutePath, out string fileToRead, out string fileToReadDir, out string ErrorMsg))
+        //                    {
+        //                        this.OnWarningLog?.Invoke(callerIP + " requested '" + absolutePath + "'. " + ErrorMsg);
+        //                        context.Response.StatusCode = (int)HttpStatusCode.NotFound; return;
+        //                    }
+
+        //                    if (string.IsNullOrEmpty(fileToRead))
+        //                    {
+        //                        bool found = false;
+        //                        foreach (string indexFile in DefaultDocuments)
+        //                        {
+        //                            if (File.Exists(fileToReadDir + "\\" + indexFile))
+        //                            {
+        //                                fileExists = true;
+        //                                fileToRead = fileToReadDir + "\\" + indexFile;
+        //                                found = true;
+        //                                break;
+        //                            }
+        //                        }
+        //                        if (!found)
+        //                        {
+        //                            this.OnWarningLog?.Invoke(callerIP + " requested '" + absolutePath + "'. File to read => '" + fileToRead + "' does not exist. Returning NOT FOUND");
+        //                            context.Response.StatusCode = (int)HttpStatusCode.NotFound; return;
+        //                        }
+        //                    }
+        //                    this.OnInfoLog?.Invoke(callerIP + " requested '" + absolutePath + "'. File to read => '" + fileToRead + "'");
+        //                    if (string.IsNullOrEmpty(fileToRead)) { context.Response.StatusCode = (int)HttpStatusCode.NotFound; return; }
+        //                    if (!fileExists) fileExists = File.Exists(fileToRead);
+        //                    if (fileExists)
+        //                    {
+        //                        try
+        //                        {
+        //                            if (this.EnableCache)
+        //                            {
+        //                                if (!this.cacheFiles.TryGetValue(fileToRead, out HttpCache httpCache))
+        //                                {
+        //                                    httpCache = new HttpCache(new MemoryStream(), DateTime.Now.AddMinutes(1));
+        //                                    using (Stream input = new FileStream(fileToRead, FileMode.Open))
+        //                                    {
+        //                                        string mime;
+        //                                        context.Response.ContentType = _mimeTypeMappings.TryGetValue(System.IO.Path.GetExtension(fileToRead), out mime) ? mime : "application/octet-stream";
+        //                                        context.Response.ContentLength64 = input.Length;
+        //                                        context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
+        //                                        context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(fileToRead).ToString("r"));
+        //                                        byte[] buffer = new byte[4096]; //byte[] buffer = new byte[1024 * 32]; //4096 faster than 32K
+        //                                        int nbytes;
+        //                                        while ((nbytes = input.Read(buffer, 0, buffer.Length)) > 0) httpCache.MemoryStream.Write(buffer, 0, nbytes);
+        //                                        this.cacheFiles.TryAdd(fileToRead, httpCache);
+        //                                    }
+        //                                }
+        //                                httpCache.MemoryStream.Position = 0;
+        //                                httpCache.MemoryStream.CopyTo(context.Response.OutputStream);
+        //                            }
+        //                            else
+        //                            {
+        //                                using (Stream input = new FileStream(fileToRead, FileMode.Open))
+        //                                {
+        //                                    string mime;
+        //                                    context.Response.ContentType = _mimeTypeMappings.TryGetValue(System.IO.Path.GetExtension(fileToRead), out mime) ? mime : "application/octet-stream";
+        //                                    context.Response.ContentLength64 = input.Length;
+        //                                    context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
+        //                                    context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(fileToRead).ToString("r"));
+        //                                    byte[] buffer = new byte[4096]; //byte[] buffer = new byte[1024 * 32]; //4096 faster than 32K
+        //                                    int nbytes;
+        //                                    while ((nbytes = input.Read(buffer, 0, buffer.Length)) > 0) context.Response.OutputStream.Write(buffer, 0, nbytes);
+        //                                }
+        //                            }
+
+        //                            context.Response.OutputStream.Flush();
+        //                            context.Response.StatusCode = (int)HttpStatusCode.OK;
+        //                        }
+        //                        catch { context.Response.StatusCode = (int)HttpStatusCode.InternalServerError; }
+        //                    }
+        //                    else context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+        //                }
+        //                catch (Exception Ex) { this.OnError?.Invoke(Ex); }
+        //                finally { context?.Response?.OutputStream?.Close(); }
+        //            }, newContext);
+        //        }
+        //    });
+        //    //_serverThread.SetApartmentState(ApartmentState.STA);
+        //}
+
+
         public void Start() { this.OnInfoLog?.Invoke("Starting Vlix Http Server..."); _serverThread.Start(); this.OnInfoLog?.Invoke("Vlix Http Server Started!"); }
-        public void Stop() { this.OnInfoLog?.Invoke("Stopping Vlix Http Server..."); _serverThread.Abort(); _listener.Stop(); cacheFiles.Dispose(); this.OnInfoLog?.Invoke("Vlix Http Server Stopped!"); }
+        public void Stop() { this.OnInfoLog?.Invoke("Stopping Vlix Http Server..."); cancellationTokenSource.Cancel(); _serverThread.Abort(); _listener.Stop(); cacheFiles.Dispose(); this.OnInfoLog?.Invoke("Vlix Http Server Stopped!"); }
 
     }
 

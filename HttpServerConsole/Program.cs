@@ -12,8 +12,7 @@ namespace Vlix
     class Program
     {
         static void Main(string[] args)
-        {
-            
+        {   
             string Port = ConfigurationManager.AppSettings.Get("Port");
             string EnableCache = ConfigurationManager.AppSettings.Get("EnableCache");
             string WWWDirectory = ConfigurationManager.AppSettings.Get("WWWDirectory");

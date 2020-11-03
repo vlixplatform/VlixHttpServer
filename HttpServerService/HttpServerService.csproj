@@ -46,6 +46,7 @@
     <Reference Include="System.Configuration.Install" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ProcessRunner.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProjectInstaller.cs">
       <SubType>Component</SubType>

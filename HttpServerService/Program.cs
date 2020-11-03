@@ -46,6 +46,16 @@ namespace Vlix
                    .MinimumLevel.Debug()
                    .WriteTo.File(LogDirectory + "\\HttpServer.log", rollingInterval: RollingInterval.Day)
                    .CreateLogger();
+
+            //string path = @"C:\my\src\VlixHttpServer\bin\Console DotNet Core\Release\TestDotNetCore.exe";
+            //ProcessRunner processRunner = new ProcessRunner(path, (data) =>
+            //{
+            //    Log.Information(data);
+            //});
+            //var Res = processRunner.TryStart();
+            //if (!Res.Success) Log.Error(Res.ExStr);
+
+
             try
             {
                 Directory.CreateDirectory(WWWDirectory);
@@ -53,8 +63,6 @@ namespace Vlix
                 var AppDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
                 if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "index.html") == null) File.Copy(AppDir + "\\Sample\\index.html", WWWDirectory + "\\index.html");
                 if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "test.html") == null) File.Copy(AppDir + "\\Sample\\test.html", WWWDirectory + "\\test.html");
-                
-                
                 vlixHttpServer = new VlixHttpServer(WWWDirectory, Convert.ToInt32(Port), EnableCache.ToBool());
                 vlixHttpServer.OnError = (ex) => Log.Error(ex.ToString());
                 vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
@@ -66,6 +74,12 @@ namespace Vlix
                 var AppDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
                 Log.Error(ex.ToString() + "\r\n\r\nApp Directory = " + AppDir);
             }
+        }
+
+
+        public void StartAProgram()
+        {
+
         }
 
         protected override void OnStop()

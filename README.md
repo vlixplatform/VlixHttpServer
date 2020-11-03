@@ -25,7 +25,7 @@ Vlix Http Server
 
 
 
-## Embedding in your project / Consuming DLL
+## Embedding in your project / Consuming the DLL
 
 Install the [VlixHttpServer Package](https://www.nuget.org/packages/VlixHttpServer/) via Nuget:
 
@@ -64,12 +64,13 @@ To install Vlix Http Server as a windows service,
 simply run the MSI Installer which can be obtained from
 
 https://github.com/vlixplatform/VlixHttpServer/releases<br />
-<img align="left" height="300" src="https://cdn.vlix.me/res/install.png"><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+<img align="left" height="300" src="https://cdn.vlix.me/res/install.png">
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
 Ater installation, Vlix Http Server should be seen running as a windows service:
 <div>
 <img align="left" width="auto" height="auto" src="https://cdn.vlix.me/res/httpserverservice.png">
 </div>
-<br />
+<br /><br /><br />
 
 The default port for the server is *8080* and the default directory is *C:\ProgramData\Vlix\HttpServer\www*. To use a different port and directory, edit the config found in the installation directory:<br />
 
@@ -98,7 +99,7 @@ The default port for the server is *8080* and the default directory is *C:\Progr
 
 ## How caching works
 
-For every first caller that makes a HTTP request to a file, Vlix Http Server will read and store the file in memory for a duration of 1 minute. Within this duration, any consecutive calls to the file will not cause another file read, but will read from memory instead. After 1 minute, the file is removed from memory, to allow the next caller to re-read from file and into memory. With this, any updates will only take effect after the minute.
+For every first caller that makes a HTTP request to a file, Vlix Http Server will read and store the file in memory for a duration of 1 minute. Within this duration, any consecutive calls to the file will not cause another file read, but will read from the memory cache. After 1 minute, the file is removed from memory, to allow the next caller to re-read from file and into memory. With this, any updates will only take effect after one minute.
 
 
 

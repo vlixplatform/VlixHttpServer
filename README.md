@@ -72,7 +72,7 @@ Ater installation, Vlix Http Server should be seen running as a windows service:
 </div>
 <br /><br /><br />
 
-The default port for the server is *8080* and the default directory is *C:\ProgramData\Vlix\HttpServer\www*. To use a different port and directory, edit the config found in the installation directory:<br />
+The default port for the server is *80 for Http* and *443 for Https* and the default directory is *C:\ProgramData\Vlix\HttpServer\www*. To use a different port and directory, edit the config found in the installation directory:<br />
 
 **C:\Program Files\Vlix\HttpServer\VlixHttpServerService.exe.config**<br />
 
@@ -80,7 +80,8 @@ The default port for the server is *8080* and the default directory is *C:\Progr
 <?xml version="1.0" encoding="utf-8" ?>
 <configuration>
   <appSettings>
-    <add key="Port" value="8080" />
+    <add key="HttpPort" value="80" />
+    <add key="HttpsPort" value="443" />
     <add key="EnableCache" value="True" />
     <add key="LogDirectory" value="[ProgramDataDirectory]\Vlix\HttpServer\Logs" />
     <add key="WWWDirectory" value="[ProgramDataDirectory]\Vlix\HttpServer\www" />

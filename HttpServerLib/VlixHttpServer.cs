@@ -12,7 +12,8 @@ namespace Vlix
 {
     public class VlixHttpServer
     {
-        public int Port { get; internal set; }
+        public int HttpPort { get; internal set; }
+        public int HttpsPort { get; internal set; }
         public bool EnableCache { get; internal set; }
         public string Path { get; private set; }
         public string[] DefaultDocuments = { "index.html", "index.htm", "default.html", "default.htm" };
@@ -120,6 +121,7 @@ namespace Vlix
         {
             public HttpCache(MemoryStream memoryStream,DateTime expiryTime) { this.MemoryStream = memoryStream; this.ExpiryTime = expiryTime;  }
             public DateTime ExpiryTime { get; set; }
+            public long ContentLength { get; set; }
             public MemoryStream MemoryStream { get; set; }
             
         }
@@ -162,17 +164,19 @@ namespace Vlix
         }
 
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        public VlixHttpServer(string path, int port = 8080, bool enableCache = true)
+        public VlixHttpServer(string path, int httpPort = 80, int httpsPort = 443, bool enableCache = true)
         {
             if (path.Length < 1) throw new Exception("path cannot be empty!");
             if (path.Substring(path.Length-1,1)=="\\") path = path.Substring(0, path.Length - 1);
             this.Path = path;
-            this.Port = port;
+            this.HttpPort = httpPort;
+            this.HttpsPort = httpsPort;
             this.EnableCache = enableCache;
             _serverThread = new Thread(() => {                
-                (_listener = new HttpListener()).Prefixes.Add("http://*:" + this.Port.ToString() + "/");
+                (_listener = new HttpListener()).Prefixes.Add("http://*:" + this.HttpPort.ToString() + "/");
+                _listener.Prefixes.Add("https://*:" + this.HttpsPort.ToString() + "/");
                 _listener.Start();
-                this.OnInfoLog?.Invoke("Listening to port " + this.Port + ", Directory = '" + this.Path + "'");
+                this.OnInfoLog?.Invoke("Listening to port " + this.HttpPort + "(Http) and " + this.HttpsPort + "(Https), Directory = '" + this.Path + "'");
                 
                 while (true)
                 {

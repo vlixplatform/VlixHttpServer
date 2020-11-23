@@ -5,6 +5,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Vlix
@@ -35,7 +36,7 @@ namespace Vlix
                 .WriteTo.Console()
                 .WriteTo.File(LogDirectory + "\\HttpServer.log", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
-            VlixHttpServer vlixHttpServer = new VlixHttpServer(WWWDirectory, Convert.ToInt32(HttpPort), Convert.ToInt32(HttpsPort), EnableCache.ToBool());
+            VlixHttpServer vlixHttpServer = new VlixHttpServer((new CancellationTokenSource()).Token,WWWDirectory, Convert.ToInt32(HttpPort), Convert.ToInt32(HttpsPort), EnableCache.ToBool());
             vlixHttpServer.OnError = (ex) => Log.Error(ex.ToString());
             vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
             vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);

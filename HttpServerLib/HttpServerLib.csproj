@@ -3,7 +3,7 @@
     <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Vlix</RootNamespace>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
     <AssemblyName>VlixHttpServer</AssemblyName>
     <Deterministic>false</Deterministic>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>

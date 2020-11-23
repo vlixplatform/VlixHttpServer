@@ -34,28 +34,22 @@ namespace Vlix
         }
 
         VlixHttpServer vlixHttpServer = null;
+        CancellationTokenSource cancellationTokenSource;
         protected override void OnStart(string[] args)
         {
-            string Port = ConfigurationManager.AppSettings.Get("Port");
+            string HttpPort = ConfigurationManager.AppSettings.Get("HttpPort");
+            string HttpsPort = ConfigurationManager.AppSettings.Get("HttpsPort");
             string EnableCache = ConfigurationManager.AppSettings.Get("EnableCache");
             string WWWDirectory = ConfigurationManager.AppSettings.Get("WWWDirectory");
             string LogDirectory = ConfigurationManager.AppSettings.Get("LogDirectory");
+            string OnlyCacheItemsLessThenMB = ConfigurationManager.AppSettings.Get("OnlyCacheItemsLessThenMB");
+            string MaximumCacheSizeInMB = ConfigurationManager.AppSettings.Get("MaximumCacheSizeInMB");
             WWWDirectory = WWWDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
             LogDirectory = LogDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
             Log.Logger = new LoggerConfiguration()
                    .MinimumLevel.Debug()
                    .WriteTo.File(LogDirectory + "\\HttpServer.log", rollingInterval: RollingInterval.Day)
                    .CreateLogger();
-
-            //string path = @"C:\my\src\VlixHttpServer\bin\Console DotNet Core\Release\TestDotNetCore.exe";
-            //ProcessRunner processRunner = new ProcessRunner(path, (data) =>
-            //{
-            //    Log.Information(data);
-            //});
-            //var Res = processRunner.TryStart();
-            //if (!Res.Success) Log.Error(Res.ExStr);
-
-
             try
             {
                 Directory.CreateDirectory(WWWDirectory);
@@ -63,7 +57,8 @@ namespace Vlix
                 var AppDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
                 if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "index.html") == null) File.Copy(AppDir + "\\Sample\\index.html", WWWDirectory + "\\index.html");
                 if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "test.html") == null) File.Copy(AppDir + "\\Sample\\test.html", WWWDirectory + "\\test.html");
-                vlixHttpServer = new VlixHttpServer(WWWDirectory, Convert.ToInt32(Port), EnableCache.ToBool());
+                cancellationTokenSource = new CancellationTokenSource();
+                vlixHttpServer = new VlixHttpServer(cancellationTokenSource.Token, WWWDirectory, Convert.ToInt32(HttpPort), Convert.ToInt32(HttpsPort), EnableCache.ToBool(), Convert.ToInt32(OnlyCacheItemsLessThenMB), Convert.ToInt32(MaximumCacheSizeInMB));
                 vlixHttpServer.OnError = (ex) => Log.Error(ex.ToString());
                 vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
                 vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);
@@ -77,13 +72,9 @@ namespace Vlix
         }
 
 
-        public void StartAProgram()
-        {
-
-        }
-
         protected override void OnStop()
         {
+            cancellationTokenSource.Cancel();
             vlixHttpServer?.Stop();
         }
     }

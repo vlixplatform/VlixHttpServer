@@ -9,6 +9,19 @@ namespace Vlix
 {
     public static partial class Extensions
     {
+        public static int ToInt(this object value, int ValueIfFail = 0)
+        {
+            if (value == null) return ValueIfFail;
+            try
+            {
+                return Convert.ToInt32(value);
+            }
+            catch
+            {
+                return ValueIfFail;
+            }
+        }
+
         public static bool ToBool(this object value, bool ValueIfError = false, bool? ValueIfNotAString = null)
         {
             try

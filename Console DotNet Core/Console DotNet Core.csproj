@@ -6,6 +6,7 @@
     <RootNamespace>Vlix</RootNamespace>
     <AssemblyName>TestDotNetCore</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -37,8 +37,8 @@ namespace Vlix
         CancellationTokenSource cancellationTokenSource;
         protected override void OnStart(string[] args)
         {
-            string HttpPort = ConfigurationManager.AppSettings.Get("HttpPort");
-            string HttpsPort = ConfigurationManager.AppSettings.Get("HttpsPort");
+            string HTTPPort = ConfigurationManager.AppSettings.Get("HTTPPort");
+            string HTTPSPort = ConfigurationManager.AppSettings.Get("HTTPSPort");
             string EnableCache = ConfigurationManager.AppSettings.Get("EnableCache");
             string WWWDirectory = ConfigurationManager.AppSettings.Get("WWWDirectory");
             string LogDirectory = ConfigurationManager.AppSettings.Get("LogDirectory");
@@ -46,6 +46,8 @@ namespace Vlix
             string MaximumCacheSizeInMB = ConfigurationManager.AppSettings.Get("MaximumCacheSizeInMB");
             WWWDirectory = WWWDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
             LogDirectory = LogDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
+            string AllowLocalhostConnectionsOnly = ConfigurationManager.AppSettings.Get("AllowLocalhostConnectionsOnly");
+
             Log.Logger = new LoggerConfiguration()
                    .MinimumLevel.Debug()
                    .WriteTo.File(LogDirectory + "\\HttpServer.log", rollingInterval: RollingInterval.Day)
@@ -58,8 +60,9 @@ namespace Vlix
                 if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "index.html") == null) File.Copy(AppDir + "\\Sample\\index.html", WWWDirectory + "\\index.html");
                 if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "test.html") == null) File.Copy(AppDir + "\\Sample\\test.html", WWWDirectory + "\\test.html");
                 cancellationTokenSource = new CancellationTokenSource();
-                vlixHttpServer = new VlixHttpServer(cancellationTokenSource.Token, WWWDirectory, Convert.ToInt32(HttpPort), Convert.ToInt32(HttpsPort), EnableCache.ToBool(), Convert.ToInt32(OnlyCacheItemsLessThenMB), Convert.ToInt32(MaximumCacheSizeInMB));
-                vlixHttpServer.OnError = (ex) => Log.Error(ex.ToString());
+                VlixHttpServer vlixHttpServer = new VlixHttpServer(cancellationTokenSource.Token, WWWDirectory, HTTPPort.ToInt(80), HTTPSPort.ToInt(443), EnableCache.ToBool(),
+                OnlyCacheItemsLessThenMB.ToInt(10), MaximumCacheSizeInMB.ToInt(250), AllowLocalhostConnectionsOnly.ToBool());
+                vlixHttpServer.OnErrorLog = (log) => Log.Error(log);
                 vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
                 vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);
                 vlixHttpServer.Start();

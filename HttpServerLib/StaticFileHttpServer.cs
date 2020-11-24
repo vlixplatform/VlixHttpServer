@@ -10,21 +10,7 @@ using System.Collections.Concurrent;
 
 namespace Vlix
 {
-    public class HTTPStreamResult
-    {
-        public HTTPStreamResult(HttpStatusCode httpStatusCode, string contentType, MemoryStream memoryStream, string errorMsg)
-        {
-            this.HttpStatusCode = httpStatusCode;
-            this.ContentType = contentType;
-            this.MemoryStream = memoryStream;
-            this.ErrorMsg = errorMsg;
-        }
-        public MemoryStream MemoryStream { get; set; } = null;
-        public string ContentType { get; set; } = null;
 
-        public string ErrorMsg { get; set; } = null;
-        public HttpStatusCode HttpStatusCode { get; set; } = HttpStatusCode.OK;
-    }
     public class StaticFileHTTPServer
     {
         public CancellationTokenSource cancellationTokenSource;
@@ -48,19 +34,16 @@ namespace Vlix
                     if (cancellationTokenSource.IsCancellationRequested) break;
                     if (this.EnableCache)
                     {
-                        double totalCacheInKB = 0;
-                        foreach (var cache in this.cacheFiles.Values) totalCacheInKB += cache.ContentLengthInKB;
-                        if (totalCacheInKB > this.MaximumCacheSizeInMB * 1024)
+                        if (this.CacheFiles.TotalCacheInKB > this.MaximumCacheSizeInMB * 1024)
                         {
-                            var cacheFileToRemoveInOrder = this.cacheFiles.Values.OrderBy(h => h.RequestCount).ThenBy(h => h.LastAccessTimeUTC).Select(h => h.FileToRead).ToList();
+                            var cacheFileToRemoveInOrder = this.CacheFiles.Values.OrderBy(h => h.RequestCount).ThenBy(h => h.LastAccessTimeUTC).Select(h => h.FileToRead).ToList();
                             foreach (string key in cacheFileToRemoveInOrder)
                             {
-                                if (this.cacheFiles.Count == 0) break;
+                                if (this.CacheFiles.Count == 0) break;
                                 if (this.MaximumCacheSizeInMB <= 0) break;
-                                if (this.cacheFiles.TryRemove(key, out HTTPCache hTTPCacheRemoved))
+                                if (this.CacheFiles.TryRemove(key, out HTTPCache hTTPCacheRemoved))
                                 {
-                                    totalCacheInKB -= hTTPCacheRemoved.ContentLengthInKB;
-                                    if (totalCacheInKB < this.MaximumCacheSizeInMB) break;
+                                    if (this.CacheFiles.TotalCacheInKB < this.MaximumCacheSizeInMB * 1024) break;
                                 }
                             }
                         }
@@ -77,28 +60,10 @@ namespace Vlix
 
         public void Shutdown() { cancellationTokenSource.Cancel(); }
 
-        private ConcurrentDictionary<string, HTTPCache> cacheFiles = new ConcurrentDictionary<string, HTTPCache>();
-        class HTTPCache
-        {
-            public HTTPCache(string fileToRead, MemoryStream memoryStream, DateTime lastModifiedTimeUTC, double contentLengthInKB) 
-            {
-                this.FileToRead = fileToRead;
-                this.MemoryStream = memoryStream; 
-                this.LastModifiedTimeUTC = lastModifiedTimeUTC;
-                this.LastAccessTimeUTC = DateTime.UtcNow;
-                this.RequestCount = 1;
-                this.ContentLengthInKB = contentLengthInKB;
-            }
-            public string FileToRead { get; internal set; }
-            public DateTime LastModifiedTimeUTC { get; set; }
-            public DateTime LastAccessTimeUTC { get; set; }
-            public int RequestCount { get; set; } = 0;
-            public MemoryStream MemoryStream { get; set; }
+        
 
-            public double ContentLengthInKB { get; set; }
-
-        }
-
+        public CacheFiles CacheFiles = new CacheFiles();
+        
         private readonly IDictionary<string, string> _mimeTypeMappings = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
         {
             {".mp4", "video/mp4"},
@@ -169,14 +134,15 @@ namespace Vlix
         };
 
         public readonly string[] DefaultDocuments = { "index.html", "index.htm", "default.html", "default.htm" };
-        public async Task<HttpStreamResult> ProcessRequest(string callerIP, string absolutePath)
+        public async Task<HTTPStreamResult> ProcessRequest(string callerIP, string absolutePath)
         {
-            MemoryStream outputMemoryStream = null;            
+            string fileToRead = null;
+            MemoryStream outputMemoryStream = null;
             try
             {
-                if (!this.TryParseAbsolutePath(absolutePath, out string fileToRead, out string fileToReadDir, out string ErrorMsg))
+                if (!this.TryParseAbsolutePath(absolutePath, out fileToRead, out string fileToReadDir, out string ErrorMsg))
                 {
-                    throw new ServerWebFaultException(ErrorMsg, HttpStatusCode.NotFound);
+                    return new HTTPStreamResult(false,fileToRead, HttpStatusCode.NotFound, null, null, ErrorMsg,false);
                 }
 
                 //Find a FileToRead if a directory is requested. Find standard files "index.html", "index.htm", "default.html", "default.htm"
@@ -192,27 +158,32 @@ namespace Vlix
                             fileExists = true;
                             break;
                         }
-                    }                    
+                    }
                 }
 
                 try
                 {
                     if (!fileExists) fileExists = File.Exists(fileToRead);
-                    if (!fileExists) throw new ServerWebFaultException("File '" + fileToRead + "' does not exist!", HttpStatusCode.NotFound);
+                    if (!fileExists)
+                    {
+                        if (fileToRead.Contains("favicon")) return new HTTPStreamResult(false,fileToRead, HttpStatusCode.NotFound, null, null, "File '" + fileToRead + "' does not exist!", true);
+                        else return new HTTPStreamResult(false,fileToRead, HttpStatusCode.NotFound, null, null, "File '" + fileToRead + "' does not exist!",false);
+                    }
                     if (fileExists) fileLastModifiedTimeUTC = File.GetLastWriteTimeUtc(fileToRead).ToUniversalTime();
 
 
                     outputMemoryStream = new MemoryStream();
                     HTTPCache httpCache = null;
+                    bool obtainedFromCache = false;
                     if (this.EnableCache)
                     {
-                        if (this.cacheFiles.TryGetValue(fileToRead, out httpCache) && httpCache.LastModifiedTimeUTC == fileLastModifiedTimeUTC)
+                        if (this.CacheFiles.TryGetValue(fileToRead, out httpCache) && httpCache.LastModifiedTimeUTC == fileLastModifiedTimeUTC)
                         {
                             httpCache.RequestCount++;
                             httpCache.LastAccessTimeUTC = DateTime.UtcNow;
                             httpCache.MemoryStream.Position = 0;
                             await httpCache.MemoryStream.CopyToAsync(outputMemoryStream);
-                            //outputMemoryStream = httpCache.MemoryStream;
+                            obtainedFromCache = true;
                         }
                         else
                         {
@@ -222,14 +193,16 @@ namespace Vlix
                                 int nbytes; MemoryStream ms = new MemoryStream();
                                 while ((nbytes = await input.ReadAsync(buffer, 0, buffer.Length)) > 0)
                                 {
-                                    if (cancellationTokenSource.IsCancellationRequested) throw new ServerWebFaultException("Request was cancelled by server while reading file '" + fileToRead + "'", HttpStatusCode.InternalServerError);
+                                    if (cancellationTokenSource.IsCancellationRequested) 
+                                        return new HTTPStreamResult(false, fileToRead, HttpStatusCode.InternalServerError, null, null, "Request was cancelled by server while reading file '" + fileToRead + "'",false);
                                     await ms.WriteAsync(buffer, 0, nbytes);
                                 }
-                                httpCache = new HTTPCache(fileToRead, ms, fileLastModifiedTimeUTC, outputMemoryStream.Length / 1024);
-                                if (httpCache.ContentLengthInKB <= (this.OnlyCacheItemsLessThenMB * 1024)) this.cacheFiles.TryAdd(fileToRead, httpCache);
                                 ms.Position = 0;
                                 await ms.CopyToAsync(outputMemoryStream);
-                            }
+                                httpCache = new HTTPCache(fileToRead, ms, fileLastModifiedTimeUTC, outputMemoryStream.Length / 1024);
+                                if (httpCache.ContentLengthInKB <= (this.OnlyCacheItemsLessThenMB * 1024)) this.CacheFiles.TryAdd(fileToRead, httpCache);
+                                obtainedFromCache = false;
+                            }                            
                         }
                     }
                     else
@@ -240,33 +213,28 @@ namespace Vlix
                             int nbytes;
                             while ((nbytes = await input.ReadAsync(buffer, 0, buffer.Length)) > 0)
                             {
-                                if (cancellationTokenSource.IsCancellationRequested) throw new ServerWebFaultException("Request was cancelled by server while reading file '" + fileToRead + "'", HttpStatusCode.InternalServerError);
+                                if (cancellationTokenSource.IsCancellationRequested) return new HTTPStreamResult(false, fileToRead, HttpStatusCode.InternalServerError, null, null, "Request was cancelled by server while reading file '" + fileToRead + "'",false);
                                 await outputMemoryStream.WriteAsync(buffer, 0, nbytes);
                             }
+                            obtainedFromCache = false;
                         }
                     }
                     string contentType = _mimeTypeMappings.TryGetValue(System.IO.Path.GetExtension(fileToRead), out string mime) ? mime : "application/octet-stream";
-                    lock (Server.APICallsLock) Server.APICalls.Add(new ServerAPICall(DateTime.UtcNow));
-                    //outputMemoryStream.Position = 0;
-                    //await outputMemoryStream.FlushAsync();                    
-                    return new HttpStreamResult(HttpStatusCode.OK, contentType, outputMemoryStream, null);
+                    outputMemoryStream.Position = 0;
+                    return new HTTPStreamResult(obtainedFromCache, fileToRead, HttpStatusCode.OK, contentType, outputMemoryStream, null, false);
                 }
                 catch (Exception ex)
                 {
-                    return new HttpStreamResult(HttpStatusCode.InternalServerError, null, null, "Generic Error wile processing file '" + fileToRead + "'\r\n" + ex.ToString());
+                    return new HTTPStreamResult(false,fileToRead, HttpStatusCode.InternalServerError, null, null, "Generic Error wile processing file '" + fileToRead + "'\r\n" + ex.ToString(),false);
                 }
             }
             catch (Exception ex2)
             {
-                return new HttpStreamResult(HttpStatusCode.InternalServerError, null, null, "Generic Error: " + ex2.ToString());
+                return new HTTPStreamResult(false,fileToRead, HttpStatusCode.InternalServerError, null, null, "Generic Error: " + ex2.ToString(),false);
             }
-            //finally
-            //{
-            //    stream?.Close();
-            //}
         }
 
-        private bool TryParseAbsolutePath(string absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg)
+        public bool TryParseAbsolutePath(string absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg)
         {
             errorMsg = null;
             absolutePath = absolutePath.TrimEnd();
@@ -297,21 +265,5 @@ namespace Vlix
             }
             return true;
         }
-    }
-
-    public class HttpStreamResult
-    {
-        public HttpStreamResult(HttpStatusCode httpStatusCode, string contentType, MemoryStream memoryStream, string errorMsg)
-        {
-            this.HttpStatusCode = httpStatusCode;
-            this.ContentType = contentType;
-            this.MemoryStream = memoryStream;
-            this.ErrorMsg = errorMsg;
-        }
-        public MemoryStream MemoryStream { get; set; } = null;
-        public string ContentType { get; set; } = null;
-
-        public string ErrorMsg { get; set; } = null;
-        public HttpStatusCode HttpStatusCode { get; set; } = HttpStatusCode.OK;
     }
 }

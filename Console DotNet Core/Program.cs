@@ -13,13 +13,16 @@ namespace Vlix
     {
         static void Main(string[] args)
         {
-            string HttpPort = ConfigurationManager.AppSettings.Get("HttpPort");
-            string HttpsPort = ConfigurationManager.AppSettings.Get("HttpsPort");
+            string HTTPPort = ConfigurationManager.AppSettings.Get("HTTPPort");
+            string HTTPSPort = ConfigurationManager.AppSettings.Get("HTTPSPort");
             string EnableCache = ConfigurationManager.AppSettings.Get("EnableCache");
             string WWWDirectory = ConfigurationManager.AppSettings.Get("WWWDirectory");
             string LogDirectory = ConfigurationManager.AppSettings.Get("LogDirectory");
+            string OnlyCacheItemsLessThenMB = ConfigurationManager.AppSettings.Get("OnlyCacheItemsLessThenMB");
+            string MaximumCacheSizeInMB = ConfigurationManager.AppSettings.Get("MaximumCacheSizeInMB");
             WWWDirectory = WWWDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
             LogDirectory = LogDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
+            string AllowLocalhostConnectionsOnly = ConfigurationManager.AppSettings.Get("AllowLocalhostConnectionsOnly");
 
 
             Directory.CreateDirectory(WWWDirectory);
@@ -30,11 +33,12 @@ namespace Vlix
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Console()
-                .WriteTo.File(LogDirectory + "\\HttpServer.log", rollingInterval: RollingInterval.Day)
+                .WriteTo.File(LogDirectory + "\\HTTPServer.log", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
             
-            VlixHttpServer vlixHttpServer = new VlixHttpServer((new CancellationTokenSource()).Token, WWWDirectory, Convert.ToInt32(HttpPort), Convert.ToInt32(HttpsPort), EnableCache.ToBool());
-            vlixHttpServer.OnError = (ex) => Log.Error(ex.ToString());
+            VlixHttpServer vlixHttpServer = new VlixHttpServer((new CancellationTokenSource()).Token, WWWDirectory, HTTPPort.ToInt(80), HTTPSPort.ToInt(443), EnableCache.ToBool(),
+                OnlyCacheItemsLessThenMB.ToInt(10), MaximumCacheSizeInMB.ToInt(250), AllowLocalhostConnectionsOnly.ToBool());
+            vlixHttpServer.OnErrorLog = (log) => Log.Error(log);
             vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
             vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);
             vlixHttpServer.Start();

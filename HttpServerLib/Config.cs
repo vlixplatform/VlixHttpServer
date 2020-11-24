@@ -30,17 +30,19 @@ namespace Vlix.HttpServer
         {
             this.From = new RedirectFrom()
             {
-                FromAnyPort = false,
-                FromPort = 80,
-                URLWildCardMatch = "*"
+                AnyHostName = true,
+                HostNameWildCard = null,
+                AnyPort = false,
+                Port = 80,
+                URLWildCard = "*"
             };
 
             this.To = new RedirectTo()
             {
-                ToSamePort = false,
-                ToPort = 443,
-                EnableURLRewrite = false,
-                RewriteURLAs = null
+                HostName = null,
+                Port = 443,
+                HTTPS = true,
+                RewriteURLTo = null
             };
         }
     }
@@ -48,16 +50,35 @@ namespace Vlix.HttpServer
 
     public class RedirectFrom
     {
-        public bool FromAnyPort { get; set; } = false;
-        public int? FromPort { get; set; } = null;
-        public string URLWildCardMatch { get; set; } = "*";
+        public bool AnyHostName { get; set; } = true;
+        public string HostNameWildCard { get; set; } = null;
+        public bool AnyPort { get; set; } = true;
+        public int? Port { get; set; } = null;
+
+        public bool AnyURL { get; set; } = true;
+        public string URLWildCard { get; set; } = null;
+
+        Wildcard hostWildCard = null;
+        public Wildcard GetHostWildCard()
+        {
+            if (hostWildCard==null) hostWildCard = new Wildcard(HostNameWildCard);
+            return hostWildCard;
+        }
+        Wildcard uRLWilCard = null;
+        public Wildcard GetURLWildCard()
+        {
+            if (uRLWilCard == null) uRLWilCard = new Wildcard(URLWildCard);
+            return uRLWilCard;
+        }
+
+
     }
 
     public class RedirectTo
     {
-        public bool ToSamePort { get; set; } = false;
-        public int? ToPort { get; set; } = null;
-        public bool EnableURLRewrite { get; set; } = false;
-        public string RewriteURLAs { get; set; } = null;
+        public string HostName { get; set; } = null;
+        public int? Port { get; set; } = null;
+        public bool? HTTPS { get; set; } = null;
+        public string RewriteURLTo { get; set; } = null;
     }
 }

@@ -20,6 +20,8 @@ namespace  Vlix.HttpServer
         public bool AllowLocalhostConnectionsOnly { get; set; } = false;
         public CancellationToken CancellationToken { get; internal set; }
 
+        public List<Redirect> Redirects { get; set; } = null;
+
         #region MimeTypings
         private static IDictionary<string, string> _mimeTypeMappings = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
         {
@@ -111,16 +113,18 @@ namespace  Vlix.HttpServer
         }
         public VlixHttpServer(CancellationToken cancellationToken, HttpServerConfig httpServerConfig) : base(httpServerConfig.WWWDirectory, httpServerConfig.EnableCache, httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB)
         {
-            CommonConstructor(cancellationToken, httpServerConfig.WWWDirectory, httpServerConfig.EnableHTTP, httpServerConfig.HTTPPort, httpServerConfig.EnableHTTPS, httpServerConfig.HTTPSPort, httpServerConfig.EnableCache, httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB, httpServerConfig.AllowLocalhostConnectionsOnly);
+            CommonConstructor(cancellationToken, httpServerConfig.WWWDirectory, httpServerConfig.EnableHTTP, httpServerConfig.HTTPPort, httpServerConfig.EnableHTTPS, httpServerConfig.HTTPSPort, httpServerConfig.EnableCache, 
+                httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB, httpServerConfig.AllowLocalhostConnectionsOnly, httpServerConfig.Redirects);
         }
 
         public VlixHttpServer(HttpServerConfig httpServerConfig) : base(httpServerConfig.WWWDirectory, httpServerConfig.EnableCache, httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB)
         {
-            CommonConstructor((new CancellationTokenSource()).Token, httpServerConfig.WWWDirectory, httpServerConfig.EnableHTTP, httpServerConfig.HTTPPort, httpServerConfig.EnableHTTPS, httpServerConfig.HTTPSPort, httpServerConfig.EnableCache, httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB, httpServerConfig.AllowLocalhostConnectionsOnly);
+            CommonConstructor((new CancellationTokenSource()).Token, httpServerConfig.WWWDirectory, httpServerConfig.EnableHTTP, httpServerConfig.HTTPPort, httpServerConfig.EnableHTTPS, httpServerConfig.HTTPSPort, httpServerConfig.EnableCache, 
+                httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB, httpServerConfig.AllowLocalhostConnectionsOnly, httpServerConfig.Redirects);
         }
 
         private void CommonConstructor(CancellationToken cancellationToken, string path, bool EnableHTTP = true, int httpPort = 80, bool EnableHTTPS = true, int httpsPort = 443, bool enableCache = true, int onlyCacheItemsLessThenMB=10, 
-            int maximumCacheSizeInMB = 500, bool allowLocalhostConnectionsOnly = false)
+            int maximumCacheSizeInMB = 500, bool allowLocalhostConnectionsOnly = false, List<Redirect> redirects = null)
         {
             if (path.Length < 1) throw new Exception("path cannot be empty!");
             if (path.Substring(path.Length-1,1)=="\\") path = path.Substring(0, path.Length - 1);
@@ -129,6 +133,7 @@ namespace  Vlix.HttpServer
             this.HTTPPort = httpPort;
             this.EnableHTTPS = EnableHTTPS;
             this.HTTPSPort = httpsPort;
+            this.Redirects = redirects;
             this.AllowLocalhostConnectionsOnly = allowLocalhostConnectionsOnly;
             _serverThread = new Thread(async () => {
                 _listener = new HttpListener();
@@ -152,6 +157,9 @@ namespace  Vlix.HttpServer
                         {
                             string callerIP = context.Request.RemoteEndPoint.ToString();
                             string absolutePath = context.Request.Url.AbsolutePath;
+                            int port = context.Request.Url.Port;
+                            string host = context.Request.Url.Host;
+                            string http = context.Request.Url.Scheme;
                             if (this.AllowLocalhostConnectionsOnly)
                             {
                                 if (!context.Request.IsLocal)
@@ -162,6 +170,46 @@ namespace  Vlix.HttpServer
                                     return;
                                 }
                             }
+
+                            //Process Redirect
+                            if (this.Redirects != null)
+                            {
+                                foreach (Redirect redirect in this.Redirects)
+                                {
+                                    bool portMatch = (redirect.From.AnyPort || (!redirect.From.AnyPort && (redirect.From.Port == port)));
+                                    bool hostMatch = (redirect.From.AnyHostName || (!redirect.From.AnyHostName && (redirect.From.GetHostWildCard().IsMatch(host))));
+                                    bool uRLMatch = (redirect.From.AnyURL || (!redirect.From.AnyHostName && (redirect.From.GetURLWildCard().IsMatch(absolutePath))));
+                                    if (portMatch && hostMatch && uRLMatch)
+                                    {
+                                        string redirectURL = "";
+                                        if (redirect.To.HTTPS == null) redirectURL += http + ":\\";
+                                        else if (redirect.To.HTTPS == true) redirectURL += "https:\\"; else redirectURL += "http:\\";
+
+                                        if (redirect.To.HostName == null) redirectURL += host; else redirectURL += redirect.To.HostName;
+
+                                        if (port != 80 && port != 443) //33172
+                                        {
+                                            if (redirect.To.Port == null) redirectURL += ":" + port; else redirectURL += ":" + redirect.To.Port;
+                                        }
+                                        else //80
+                                        {
+                                            if (redirect.To.Port != null && redirect.To.Port != 80 && redirect.To.Port != 443) redirectURL += ":" + redirect.To.Port;
+                                        }
+                                        
+                                        if (redirect.To.RewriteURLTo == null) redirectURL += absolutePath;
+                                        else
+                                        {
+                                            
+                                        }
+
+
+
+                                        string msg = callerIP + " requested '" + absolutePath + "'. Blocked as caller is not local ('AllowLocalhostConnectionsOnly' is set to 'true')";
+
+                                    }
+                                }
+                            }
+
 
                             HTTPStreamResult httpStreamResult = await this.ProcessRequest(callerIP, absolutePath);
                             this.OnHTTPStreamResult?.Invoke(httpStreamResult);

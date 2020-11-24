@@ -45,7 +45,7 @@ namespace  Vlix.HttpServer
                 string appDirectory = ConfigurationManager.AppSettings.Get("AppDirectory");
                 appDirectory = appDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
             
-                    Directory.CreateDirectory(appDirectory);
+                Directory.CreateDirectory(appDirectory);
                 string configFilePath = Path.Combine(appDirectory, "httpserver.json");
                 if (File.Exists(configFilePath))
                 {

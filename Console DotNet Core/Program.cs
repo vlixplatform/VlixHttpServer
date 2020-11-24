@@ -14,6 +14,13 @@ namespace  Vlix.HttpServer
         {
 
             HttpServerConfig config = new HttpServerConfig();
+            config.Redirects = new List<Redirect>()
+            {
+                new Redirect() {From= new RedirectFrom() {AnyHostName= true, HostNameWildCard = "*"}, To = new RedirectTo() { Port=80 } },
+                new HttpToHttpsRedirect()
+            };
+
+
 
             string appDirectory = ConfigurationManager.AppSettings.Get("AppDirectory");
             appDirectory = appDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));

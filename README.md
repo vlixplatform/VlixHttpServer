@@ -21,7 +21,7 @@ Vlix Http Server
 
 
 
-<br />Vlix Http Server targets the **DotNet 4.5.2 and DotNet Standard  ** framework.
+<br />Vlix Http Server targets the **DotNet 4.5.2 and DotNet Standard 2.0** framework.
 
 
 
@@ -36,14 +36,14 @@ Install-Package VlixHttpServer
 In your project, to create a Http Server, simply use:
 
 ```c#
-VlixHttpServer vlixHttpServer = new VlixHttpServer("C:\\YourDirectory",8080);
+VlixHttpServer vlixHttpServer = new VlixHttpServer("C:\\YourWWWDirectory",80,443);
 vlixHttpServer.Start();
 ```
 
 You can also handle logs and exceptions via delegates. Example:
 
 ```C#
-VlixHttpServer vlixHttpServer = new VlixHttpServer("C:\\YourDirectory", 8080);
+VlixHttpServer vlixHttpServer = new VlixHttpServer("C:\\YourWWWDirectory", 80, 443);
 vlixHttpServer.OnError = (ex) => Log.Error(ex.ToString());
 vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
 vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);
@@ -80,11 +80,14 @@ The default port for the server is *80 for Http* and *443 for Https* and the def
 <?xml version="1.0" encoding="utf-8" ?>
 <configuration>
   <appSettings>
-    <add key="HttpPort" value="80" />
-    <add key="HttpsPort" value="443" />
-    <add key="EnableCache" value="True" />
-    <add key="LogDirectory" value="[ProgramDataDirectory]\Vlix\HttpServer\Logs" />
-    <add key="WWWDirectory" value="[ProgramDataDirectory]\Vlix\HttpServer\www" />
+    <add key="HTTPPort" value="80"/>
+    <add key="HTTPSPort" value="443"/>
+    <add key="EnableCache" value="True"/>
+    <add key="OnlyCacheItemsLessThenMB" value="10"/>
+    <add key="MaximumCacheSizeInMB" value="250"/>
+    <add key="LogDirectory" value="[ProgramDataDirectory]\Vlix\HTTPServer\Logs"/>
+    <add key="WWWDirectory" value="[ProgramDataDirectory]\Vlix\HTTPServer\www"/>
+    <add key="AllowLocalhostConnectionsOnly" value="False"/>
   </appSettings>
     <startup> 
         <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.5.2" />
@@ -100,7 +103,9 @@ The default port for the server is *80 for Http* and *443 for Https* and the def
 
 ## How caching works
 
-For every first caller that makes a HTTP request to a file, Vlix Http Server will read and store the file in memory for a duration of 1 minute. Within this duration, any consecutive calls to the file will not cause another file read, but will read from the memory cache. After 1 minute, the file is removed from memory, to allow the next caller to re-read from file and into memory. With this, any updates will only take effect after one minute.
+For every first caller that makes a HTTP request to a file, Vlix Http Server will read and store the file in memory. Any consecutive calls to the file will not cause another file read, but will read from the memory cache. The read also verifies if the file's timestamp has changed. If it has, the cache will be refreshed. 
+
+If the cache size (memory usage) exceeds the "MaximumCacheSizeInMB", the files with the least access will be removed. This ensures that the Maximum Cache size will be within the limit. The default size of this cache is 250 MB.
 
 
 

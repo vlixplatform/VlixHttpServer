@@ -36,7 +36,7 @@ namespace Vlix
                     {
                         if (this.CacheFiles.TotalCacheInKB > this.MaximumCacheSizeInMB * 1024)
                         {
-                            var cacheFileToRemoveInOrder = this.CacheFiles.Values.OrderBy(h => h.RequestCount).ThenBy(h => h.LastAccessTimeUTC).Select(h => h.FileToRead).ToList();
+                            var cacheFileToRemoveInOrder = this.CacheFiles.Values.OrderBy(h => h.LastAccessTimeUTC).ThenBy(h => h.RequestCount).Select(h => h.FileToRead).ToList();
                             foreach (string key in cacheFileToRemoveInOrder)
                             {
                                 if (this.CacheFiles.Count == 0) break;

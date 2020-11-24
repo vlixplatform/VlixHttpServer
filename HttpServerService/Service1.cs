@@ -7,7 +7,7 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 
-namespace Vlix
+namespace  Vlix.HttpServer
 {
 
 }

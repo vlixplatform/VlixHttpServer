@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace Vlix
+namespace  Vlix.HttpServer
 {
     public class CacheFiles : ConcurrentDictionary<string, HTTPCache>
     {

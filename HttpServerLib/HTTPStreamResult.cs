@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Net;
 
-namespace Vlix
+namespace  Vlix.HttpServer
 {
     public class HTTPStreamResult
     {

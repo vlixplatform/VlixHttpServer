@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Newtonsoft.Json;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -8,7 +9,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 
-namespace Vlix
+namespace  Vlix.HttpServer
 {
     static class Program
     {
@@ -34,34 +35,43 @@ namespace Vlix
         }
 
         VlixHttpServer vlixHttpServer = null;
-        CancellationTokenSource cancellationTokenSource;
+        CancellationTokenSource cancellationTokenSource = null;
         protected override void OnStart(string[] args)
         {
-            string HTTPPort = ConfigurationManager.AppSettings.Get("HTTPPort");
-            string HTTPSPort = ConfigurationManager.AppSettings.Get("HTTPSPort");
-            string EnableCache = ConfigurationManager.AppSettings.Get("EnableCache");
-            string WWWDirectory = ConfigurationManager.AppSettings.Get("WWWDirectory");
-            string LogDirectory = ConfigurationManager.AppSettings.Get("LogDirectory");
-            string OnlyCacheItemsLessThenMB = ConfigurationManager.AppSettings.Get("OnlyCacheItemsLessThenMB");
-            string MaximumCacheSizeInMB = ConfigurationManager.AppSettings.Get("MaximumCacheSizeInMB");
-            WWWDirectory = WWWDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
-            LogDirectory = LogDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
-            string AllowLocalhostConnectionsOnly = ConfigurationManager.AppSettings.Get("AllowLocalhostConnectionsOnly");
-
-            Log.Logger = new LoggerConfiguration()
-                   .MinimumLevel.Debug()
-                   .WriteTo.File(LogDirectory + "\\HttpServer.log", rollingInterval: RollingInterval.Day)
-                   .CreateLogger();
+            cancellationTokenSource = new CancellationTokenSource();
+            HttpServerConfig config = new HttpServerConfig();
             try
             {
-                Directory.CreateDirectory(WWWDirectory);
-                string[] myFiles = Directory.GetFiles(WWWDirectory);
-                var AppDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "index.html") == null) File.Copy(AppDir + "\\Sample\\index.html", WWWDirectory + "\\index.html");
-                if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "test.html") == null) File.Copy(AppDir + "\\Sample\\test.html", WWWDirectory + "\\test.html");
-                cancellationTokenSource = new CancellationTokenSource();
-                VlixHttpServer vlixHttpServer = new VlixHttpServer(cancellationTokenSource.Token, WWWDirectory, HTTPPort.ToInt(80), HTTPSPort.ToInt(443), EnableCache.ToBool(),
-                OnlyCacheItemsLessThenMB.ToInt(10), MaximumCacheSizeInMB.ToInt(250), AllowLocalhostConnectionsOnly.ToBool());
+                string appDirectory = ConfigurationManager.AppSettings.Get("AppDirectory");
+                appDirectory = appDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
+            
+                    Directory.CreateDirectory(appDirectory);
+                string configFilePath = Path.Combine(appDirectory, "httpserver.json");
+                if (File.Exists(configFilePath))
+                {
+                    string configJSONStr = File.ReadAllText(configFilePath);
+                    config = JsonConvert.DeserializeObject<HttpServerConfig>(configJSONStr);
+                }
+                else
+                {
+                    string jsonString = JsonConvert.SerializeObject(config, Formatting.Indented);
+                    File.WriteAllText(configFilePath, jsonString);
+                }
+                config.LogDirectory = config.LogDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
+                config.WWWDirectory = config.WWWDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
+
+
+
+                string[] myFiles = Directory.GetFiles(config.WWWDirectory);
+                if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "index.html") == null) File.Copy(Path.Combine("Sample", "index.html"), Path.Combine(config.WWWDirectory, "index.html"));
+                if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "test.html") == null) File.Copy(Path.Combine("Sample", "test.html"), Path.Combine(config.WWWDirectory, "test.html"));
+
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Debug()
+                    .WriteTo.File(Path.Combine(config.LogDirectory, "HTTPServer.log"), rollingInterval: RollingInterval.Day)
+                    .CreateLogger();
+
+                VlixHttpServer vlixHttpServer = new VlixHttpServer(cancellationTokenSource.Token, config);
                 vlixHttpServer.OnErrorLog = (log) => Log.Error(log);
                 vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
                 vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);

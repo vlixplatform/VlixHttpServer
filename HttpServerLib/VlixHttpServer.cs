@@ -9,11 +9,13 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using System.Text;
 
-namespace Vlix
+namespace  Vlix.HttpServer
 {
     public class VlixHttpServer: StaticFileHTTPServer
     {
+        public bool EnableHTTP { get; internal set; }
         public int HTTPPort { get; internal set; }
+        public bool EnableHTTPS { get; internal set; }
         public int HTTPSPort { get; internal set; }
         public bool AllowLocalhostConnectionsOnly { get; set; } = false;
         public CancellationToken CancellationToken { get; internal set; }
@@ -99,33 +101,52 @@ namespace Vlix
         public VlixHttpServer(string path, int httpPort = 80, int httpsPort = 443, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, int maximumCacheSizeInMB = 500,
             bool allowLocalhostConnectionsOnly = false) : base(path, enableCache, onlyCacheItemsLessThenMB, maximumCacheSizeInMB)
         {
-            CommonConstructor((new CancellationTokenSource()).Token, path, httpPort, httpsPort, enableCache, onlyCacheItemsLessThenMB, maximumCacheSizeInMB, allowLocalhostConnectionsOnly);
+            CommonConstructor((new CancellationTokenSource()).Token, path, true, httpPort, true, httpsPort, enableCache, onlyCacheItemsLessThenMB, maximumCacheSizeInMB, allowLocalhostConnectionsOnly);
         }
 
         public VlixHttpServer(CancellationToken cancellationToken, string path, int httpPort = 80, int httpsPort = 443, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, 
             int maximumCacheSizeInMB = 500, bool allowLocalhostConnectionsOnly = false) : base(path, enableCache, onlyCacheItemsLessThenMB, maximumCacheSizeInMB)
         {
-            CommonConstructor(cancellationToken, path, httpPort, httpsPort, enableCache, onlyCacheItemsLessThenMB, maximumCacheSizeInMB, allowLocalhostConnectionsOnly);
+            CommonConstructor(cancellationToken, path, true, httpPort, true, httpsPort, enableCache, onlyCacheItemsLessThenMB, maximumCacheSizeInMB, allowLocalhostConnectionsOnly);
         }
-        private void CommonConstructor(CancellationToken cancellationToken, string path, int httpPort = 80, int httpsPort = 443, bool enableCache = true, int onlyCacheItemsLessThenMB=10, 
+        public VlixHttpServer(CancellationToken cancellationToken, HttpServerConfig httpServerConfig) : base(httpServerConfig.WWWDirectory, httpServerConfig.EnableCache, httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB)
+        {
+            CommonConstructor(cancellationToken, httpServerConfig.WWWDirectory, httpServerConfig.EnableHTTP, httpServerConfig.HTTPPort, httpServerConfig.EnableHTTPS, httpServerConfig.HTTPSPort, httpServerConfig.EnableCache, httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB, httpServerConfig.AllowLocalhostConnectionsOnly);
+        }
+
+        public VlixHttpServer(HttpServerConfig httpServerConfig) : base(httpServerConfig.WWWDirectory, httpServerConfig.EnableCache, httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB)
+        {
+            CommonConstructor((new CancellationTokenSource()).Token, httpServerConfig.WWWDirectory, httpServerConfig.EnableHTTP, httpServerConfig.HTTPPort, httpServerConfig.EnableHTTPS, httpServerConfig.HTTPSPort, httpServerConfig.EnableCache, httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB, httpServerConfig.AllowLocalhostConnectionsOnly);
+        }
+
+        private void CommonConstructor(CancellationToken cancellationToken, string path, bool EnableHTTP = true, int httpPort = 80, bool EnableHTTPS = true, int httpsPort = 443, bool enableCache = true, int onlyCacheItemsLessThenMB=10, 
             int maximumCacheSizeInMB = 500, bool allowLocalhostConnectionsOnly = false)
         {
             if (path.Length < 1) throw new Exception("path cannot be empty!");
             if (path.Substring(path.Length-1,1)=="\\") path = path.Substring(0, path.Length - 1);
             this.CancellationToken = cancellationToken;
+            this.EnableHTTP = EnableHTTP;
             this.HTTPPort = httpPort;
+            this.EnableHTTPS = EnableHTTPS;
             this.HTTPSPort = httpsPort;
             this.AllowLocalhostConnectionsOnly = allowLocalhostConnectionsOnly;
-            _serverThread = new Thread(() => {                
-                (_listener = new HttpListener()).Prefixes.Add("http://*:" + this.HTTPPort.ToString() + "/");
-                _listener.Prefixes.Add("https://*:" + this.HTTPSPort.ToString() + "/");
+            _serverThread = new Thread(async () => {
+                _listener = new HttpListener();
+                if (this.EnableHTTP) _listener.Prefixes.Add("http://*:" + this.HTTPPort.ToString() + "/");
+                if (this.EnableHTTPS) _listener.Prefixes.Add("https://*:" + this.HTTPSPort.ToString() + "/");
                 _listener.Start();
-                this.OnInfoLog?.Invoke("Listening to port " + this.HTTPPort + "(HTTP) and " + this.HTTPSPort + "(HTTPS), Directory = '" + this.Path + "'");
+                this.OnInfoLog?.Invoke("Listening to port " + this.HTTPPort + "(HTTP) and " + this.HTTPSPort + "(HTTPS), Directory = '" + this.WWWDirectory + "'");
                 
                 while (true)
                 {
+                    if (!this.EnableHTTP && !this.EnableHTTPS)
+                    {
+                        this.OnInfoLog?.Invoke("Both HTTP (Port " + this.HTTPPort + ") and HTTPS (Port " + this.HTTPSPort + ") is disabled");
+                        await Task.Delay(3000);
+                        continue;
+                    }
                     HttpListenerContext context = _listener.GetContext(); //The thread stops here waiting for content to come
-                    Task.Run(async () => 
+                    _ = Task.Run(async () => 
                     {
                         try
                         {

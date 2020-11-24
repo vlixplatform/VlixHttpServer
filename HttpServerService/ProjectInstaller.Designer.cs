@@ -1,4 +1,4 @@
-﻿namespace Vlix
+﻿namespace  Vlix.HttpServer
 {
     partial class ProjectInstaller
     {

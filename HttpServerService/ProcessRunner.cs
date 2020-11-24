@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace Vlix
+namespace  Vlix.HttpServer
 {
     public class ProcessRunnerResult
     {

@@ -6,7 +6,7 @@ using System.Configuration.Install;
 using System.Linq;
 using System.ServiceProcess;
 
-namespace Vlix
+namespace  Vlix.HttpServer
 {
     [RunInstaller(true)]
     public partial class ProjectInstaller : System.Configuration.Install.Installer

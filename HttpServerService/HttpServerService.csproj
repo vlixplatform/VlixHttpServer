@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{B55A6AFD-3620-4026-99E6-50B0BBF81EF5}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Vlix</RootNamespace>
+    <RootNamespace>Vlix.HttpServer</RootNamespace>
     <AssemblyName>VlixHttpServerService</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

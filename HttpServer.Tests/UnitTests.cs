@@ -5,7 +5,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Vlix;
+
+using Vlix.HttpServer;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -106,7 +107,7 @@ namespace HttpServer.Tests
                     }
                     else
                     {
-                        await Task.Delay(5000); //Wait for Cache to Clean
+                        await Task.Delay(6000); //Wait for Cache to Clean
                         Assert.True(vlixHttpServer.CacheFiles.TotalCacheInKB < vlixHttpServer.MaximumCacheSizeInMB *1024); //The Cache Cleaned must be lower than Max Cache
                     }
                 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Vlix
+namespace  Vlix.HttpServer
 {
     public class HTTPCache
     {

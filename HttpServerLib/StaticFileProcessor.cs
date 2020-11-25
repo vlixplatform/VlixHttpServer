@@ -11,10 +11,10 @@ using System.Collections.Concurrent;
 namespace Vlix.HttpServer
 {
 
-    public class StaticFileHTTPServer
+    public class StaticFileProcessor
     {
         public CancellationTokenSource cancellationTokenSource;
-        public StaticFileHTTPServer(string wWWDirectory, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, int maximumCacheSizeInMB = 500)
+        public StaticFileProcessor(string wWWDirectory, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, int maximumCacheSizeInMB = 500)
         {
             this.WWWDirectory = wWWDirectory;
             this.EnableCache = enableCache;
@@ -26,12 +26,7 @@ namespace Vlix.HttpServer
             {
                 while (true)
                 {
-                    await Task.Delay(1000);
-                    if (cancellationTokenSource.IsCancellationRequested) break;
-                    await Task.Delay(1000);
-                    if (cancellationTokenSource.IsCancellationRequested) break;
-                    await Task.Delay(1000);
-                    if (cancellationTokenSource.IsCancellationRequested) break;
+                    for (int i = 0; i < 3; i++) { await Task.Delay(1000); if (cancellationTokenSource.IsCancellationRequested) break; }
                     if (this.EnableCache)
                     {
                         if (this.CacheFiles.TotalCacheInKB > this.MaximumCacheSizeInMB * 1024)
@@ -51,7 +46,7 @@ namespace Vlix.HttpServer
                 }
             });
         }
-        public string WWWDirectory { get; private set; }
+        public string WWWDirectory { get; private set; } = @"[ProgramDataDirectory]\Vlix\HTTPServer\www";
         public bool EnableCache { get; set; } = true;
         public int OnlyCacheItemsLessThenMB { get; set; }
         public int MaximumCacheSizeInMB { get; set; }

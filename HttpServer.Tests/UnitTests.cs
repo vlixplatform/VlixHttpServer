@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Vlix.HttpServer;
 using Xunit;
 using Xunit.Abstractions;
+using static Vlix.HttpServer.Redirect;
 
 namespace HttpServer.Tests
 {
@@ -24,7 +25,7 @@ namespace HttpServer.Tests
 
 
         //[Theory(Skip ="No Need")]        
-        [Theory]        
+        [Theory]
         [InlineData("/questions/9122708/unit-sharp.html", "C:\\www\\questions\\9122708\\unit-sharp.html", "C:\\www\\questions\\9122708",true)]                
         [InlineData("/questions/aaa/test.html", "C:\\www\\questions\\aaa\\test.html", "C:\\www\\questions\\aaa", true)]
         [InlineData("/questions/aaa/unit", "", "C:\\www\\questions\\aaa\\unit", true)]
@@ -63,7 +64,7 @@ namespace HttpServer.Tests
         [InlineData("/ss/../secret.txt", null, null, false )]      
         public void ParseAbsolutePath(string absolutePath, string xFileToRead, string xFileToReadDir, bool ErrorMsgIsNull)
         {
-            VlixHttpServer vlixHttpServer = new VlixHttpServer("C:\\www");
+            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer("C:\\www");
             output.WriteLine("absolutePath  = " + absolutePath);
             vlixHttpServer.TryParseAbsolutePath(absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg);
             output.WriteLine("fileToRead    = " + fileToRead);
@@ -74,11 +75,22 @@ namespace HttpServer.Tests
             Assert.Equal(ErrorMsgIsNull, errorMsg==null);
         }
 
+
+
+        //[Theory]
+        //[InlineData(new Redirect() { From = new RedirectFrom() { AnyHostName=false, HostNameWildCard=null, AnyPort=false, Port=80,AnyPath=true,PathWildCard=null}, To= new RedirectTo() { HTTPS=true,HostName=null,Port= } }, null, null, false)]
+        //public string Process(Redirect redirect, string requestURL, string redirectURL)
+        //{
+            
+        //}
+
+
+
         [Fact]
         public async void CacheTest()
         {
             string tempWWWPath = Path.Combine(Path.GetTempPath(),"www");
-            VlixHttpServer vlixHttpServer = new VlixHttpServer(tempWWWPath,80,443,true,10,10,true);
+            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer(tempWWWPath, 80,443,true,10,10,true);
             string LongText = "";
             for (int n2 = 0; n2 < 10000; n2++) LongText += Guid.NewGuid().ToString() + "<br />";
             for (int n =0;n<30;n++)

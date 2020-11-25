@@ -4,7 +4,7 @@ namespace  Vlix.HttpServer
 {
     public class CacheFiles : ConcurrentDictionary<string, HTTPCache>
     {
-        public double TotalCacheInKB = 0;
+        public double TotalCacheInKB { get; private set; } = 0;
         public new bool TryAdd(string key, HTTPCache hTTPCache)
         {
             if (base.TryAdd(key, hTTPCache))

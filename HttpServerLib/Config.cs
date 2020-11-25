@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using System.Collections.Generic;
 using System.Configuration;
 
 namespace Vlix.HttpServer
@@ -20,29 +22,51 @@ namespace Vlix.HttpServer
 
     public class Redirect
     {
+        public bool Enable { get; set; } = false;
         public RedirectFrom From { get; set; } = new RedirectFrom();
         public RedirectTo To { get; set; } = new RedirectTo();
+
+        public string Process(Scheme scheme, string host, int port, string path)
+        {
+            if (this.Enable)
+            {
+                bool portMatch = (this.From.AnyPort || (!this.From.AnyPort && (this.From.Port == port)));
+                bool hostMatch = (this.From.AnyHostName || (!this.From.AnyHostName && (this.From.GetHostWildCard().IsMatch(host))));
+                bool uRLMatch = (this.From.AnyPath || (!this.From.AnyHostName && (this.From.GetURLWildCard().IsMatch(path))));
+                if (portMatch && hostMatch && uRLMatch)
+                {
+                    string redirectScheme = (this.To.Scheme ?? scheme).ToString();
+                    string redirectHost = this.To.HostName ?? host;
+                    int redirectPort = this.To.Port ?? port;
+                    string redirectPath = this.To.Path ?? path;
+                    string redirectURL = redirectScheme + "://" + redirectHost + ":" + redirectPort + redirectPath;
+                    return redirectURL;
+                }
+            }
+            return null;
+        }
     }
 
     public class HttpToHttpsRedirect : Redirect
     {
         public HttpToHttpsRedirect()
         {
+            this.Enable = true;
             this.From = new RedirectFrom()
             {
                 AnyHostName = true,
                 HostNameWildCard = null,
                 AnyPort = false,
                 Port = 80,
-                URLWildCard = "*"
+                PathWildCard = "*"
             };
 
             this.To = new RedirectTo()
             {
+                Scheme = Scheme.https,
                 HostName = null,
                 Port = 443,
-                HTTPS = true,
-                RewriteURLTo = null
+                Path = null
             };
         }
     }
@@ -50,13 +74,12 @@ namespace Vlix.HttpServer
 
     public class RedirectFrom
     {
-        public bool AnyHostName { get; set; } = true;
+        public bool AnyHostName { get; set; } = false;
         public string HostNameWildCard { get; set; } = null;
-        public bool AnyPort { get; set; } = true;
+        public bool AnyPort { get; set; } = false;
         public int? Port { get; set; } = null;
-
-        public bool AnyURL { get; set; } = true;
-        public string URLWildCard { get; set; } = null;
+        public bool AnyPath { get; set; } = false;
+        public string PathWildCard { get; set; } = null;
 
         Wildcard hostWildCard = null;
         public Wildcard GetHostWildCard()
@@ -67,18 +90,19 @@ namespace Vlix.HttpServer
         Wildcard uRLWilCard = null;
         public Wildcard GetURLWildCard()
         {
-            if (uRLWilCard == null) uRLWilCard = new Wildcard(URLWildCard);
+            if (uRLWilCard == null) uRLWilCard = new Wildcard(PathWildCard);
             return uRLWilCard;
         }
-
-
     }
 
     public class RedirectTo
     {
+        [JsonConverter(typeof(StringEnumConverter))]
+        public Scheme? Scheme { get; set; } = null;
         public string HostName { get; set; } = null;
         public int? Port { get; set; } = null;
-        public bool? HTTPS { get; set; } = null;
-        public string RewriteURLTo { get; set; } = null;
+        public string Path { get; set; } = null;
     }
+
+    public enum Scheme { http, https }
 }

@@ -20,7 +20,7 @@
     <PackageIcon>vlixicon-128x128.png</PackageIcon>
     <PackageProjectUrl>https://github.com/vlixplatform/VlixHttpServer</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageTags>vlix, webserver, httpserver, http, server, staticfile</PackageTags>
+    <PackageTags>vlix, webserver, httpserver, http, server, staticfile, redirect, urlrewrite, reverseproxy, reverse, proxy, url, rewrite</PackageTags>
     <PackageReleaseNotes></PackageReleaseNotes>
     <RepositoryUrl>https://github.com/vlixplatform/VlixHttpServer</RepositoryUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -45,6 +45,9 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Configuration">

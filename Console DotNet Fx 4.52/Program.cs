@@ -49,7 +49,7 @@ namespace  Vlix.HttpServer
                 .WriteTo.File(Path.Combine(config.LogDirectory, "HTTPServer.log"), rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
-            VlixHttpServer vlixHttpServer = new VlixHttpServer((new CancellationTokenSource()).Token, config);
+            HttpServer vlixHttpServer = new HttpServer((new CancellationTokenSource()).Token, config);
             vlixHttpServer.OnErrorLog = (log) => Log.Error(log);
             vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
             vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);

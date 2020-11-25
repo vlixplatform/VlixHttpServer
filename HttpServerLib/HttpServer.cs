@@ -11,7 +11,7 @@ using System.Text;
 
 namespace  Vlix.HttpServer
 {
-    public class VlixHttpServer: StaticFileHTTPServer
+    public class HttpServer: StaticFileProcessor
     {
         public bool EnableHTTP { get; internal set; }
         public int HTTPPort { get; internal set; }
@@ -100,24 +100,24 @@ namespace  Vlix.HttpServer
         public Action<string> OnInfoLog { get; set; }
         public Action<HTTPStreamResult> OnHTTPStreamResult { get; set; }
 
-        public VlixHttpServer(string path, int httpPort = 80, int httpsPort = 443, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, int maximumCacheSizeInMB = 500,
+        public HttpServer(string path, int httpPort = 80, int httpsPort = 443, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, int maximumCacheSizeInMB = 500,
             bool allowLocalhostConnectionsOnly = false) : base(path, enableCache, onlyCacheItemsLessThenMB, maximumCacheSizeInMB)
         {
             CommonConstructor((new CancellationTokenSource()).Token, path, true, httpPort, true, httpsPort, enableCache, onlyCacheItemsLessThenMB, maximumCacheSizeInMB, allowLocalhostConnectionsOnly);
         }
 
-        public VlixHttpServer(CancellationToken cancellationToken, string path, int httpPort = 80, int httpsPort = 443, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, 
+        public HttpServer(CancellationToken cancellationToken, string path, int httpPort = 80, int httpsPort = 443, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, 
             int maximumCacheSizeInMB = 500, bool allowLocalhostConnectionsOnly = false) : base(path, enableCache, onlyCacheItemsLessThenMB, maximumCacheSizeInMB)
         {
             CommonConstructor(cancellationToken, path, true, httpPort, true, httpsPort, enableCache, onlyCacheItemsLessThenMB, maximumCacheSizeInMB, allowLocalhostConnectionsOnly);
         }
-        public VlixHttpServer(CancellationToken cancellationToken, HttpServerConfig httpServerConfig) : base(httpServerConfig.WWWDirectory, httpServerConfig.EnableCache, httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB)
+        public HttpServer(CancellationToken cancellationToken, HttpServerConfig httpServerConfig) : base(httpServerConfig.WWWDirectory, httpServerConfig.EnableCache, httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB)
         {
             CommonConstructor(cancellationToken, httpServerConfig.WWWDirectory, httpServerConfig.EnableHTTP, httpServerConfig.HTTPPort, httpServerConfig.EnableHTTPS, httpServerConfig.HTTPSPort, httpServerConfig.EnableCache, 
                 httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB, httpServerConfig.AllowLocalhostConnectionsOnly, httpServerConfig.Redirects);
         }
 
-        public VlixHttpServer(HttpServerConfig httpServerConfig) : base(httpServerConfig.WWWDirectory, httpServerConfig.EnableCache, httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB)
+        public HttpServer(HttpServerConfig httpServerConfig) : base(httpServerConfig.WWWDirectory, httpServerConfig.EnableCache, httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB)
         {
             CommonConstructor((new CancellationTokenSource()).Token, httpServerConfig.WWWDirectory, httpServerConfig.EnableHTTP, httpServerConfig.HTTPPort, httpServerConfig.EnableHTTPS, httpServerConfig.HTTPSPort, httpServerConfig.EnableCache, 
                 httpServerConfig.OnlyCacheItemsLessThenMB, httpServerConfig.MaximumCacheSizeInMB, httpServerConfig.AllowLocalhostConnectionsOnly, httpServerConfig.Redirects);
@@ -156,10 +156,11 @@ namespace  Vlix.HttpServer
                         try
                         {
                             string callerIP = context.Request.RemoteEndPoint.ToString();
-                            string absolutePath = context.Request.Url.AbsolutePath;
-                            int port = context.Request.Url.Port;
+                            string schemeStr = context.Request.Url.Scheme;
                             string host = context.Request.Url.Host;
-                            string http = context.Request.Url.Scheme;
+                            int port = context.Request.Url.Port;
+                            string absolutePath = context.Request.Url.AbsolutePath;
+                            if (string.IsNullOrWhiteSpace(absolutePath)) absolutePath = "/";
                             if (this.AllowLocalhostConnectionsOnly)
                             {
                                 if (!context.Request.IsLocal)
@@ -171,46 +172,28 @@ namespace  Vlix.HttpServer
                                 }
                             }
 
-                            //Process Redirect
+                            //Process Redirects
                             if (this.Redirects != null)
                             {
+                                int ruleNum = 0;
                                 foreach (Redirect redirect in this.Redirects)
                                 {
-                                    bool portMatch = (redirect.From.AnyPort || (!redirect.From.AnyPort && (redirect.From.Port == port)));
-                                    bool hostMatch = (redirect.From.AnyHostName || (!redirect.From.AnyHostName && (redirect.From.GetHostWildCard().IsMatch(host))));
-                                    bool uRLMatch = (redirect.From.AnyURL || (!redirect.From.AnyHostName && (redirect.From.GetURLWildCard().IsMatch(absolutePath))));
-                                    if (portMatch && hostMatch && uRLMatch)
+                                    ruleNum++;
+                                    Scheme scheme = Scheme.http;
+                                    if (string.Equals(schemeStr, "https", StringComparison.OrdinalIgnoreCase)) scheme = Scheme.https;
+                                    string redirectURL = redirect.Process(scheme, host, port, absolutePath);
+                                    if (redirectURL != null)
                                     {
-                                        string redirectURL = "";
-                                        if (redirect.To.HTTPS == null) redirectURL += http + ":\\";
-                                        else if (redirect.To.HTTPS == true) redirectURL += "https:\\"; else redirectURL += "http:\\";
-
-                                        if (redirect.To.HostName == null) redirectURL += host; else redirectURL += redirect.To.HostName;
-
-                                        if (port != 80 && port != 443) //33172
-                                        {
-                                            if (redirect.To.Port == null) redirectURL += ":" + port; else redirectURL += ":" + redirect.To.Port;
-                                        }
-                                        else //80
-                                        {
-                                            if (redirect.To.Port != null && redirect.To.Port != 80 && redirect.To.Port != 443) redirectURL += ":" + redirect.To.Port;
-                                        }
-                                        
-                                        if (redirect.To.RewriteURLTo == null) redirectURL += absolutePath;
-                                        else
-                                        {
-                                            
-                                        }
-
-
-
-                                        string msg = callerIP + " requested '" + absolutePath + "'. Blocked as caller is not local ('AllowLocalhostConnectionsOnly' is set to 'true')";
-
+                                        string msg = callerIP + " requested '" + absolutePath + "'. Redirected to '" + redirectURL +"' (Rule #" + ruleNum +")";
+                                        context.Response.Redirect(redirectURL);
+                                        context.Response.Close();
+                                        return;
                                     }
+                                    
                                 }
                             }
 
-
+                            //Process Request
                             HTTPStreamResult httpStreamResult = await this.ProcessRequest(callerIP, absolutePath);
                             this.OnHTTPStreamResult?.Invoke(httpStreamResult);
                             if (httpStreamResult.HttpStatusCode == HttpStatusCode.OK)

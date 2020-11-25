@@ -34,7 +34,7 @@ namespace  Vlix.HttpServer
             InitializeComponent();
         }
 
-        VlixHttpServer vlixHttpServer = null;
+        HttpServer vlixHttpServer = null;
         CancellationTokenSource cancellationTokenSource = null;
         protected override void OnStart(string[] args)
         {
@@ -71,7 +71,7 @@ namespace  Vlix.HttpServer
                     .WriteTo.File(Path.Combine(config.LogDirectory, "HTTPServer.log"), rollingInterval: RollingInterval.Day)
                     .CreateLogger();
 
-                VlixHttpServer vlixHttpServer = new VlixHttpServer(cancellationTokenSource.Token, config);
+                HttpServer vlixHttpServer = new HttpServer(cancellationTokenSource.Token, config);
                 vlixHttpServer.OnErrorLog = (log) => Log.Error(log);
                 vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
                 vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);

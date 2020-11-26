@@ -19,7 +19,6 @@ namespace  Vlix.HttpServer
         public int HTTPSPort { get; internal set; }
         public bool AllowLocalhostConnectionsOnly { get; set; } = false;
         public CancellationToken CancellationToken { get; internal set; }
-
         public List<Redirect> Redirects { get; set; } = null;
 
         #region MimeTypings
@@ -127,7 +126,7 @@ namespace  Vlix.HttpServer
             int maximumCacheSizeInMB = 500, bool allowLocalhostConnectionsOnly = false, List<Redirect> redirects = null)
         {
             if (path.Length < 1) throw new Exception("path cannot be empty!");
-            if (path.Substring(path.Length-1,1)=="\\") path = path.Substring(0, path.Length - 1);
+            if (path.EndsWith(Path.DirectorySeparatorChar)) path = path.Substring(0, path.Length - 1);
             this.CancellationToken = cancellationToken;
             this.EnableHTTP = EnableHTTP;
             this.HTTPPort = httpPort;

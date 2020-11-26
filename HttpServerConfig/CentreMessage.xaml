@@ -1,0 +1,67 @@
+﻿<UserControl x:Class="HttpServerConfig.CentreMessage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" Visibility="Hidden"
+             mc:Ignorable="d"  Loaded="UserControl_Loaded"
+             xmlns:local="clr-namespace:HttpServerConfig"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid>
+        <Grid.Resources>
+            <local:BoolTrueToVisibilityVisibleElseCollapsedConverter x:Key="BoolToVisibilityVisibleElseCollapsedConverter" />
+            <Storyboard x:Key="MessageProcess">
+                <DoubleAnimation Storyboard.TargetName="gdCenterMessage" Storyboard.TargetProperty="(Grid.Opacity)"
+                                 From="0.0" To="1.0" Duration="0:0:0.2" AutoReverse="True" RepeatBehavior="Forever"  />
+                <ObjectAnimationUsingKeyFrames BeginTime="0:0:0" Storyboard.TargetName="gdCenterMessage" Storyboard.TargetProperty="(UIElement.Visibility)">
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}"/>
+                </ObjectAnimationUsingKeyFrames>
+            </Storyboard>
+            <Storyboard x:Key="MessageError" Duration="0:0:2">
+                <DoubleAnimation Storyboard.TargetName="gdCenterMessage" Storyboard.TargetProperty="(Grid.Opacity)"
+                                 From="0.0" To="1.0" Duration="0:0:0.25" AutoReverse="True" RepeatBehavior="6"  />
+                <ObjectAnimationUsingKeyFrames BeginTime="0:0:0" Storyboard.TargetName="gdCenterMessage" Storyboard.TargetProperty="(UIElement.Visibility)">
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}"/>
+                    <DiscreteObjectKeyFrame KeyTime="0:0:2" Value="{x:Static Visibility.Hidden }"/>
+                </ObjectAnimationUsingKeyFrames>
+            </Storyboard>
+            <Storyboard x:Key="MessageSuccess" Duration="0:0:1">
+                <DoubleAnimation Storyboard.TargetName="gdCenterMessage" Storyboard.TargetProperty="(Grid.Opacity)" 
+                                 From="0.0" To="2.0" Duration="0:0:0.25" AutoReverse="True" RepeatBehavior="6"  />
+                <ObjectAnimationUsingKeyFrames BeginTime="0:0:0" Storyboard.TargetName="gdCenterMessage" Storyboard.TargetProperty="(UIElement.Visibility)">
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}"/>
+                    <DiscreteObjectKeyFrame KeyTime="0:0:2" Value="{x:Static Visibility.Hidden}"/>
+                </ObjectAnimationUsingKeyFrames>
+            </Storyboard>
+        </Grid.Resources>
+        
+        <Grid x:Name="gdCenterMessage" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Hidden" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+            </Grid.RowDefinitions>
+            <!--<TextBlock TextAlignment="Center" Grid.Row="0" x:Name="tbForDisplay" Text="Centre Message"
+                       FontSize="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=MessageFontSize}" 
+                       FontWeight="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=MessageFontWeighht}" />
+            <TextBlock TextAlignment="Center" Grid.Row="1" x:Name="tbSubForDisplay" Text="Centre Sub Message"
+                       Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=EnableSubMessage, Converter={StaticResource BoolToVisibilityVisibleElseCollapsedConverter}}"
+                       FontSize="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=SubMessageFontSize}" 
+                       FontWeight="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=SubMessageFontWeight}" />-->
+            
+            <TextBlock TextAlignment="Center" Grid.Row="0" x:Name="tbCenterMessage"
+                       FontSize="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=MessageFontSize}" 
+                       FontWeight="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=MessageFontWeight}" >
+            </TextBlock>
+            
+            <TextBlock TextAlignment="Center" Grid.Row="1" x:Name="tbSubCenterMessage" Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=EnableSubMessage, Converter={StaticResource BoolToVisibilityVisibleElseCollapsedConverter}}"
+                       FontSize="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=SubMessageFontSize}" 
+                       FontWeight="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=SubMessageFontWeight}" >
+            </TextBlock>
+        </Grid>
+        <TextBlock TextAlignment="Center" x:Name="tbDesignTime" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Green" 
+                       Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=ShowDesignTimeMessageProcess, Converter={StaticResource BoolToVisibilityVisibleElseCollapsedConverter}}"
+                       Text="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=MessageProcess}"
+                       FontSize="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=MessageFontSize}" 
+                       FontWeight="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=MessageFontWeight}" >
+        </TextBlock>
+    </Grid>
+</UserControl>

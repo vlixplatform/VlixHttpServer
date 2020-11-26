@@ -7,6 +7,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 
 namespace Vlix.HttpServer
 {
@@ -46,7 +47,7 @@ namespace Vlix.HttpServer
                 }
             });
         }
-        public string WWWDirectory { get; private set; } = @"[ProgramDataDirectory]\Vlix\HTTPServer\www";
+        public string WWWDirectory { get; private set; } = Path.Combine("[ProgramDataDirectory]","Vlix","HTTPServer","www");
         public bool EnableCache { get; set; } = true;
         public int OnlyCacheItemsLessThenMB { get; set; }
         public int MaximumCacheSizeInMB { get; set; }
@@ -142,9 +143,10 @@ namespace Vlix.HttpServer
                 {
                     foreach (string indexFile in DefaultDocuments)
                     {
-                        if (File.Exists(fileToReadDir + "\\" + indexFile))
+                        string temp = Path.Combine(fileToReadDir, indexFile);
+                        if (File.Exists(temp))
                         {
-                            fileToRead = fileToReadDir + "\\" + indexFile;
+                            fileToRead = temp;
                             fileExists = true;
                             break;
                         }
@@ -242,16 +244,20 @@ namespace Vlix.HttpServer
             if (!lastURLPortion.Contains(".")) //handles "/afolder"
             {
                 fileToRead = "";
-                string Temp = absolutePath.Replace('/', '\\');
-                fileToReadDir = this.WWWDirectory + System.IO.Path.GetDirectoryName(Temp + "\\");
-                if (fileToReadDir.EndsWith("\\")) fileToReadDir = fileToReadDir.Substring(0, fileToReadDir.Length - 1);
+                string Temp = absolutePath;
+                //if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) 
+                Temp = absolutePath.Replace('/', Path.DirectorySeparatorChar);
+                fileToReadDir = this.WWWDirectory + System.IO.Path.GetDirectoryName(Temp + Path.DirectorySeparatorChar);                
+                if (fileToReadDir.EndsWith(Path.DirectorySeparatorChar)) fileToReadDir = fileToReadDir.Substring(0, fileToReadDir.Length - 1);
             }
             else
             {
-                string Temp = absolutePath.Replace('/', '\\');
+                string Temp = absolutePath;
+                //if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) 
+                Temp = absolutePath.Replace('/', Path.DirectorySeparatorChar);
                 fileToReadDir = this.WWWDirectory + System.IO.Path.GetDirectoryName(Temp);
-                if (fileToReadDir.EndsWith("\\")) fileToReadDir = fileToReadDir.Substring(0, fileToReadDir.Length - 1);
-                fileToRead = fileToReadDir + "\\" + System.IO.Path.GetFileName(Temp);
+                if (fileToReadDir.EndsWith(Path.DirectorySeparatorChar)) fileToReadDir = fileToReadDir.Substring(0, fileToReadDir.Length - 1);
+                fileToRead = Path.Combine(fileToReadDir,Path.GetFileName(Temp));
             }
             return true;
         }

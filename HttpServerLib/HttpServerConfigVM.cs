@@ -10,10 +10,13 @@ using System.Text.RegularExpressions;
 using System.Text;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows.Input;
+using Prism.Commands;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Vlix.HttpServer
 {
-    public class HttpServerVM : INotifyPropertyChanged
+    public class HttpServerConfigVM : INotifyPropertyChanged
     {
         #region BOILER PLATE
         public event PropertyChangedEventHandler PropertyChanged;
@@ -29,17 +32,83 @@ namespace Vlix.HttpServer
             return true;
         }
         #endregion
-        string _WWWDirectory = @"[ProgramDataDirectory]\Vlix\HTTPServer\www"; public string WWWDirectory { get { return _WWWDirectory; } set { SetField(ref _WWWDirectory, value, "WWWDirectory"); } }
-        bool _EnableHTTP = true; public bool EnableHTTP { get { return _EnableHTTP; } set { SetField(ref _EnableHTTP, value, "EnableHTTP"); } }
+        HttpServerConfig configBeforeChange;
+        public HttpServerConfigVM()
+        {
+
+            this.Redirects.Add(new RedirectVM(new HttpToHttpsRedirect()));
+            this.Redirects.Add(new RedirectVM(new HttpToHttpsRedirect()));
+            this.Redirects.Add(new RedirectVM(new HttpToHttpsRedirect()));
+            this.SelectSSLCertVM = new SelectSSLCertVM(this);
+
+        }
+
+        public async Task LoadVM()
+        {
+            this.IsLoading = true;
+            await Task.Delay(500);
+            HttpServerConfig configBeforeChange = await Services.LoadHttpServerConfig();
+            this.AllowLocalhostConnectionsOnly = configBeforeChange.AllowLocalhostConnectionsOnly;
+            this.WWWDirectory = configBeforeChange.WWWDirectory;
+            this.EnableHTTP = configBeforeChange.EnableHTTP;
+            this.HTTPPort = configBeforeChange.HTTPPort;
+            this.EnableHTTPS = configBeforeChange.EnableHTTPS;
+            this.HTTPSPort = configBeforeChange.HTTPSPort;
+            this.EnableCache = configBeforeChange.EnableCache;
+            this.OnlyCacheItemsLessThenMB = configBeforeChange.OnlyCacheItemsLessThenMB;
+            this.MaximumCacheSizeInMB = configBeforeChange.MaximumCacheSizeInMB;
+            await Task.Delay(500);
+            this.IsLoading = false;
+        }
+        bool _IsLoading = false; public bool IsLoading { get { return _IsLoading; } set { SetField(ref _IsLoading, value, "IsLoading"); } }
+        bool _ClientIsLocal = true; public bool ClientIsLocal { get { return _ClientIsLocal; } set { SetField(ref _ClientIsLocal, value, "ClientIsLocal"); } }
+        string _SSLCertName = null; public string SSLCertName { get { return _SSLCertName; } set { SetField(ref _SSLCertName, value, "SSLCertName"); } }
+        string _SSLCertThumbPrint = null; public string SSLCertThumbPrint { get { return _SSLCertThumbPrint; } set { SetField(ref _SSLCertThumbPrint, value, "SSLCertThumbPrint"); } }
+        string _WWWDirectory = Path.Combine("[ProgramDataDirectory]","Vlix","HTTPServer","www"); public string WWWDirectory { get { return _WWWDirectory; } set { SetField(ref _WWWDirectory, value, "WWWDirectory"); } }
+        bool _EnableHTTP = true; public bool EnableHTTP { get { return _EnableHTTP; } set { SetField(ref _EnableHTTP, value, "EnableHTTP"); } }        
         int _HTTPPort = 80; public int HTTPPort { get { return _HTTPPort; } set { SetField(ref _HTTPPort, value, "HTTPPort"); } }
         bool _EnableHTTPS = true; public bool EnableHTTPS { get { return _EnableHTTPS; } set { SetField(ref _EnableHTTPS, value, "EnableHTTPS"); } }
         int _HTTPSPort = 443; public int HTTPSPort { get { return _HTTPSPort; } set { SetField(ref _HTTPSPort, value, "HTTPSPort"); } }        
         bool _AllowLocalhostConnectionsOnly = false; public bool AllowLocalhostConnectionsOnly { get { return _AllowLocalhostConnectionsOnly; } set { SetField(ref _AllowLocalhostConnectionsOnly, value, "AllowLocalhostConnectionsOnly"); } }
+        bool _ShowAdvance = true; public bool ShowAdvance { get { return _ShowAdvance; } set { SetField(ref _ShowAdvance, value, "ShowAdvance"); } }
+        bool _ShowSelectSSLCertWindow = false; public bool ShowSelectSSLCertWindow { get { return _ShowSelectSSLCertWindow; } set { SetField(ref _ShowSelectSSLCertWindow, value, "ShowSelectSSLCertWindow"); } }
         bool _EnableCache = false; public bool EnableCache { get { return _EnableCache; } set { SetField(ref _EnableCache, value, "EnableCache"); } }
         int _OnlyCacheItemsLessThenMB = 10; public int OnlyCacheItemsLessThenMB { get { return _OnlyCacheItemsLessThenMB; } set { SetField(ref _OnlyCacheItemsLessThenMB, value, "OnlyCacheItemsLessThenMB"); } }
         int _MaximumCacheSizeInMB = 250; public int MaximumCacheSizeInMB { get { return _MaximumCacheSizeInMB; } set { SetField(ref _MaximumCacheSizeInMB, value, "MaximumCacheSizeInMB"); } }
-        int _TotalCacheSize = 10; public int TotalCacheSize { get { return _TotalCacheSize; } set { SetField(ref _TotalCacheSize, value, "TotalCacheSize"); } }
+        SelectSSLCertVM _SelectSSLCertVM = null; public SelectSSLCertVM SelectSSLCertVM { get { return _SelectSSLCertVM; } set { SetField(ref _SelectSSLCertVM, value, "SelectSSLCertVM"); } }
         public ObservableCollection<RedirectVM> Redirects { get; set; } = new ObservableCollection<RedirectVM>();
+        public ICommand ShowAdvanceClickCommand { get { return new DelegateCommand<object>((p) => this.ShowAdvance = true, (p) => true);}}
+        public ICommand HideAdvanceClickCommand { get { return new DelegateCommand<object>((p) => this.ShowAdvance = false, (p) => true);}}
+        public ICommand RefreshClickCommand { get { return new DelegateCommand<object>(async (p) => await LoadVM(), (p) => true);}}
+        public ICommand SelectSSLCertClickCommand { get { return new DelegateCommand<object>((p) => this.ShowSelectSSLCertWindow = true, (p) => true);}}
+        public ICommand OpenWWWDirectoryClickCommand
+        {
+            get
+            {
+                return new DelegateCommand<object>((p) =>
+                {
+                    var k = 1;
+
+                }, (p) => true);
+            }
+        }
+        public ICommand SaveAndApplyClickCommand
+        {
+            get { return new DelegateCommand<object>((p)=> 
+            {
+                var k = 1;
+            
+            }, (p)=> true); }
+        }
+        public ICommand AddRedirectCommand
+        {
+            get
+            {
+
+               
+                return new DelegateCommand<object>((c) => this.Redirects.Add(new RedirectVM()), (c) => true);
+            }
+        }
     }
 
 

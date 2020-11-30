@@ -36,9 +36,9 @@ namespace Vlix.HttpServer
         public HttpServerConfigVM()
         {
 
-            this.Redirects.Add(new RedirectVM(new HttpToHttpsRedirect()));
-            this.Redirects.Add(new RedirectVM(new HttpToHttpsRedirect()));
-            this.Redirects.Add(new RedirectVM(new HttpToHttpsRedirect()));
+            this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule()));
+            this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule()));
+            this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule()));
             this.SelectSSLCertVM = new SelectSSLCertVM(this);
 
         }
@@ -76,7 +76,7 @@ namespace Vlix.HttpServer
         int _OnlyCacheItemsLessThenMB = 10; public int OnlyCacheItemsLessThenMB { get { return _OnlyCacheItemsLessThenMB; } set { SetField(ref _OnlyCacheItemsLessThenMB, value, "OnlyCacheItemsLessThenMB"); } }
         int _MaximumCacheSizeInMB = 250; public int MaximumCacheSizeInMB { get { return _MaximumCacheSizeInMB; } set { SetField(ref _MaximumCacheSizeInMB, value, "MaximumCacheSizeInMB"); } }
         SelectSSLCertVM _SelectSSLCertVM = null; public SelectSSLCertVM SelectSSLCertVM { get { return _SelectSSLCertVM; } set { SetField(ref _SelectSSLCertVM, value, "SelectSSLCertVM"); } }
-        public ObservableCollection<RedirectVM> Redirects { get; set; } = new ObservableCollection<RedirectVM>();
+        public ObservableCollection<RuleVM> Rules { get; set; } = new ObservableCollection<RuleVM>();
         public ICommand ShowAdvanceClickCommand { get { return new DelegateCommand<object>((p) => this.ShowAdvance = true, (p) => true);}}
         public ICommand HideAdvanceClickCommand { get { return new DelegateCommand<object>((p) => this.ShowAdvance = false, (p) => true);}}
         public ICommand RefreshClickCommand { get { return new DelegateCommand<object>(async (p) => await LoadVM(), (p) => true);}}
@@ -104,15 +104,13 @@ namespace Vlix.HttpServer
         {
             get
             {
-
-               
-                return new DelegateCommand<object>((c) => this.Redirects.Add(new RedirectVM()), (c) => true);
+                return new DelegateCommand<object>((c) => this.Rules.Add(new RuleVM()), (c) => true);
             }
         }
     }
 
 
-    public class RedirectVM : INotifyPropertyChanged
+    public class RuleVM : INotifyPropertyChanged
     {
         #region BOILER PLATE
         public event PropertyChangedEventHandler PropertyChanged;
@@ -128,27 +126,37 @@ namespace Vlix.HttpServer
             return true;
         }
         #endregion
-        public RedirectVM() { }
-        public RedirectVM(Redirect redirect) 
+        public RuleVM() { }
+        public RuleVM(Rule rule) 
         {
-            this.Enable = redirect.Enable;
-            this.From.AnyHostName = redirect.From.AnyHostName;
-            this.From.HostNameWildCard = redirect.From.HostNameWildCard;
-            this.From.AnyPort = redirect.From.AnyPort;
-            this.From.Port = redirect.From.Port;
-            this.From.AnyPath = redirect.From.AnyPath;
-            this.From.PathWildCard = redirect.From.PathWildCard;
-            this.To.Scheme = redirect.To.Scheme;
-            this.To.HostName = redirect.To.HostName;
-            this.To.Port = redirect.To.Port;
-            this.To.Path = redirect.To.Path;            
+            this.Enable = rule.Enable;
+            this.RequestMatch.AnyHostName = rule.RequestMatch.AnyHostName;
+            this.RequestMatch.HostNameWildCard = rule.RequestMatch.HostNameMatch;
+            this.RequestMatch.HostNameMatchType = rule.RequestMatch.HostNameMatchType;
+            this.RequestMatch.AnyPort = rule.RequestMatch.AnyPort;
+            this.RequestMatch.Port = rule.RequestMatch.Port;
+            this.RequestMatch.AnyPath = rule.RequestMatch.AnyPath;
+            this.RequestMatch.PathWildCard = rule.RequestMatch.PathMatch;
+            this.RequestMatch.PathMatchType = rule.RequestMatch.PathMatchType;
+            this.ResponseAction.ActionName = rule.ResponseAction.ActionName;
+            if (rule.ResponseAction is RedirectAction redirectAction)
+            {
+                this.ResponseAction.Scheme = redirectAction.Scheme;
+                this.ResponseAction.HostName = redirectAction.HostName;
+                this.ResponseAction.Port = redirectAction.Port;
+                this.ResponseAction.Path = redirectAction.Path;
+            }
+            if (rule.ResponseAction is AlternativeWWWDirectoryAction alternativeWWWDirectoryAction)
+            {
+                this.ResponseAction.AlternativeWWWDirectory = alternativeWWWDirectoryAction.AlternativeWWWDirectory;
+            }            
         }
         bool _Enable = false; public bool Enable { get { return _Enable; } set { SetField(ref _Enable, value, "Enable"); } }
-        RedirectFrom _From = new RedirectFrom(); public RedirectFrom From { get { return _From; } set { SetField(ref _From, value, "From"); } }
-        RedirectTo _To = new RedirectTo(); public RedirectTo To { get { return _To; } set { SetField(ref _To, value, "To"); } }
+        RequestMatchVM _RequestMatchVM = new RequestMatchVM(); public RequestMatchVM RequestMatch { get { return _RequestMatchVM; } set { SetField(ref _RequestMatchVM, value, "RequestMatch"); } }
+        ResponseActionVM _ResponseActionVM = new ResponseActionVM(); public ResponseActionVM ResponseAction { get { return _ResponseActionVM; } set { SetField(ref _ResponseActionVM, value, "ResponseAction"); } }
     }
 
-    public class RedirectFromVM : INotifyPropertyChanged
+    public class RequestMatchVM : INotifyPropertyChanged
     {
         #region BOILER PLATE
         public event PropertyChangedEventHandler PropertyChanged;
@@ -165,10 +173,12 @@ namespace Vlix.HttpServer
         }
         #endregion
         bool _AnyHostName = false; public bool AnyHostName { get { return _AnyHostName; } set { SetField(ref _AnyHostName, value, "AnyHostName"); } }
+        MatchType _HostNameMatchType = MatchType.Wildcard; public MatchType HostNameMatchType { get { return _HostNameMatchType; } set { SetField(ref _HostNameMatchType, value, "HostNameMatchType"); } }
         string _HostNameWildCard = null; public string HostNameWildCard { get { return _HostNameWildCard; } set { SetField(ref _HostNameWildCard, value, "HostNameWildCard"); } }
         bool _AnyPort = false; public bool AnyPort { get { return _AnyPort; } set { SetField(ref _AnyPort, value, "AnyPort"); } }
         int? _Port = null; public int? Port { get { return _Port; } set { SetField(ref _Port, value, "Port"); } }
         bool _AnyPath = false; public bool AnyPath { get { return _AnyPath; } set { SetField(ref _AnyPath, value, "AnyPath"); } }
+        MatchType _PathMatchType = MatchType.Wildcard; public MatchType PathMatchType { get { return _PathMatchType; } set { SetField(ref _PathMatchType, value, "PathMatchType"); } }
         string _PathWildCard = null; public string PathWildCard { get { return _PathWildCard; } set { SetField(ref _PathWildCard, value, "PathWildCard"); } }
 
         Wildcard hostWildCard = null;
@@ -186,7 +196,7 @@ namespace Vlix.HttpServer
     }
 
 
-    public class RedirectToVM: INotifyPropertyChanged
+    public class ResponseActionVM: INotifyPropertyChanged
     {
         #region BOILER PLATE
         public event PropertyChangedEventHandler PropertyChanged;
@@ -202,9 +212,12 @@ namespace Vlix.HttpServer
             return true;
         }
         #endregion
+        
+        string _ActionName = null; public string ActionName { get { return _ActionName; } set { SetField(ref _ActionName, value, "ActionName"); } }
         Scheme? _Scheme = null; public Scheme? Scheme { get { return _Scheme; } set { SetField(ref _Scheme, value, "Scheme"); } }
         string _HostName = null; public string HostName { get { return _HostName; } set { SetField(ref _HostName, value, "HostName"); } }
         int? _Port = null; public int? Port { get { return _Port; } set { SetField(ref _Port, value, "Port"); } }
         string _Path = null; public string Path { get { return _Path; } set { SetField(ref _Path, value, "Path"); } }
+        string _AlternativeWWWDirectory = null; public string AlternativeWWWDirectory { get { return _AlternativeWWWDirectory; } set { SetField(ref _AlternativeWWWDirectory, value, "AlternativeWWWDirectory"); } }
     }
 }

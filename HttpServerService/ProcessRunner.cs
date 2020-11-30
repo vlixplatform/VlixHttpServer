@@ -112,7 +112,7 @@ namespace  Vlix.HttpServer
 
         private void Process_Exited(object sender, EventArgs e)
         {
-            this.OnExit.Invoke();
+            this.OnExit?.Invoke();
             this.IsRunning = false;
         }
 

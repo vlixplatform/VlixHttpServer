@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Vlix.HttpServer;
 using Xunit;
 using Xunit.Abstractions;
-using static Vlix.HttpServer.Redirect;
+using static Vlix.HttpServer.Rule;
 
 namespace HttpServer.Tests
 {
@@ -66,7 +66,7 @@ namespace HttpServer.Tests
         {
             Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer("C:\\www");
             output.WriteLine("absolutePath  = " + absolutePath);
-            vlixHttpServer.TryParseAbsolutePath(absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg);
+            vlixHttpServer.TryParseAbsolutePath(vlixHttpServer.Config.WWWDirectory, absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg);
             output.WriteLine("fileToRead    = " + fileToRead);
             output.WriteLine("fileToReadDir = " + fileToReadDir);
             output.WriteLine("errorMsg      = " + errorMsg);
@@ -112,7 +112,7 @@ namespace HttpServer.Tests
                     Assert.True(!hTTPStreamResult.ObtainedFromCache);
                     await httpClient.GetAsync("http://localhost/test" + n + ".html");
                     Assert.True(hTTPStreamResult.ObtainedFromCache);
-                    if (vlixHttpServer.CacheFiles.TotalCacheInKB < vlixHttpServer.MaximumCacheSizeInMB * 1024)
+                    if (vlixHttpServer.CacheFiles.TotalCacheInKB < vlixHttpServer.Config.MaximumCacheSizeInMB * 1024)
                     {
                         Assert.True(vlixHttpServer.CacheFiles.TotalCacheInKB > prevTotalCacheInKB);
                         if (vlixHttpServer.CacheFiles.TotalCacheInKB > prevTotalCacheInKB) prevTotalCacheInKB = vlixHttpServer.CacheFiles.TotalCacheInKB;
@@ -120,7 +120,7 @@ namespace HttpServer.Tests
                     else
                     {
                         await Task.Delay(6000); //Wait for Cache to Clean
-                        Assert.True(vlixHttpServer.CacheFiles.TotalCacheInKB < vlixHttpServer.MaximumCacheSizeInMB *1024); //The Cache Cleaned must be lower than Max Cache
+                        Assert.True(vlixHttpServer.CacheFiles.TotalCacheInKB < vlixHttpServer.Config.MaximumCacheSizeInMB *1024); //The Cache Cleaned must be lower than Max Cache
                     }
                 }
             }

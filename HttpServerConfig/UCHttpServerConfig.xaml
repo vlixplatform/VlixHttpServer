@@ -55,7 +55,7 @@
                                                     <StackPanel>
                                                         <DockPanel>
                                                             <local:OPButton DockPanel.Dock="Right" Command="{Binding SelectSSLCertClickCommand}" Width="70" IconLocation="Left" Height="21" Grid.Column="1" Icon="ic_launch">Select</local:OPButton>
-                                                            <local:OPTextBox PlaceHolder="Certificate Thumb Print" DockPanel.Dock="Left" Text="{Binding SSLCertThumbPrint}" Height="20"></local:OPTextBox>
+                                                            <local:OPTextBox PlaceHolder="Certificate Subject Name" DockPanel.Dock="Left" Text="{Binding SSLCertSubjectName}" Height="20"></local:OPTextBox>
                                                         </DockPanel>
                                                         <TextBlock FontStyle="Italic" FontSize="11" Foreground="#888" Text="{Binding SSLCertName}"></TextBlock>
                                                     </StackPanel>

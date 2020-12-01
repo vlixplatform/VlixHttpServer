@@ -86,7 +86,7 @@ namespace HttpServer.Tests
 
 
 
-        [Fact]
+        [Fact(Skip = "Too long")]
         public async void CacheTest()
         {
             string tempWWWPath = Path.Combine(Path.GetTempPath(),"www");
@@ -102,7 +102,7 @@ namespace HttpServer.Tests
             }
             HTTPStreamResult hTTPStreamResult = null;
             vlixHttpServer.OnHTTPStreamResult = (sR) => hTTPStreamResult = sR;
-            vlixHttpServer.Start();
+            await vlixHttpServer.StartAsync();
             double prevTotalCacheInKB = vlixHttpServer.CacheFiles.TotalCacheInKB;
             using (var httpClient = new HttpClient())
             {

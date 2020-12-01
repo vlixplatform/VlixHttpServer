@@ -62,8 +62,9 @@ namespace Vlix.HttpServer
         }
         bool _IsLoading = false; public bool IsLoading { get { return _IsLoading; } set { SetField(ref _IsLoading, value, "IsLoading"); } }
         bool _ClientIsLocal = true; public bool ClientIsLocal { get { return _ClientIsLocal; } set { SetField(ref _ClientIsLocal, value, "ClientIsLocal"); } }
-        string _SSLCertName = null; public string SSLCertName { get { return _SSLCertName; } set { SetField(ref _SSLCertName, value, "SSLCertName"); } }
-        string _SSLCertThumbPrint = null; public string SSLCertThumbPrint { get { return _SSLCertThumbPrint; } set { SetField(ref _SSLCertThumbPrint, value, "SSLCertThumbPrint"); } }
+        string _SSLCertSubjectName = null; public string SSLCertSubjectName { get { return _SSLCertSubjectName; } set { SetField(ref _SSLCertSubjectName, value, "SSLCertSubjectName"); } }
+        StoreName _SSLCertStoreName = StoreName.My; public StoreName SSLCertStoreName { get { return _SSLCertStoreName; } set { SetField(ref _SSLCertStoreName, value, "SSLCertStoreName"); } }
+        public ObservableCollection<string> SubjectAlternativeNames { get; set; } = new ObservableCollection<string>();
         string _WWWDirectory = Path.Combine("[ProgramDataDirectory]","Vlix","HTTPServer","www"); public string WWWDirectory { get { return _WWWDirectory; } set { SetField(ref _WWWDirectory, value, "WWWDirectory"); } }
         bool _EnableHTTP = true; public bool EnableHTTP { get { return _EnableHTTP; } set { SetField(ref _EnableHTTP, value, "EnableHTTP"); } }        
         int _HTTPPort = 80; public int HTTPPort { get { return _HTTPPort; } set { SetField(ref _HTTPPort, value, "HTTPPort"); } }

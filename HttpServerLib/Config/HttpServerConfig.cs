@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Vlix.HttpServer
 {
@@ -18,8 +19,11 @@ namespace Vlix.HttpServer
         [JsonProperty(Order = 4)]
         public int HTTPSPort { get; set; } = 443;
         [JsonProperty(Order = 5)]
-        public string SSLThumbPrint { get; set; } = null;
+        public string SSLCertificateSubjectName { get; set; } = null;
         [JsonProperty(Order = 10)]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public StoreName SSLCertificateStoreName { get; set; } = StoreName.My;
+        [JsonProperty(Order = 11)]
         public bool AllowLocalhostConnectionsOnly { get; set; } = false;
         [JsonProperty(Order = 11)]
         public string LogDirectory { get; set; } = Path.Combine("[ProgramDataDirectory]", "Vlix", "HTTPServer", "Logs");
@@ -62,7 +66,8 @@ namespace Vlix.HttpServer
             this.HTTPPort = config.HTTPPort;
             this.EnableHTTPS = config.EnableHTTPS;
             this.HTTPSPort = config.HTTPSPort;
-            this.SSLThumbPrint = config.SSLThumbPrint;
+            this.SSLCertificateSubjectName = config.SSLCertificateSubjectName;
+            this.SSLCertificateStoreName = config.SSLCertificateStoreName;
             this.LogDirectory = config.LogDirectory;
             this.MaximumCacheSizeInMB = config.MaximumCacheSizeInMB;
             this.OnlyCacheItemsLessThenMB = config.OnlyCacheItemsLessThenMB;

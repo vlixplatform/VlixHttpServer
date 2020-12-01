@@ -94,5 +94,12 @@ namespace  Vlix.HttpServer
             }
         }
 
+        public static string RemoveAllNewLines(this string MultipleLinesText)
+        {
+            MultipleLinesText = MultipleLinesText.Replace('\r', ' ');
+            MultipleLinesText = MultipleLinesText.Replace("\n", "");
+            return MultipleLinesText;
+        }
+
     }
 }

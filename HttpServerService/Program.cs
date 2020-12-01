@@ -36,7 +36,7 @@ namespace  Vlix.HttpServer
 
         HttpServer vlixHttpServer = null;
         CancellationTokenSource cancellationTokenSource = null;
-        protected override void OnStart(string[] args)
+        protected override async void OnStart(string[] args)
         {
             cancellationTokenSource = new CancellationTokenSource();
             HttpServerConfig config = new HttpServerConfig();
@@ -75,7 +75,7 @@ namespace  Vlix.HttpServer
                 vlixHttpServer.OnErrorLog = (log) => Log.Error(log);
                 vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
                 vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);
-                vlixHttpServer.Start();
+                await vlixHttpServer.StartAsync();
             }
             catch (Exception ex)
             {

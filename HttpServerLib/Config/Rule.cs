@@ -69,5 +69,23 @@ namespace Vlix.HttpServer
         }
     }
 
-    
+    public class SimpleHostNameRedirectRule : Rule
+    {
+        public SimpleHostNameRedirectRule(string hostNameMatch, string hostNameRedirect)
+        {
+            this.Enable = true;
+            this.RequestMatch = new RequestMatch()
+            {
+                AnyHostName = false,
+                HostNameMatch = hostNameMatch,
+                HostNameMatchType = MatchType.Wildcard,
+                AnyPort = true,
+                AnyPath = true
+            };
+            this.ResponseAction = new RedirectAction()
+            {
+                HostName = hostNameRedirect,
+            };
+        }
+    }
 }

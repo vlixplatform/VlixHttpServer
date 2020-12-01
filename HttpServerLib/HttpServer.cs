@@ -152,13 +152,15 @@ namespace  Vlix.HttpServer
         }
      
      
-        public void Start()
+        public async Task StartAsync()
         {
             this.OnInfoLog?.Invoke("Starting Vlix HTTP Server...");
+            await Services.TryBindSSLCertToPort(443, this.Config.SSLCertificateSubjectName, this.Config.SSLCertificateStoreName, (log) => this.OnInfoLog?.Invoke(log), (log) => this.OnErrorLog?.Invoke(log)); //Vlix Platform
+
             _listener = new HttpListener();
+            
             if (this.Config.EnableHTTP) _listener.Prefixes.Add("http://*:" + this.Config.HTTPPort.ToString() + "/");
             if (this.Config.EnableHTTPS) _listener.Prefixes.Add("https://*:" + this.Config.HTTPSPort.ToString() + "/");
-            _listener.Start();
             if (!this.Config.EnableHTTP && !this.Config.EnableHTTPS)
             {
                 this.OnInfoLog?.Invoke("Both HTTP (Port " + this.Config.HTTPPort + ") and HTTPS (Port " + this.Config.HTTPSPort + ") is disabled");
@@ -167,6 +169,7 @@ namespace  Vlix.HttpServer
             if (this.Config.EnableHTTP && !this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPPort + "(HTTP), Directory = '" + this.Config.WWWDirectory + "'");
             if (!this.Config.EnableHTTP && this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPSPort + "(HTTPS), Directory = '" + this.Config.WWWDirectory + "'");
             if (this.Config.EnableHTTP && this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPPort + "(HTTP) and " + this.Config.HTTPSPort + "(HTTPS), Directory = '" + this.Config.WWWDirectory + "'");
+            _listener.Start();
             _listener.BeginGetContext(OnContext, null); //The thread stops here waiting for content to come
             this.OnInfoLog?.Invoke("Vlix HTTP Server Started!");
         }

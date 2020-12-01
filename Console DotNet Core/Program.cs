@@ -6,20 +6,25 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Vlix.HttpServer
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            HttpServerConfig config = new HttpServerConfig();
+            HttpServerConfig config = new HttpServerConfig() { SSLCertificateSubjectName = "CN=vlixplatform.com" };
+            config.Rules.Add(new SimpleHostNameRedirectRule("*.vlixplatform.com", "vlixplatform.com"));
             config.Rules.Add(new HttpToHttpsRedirectRule());
-            config.Rules.Add(new Rule() 
-            {
-                RequestMatch = new RequestMatch() { AnyPath= false, PathMatch = "/test.html" },
-                ResponseAction = new DenyAction()
-            });
+
+            //config.Rules.Add(new Rule()
+            //{
+            //    RequestMatch = new RequestMatch() { AnyPath = false, PathMatch = "/test.html" },
+            //    ResponseAction = new DenyAction()
+            //});
+
+
             config.SaveConfigFile();
             config.LoadConfigFile();            
             string[] myFiles = Directory.GetFiles(config.WWWDirectory);
@@ -30,12 +35,18 @@ namespace Vlix.HttpServer
                 .WriteTo.Console()
                 .WriteTo.File(Path.Combine(config.LogDirectory, "HTTPServer.log"), rollingInterval: RollingInterval.Day)
                 .CreateLogger();
+ 
+
+
+
             HttpServer vlixHttpServer = new HttpServer((new CancellationTokenSource()).Token, config);
             vlixHttpServer.OnErrorLog = (log) => Log.Error(log);
             vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
             vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);
-            vlixHttpServer.Start();
+            await vlixHttpServer.StartAsync();
             Console.ReadKey();
         }
     }
+
+    
 }

@@ -13,7 +13,7 @@ namespace  Vlix.HttpServer
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             HttpServerConfig config = new HttpServerConfig();
             config.LoadConfigFile();
@@ -32,7 +32,7 @@ namespace  Vlix.HttpServer
             vlixHttpServer.OnErrorLog = (log) => Log.Error(log);
             vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
             vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);
-            vlixHttpServer.Start();
+            await vlixHttpServer.StartAsync();
         }
     }
 }

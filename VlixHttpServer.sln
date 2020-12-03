@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServerConfigUI", "HttpS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServerConfig", "HttpServerConfig\HttpServerConfig.csproj", "{72DE2F58-FA8E-4FE3-A385-6BA88357F4AF}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpServerLib.WPF", "HttpServerLib.WPF\HttpServerLib.WPF.csproj", "{9B941B0F-A852-4541-BE44-6C3278569297}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,6 +69,10 @@ Global
 		{72DE2F58-FA8E-4FE3-A385-6BA88357F4AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72DE2F58-FA8E-4FE3-A385-6BA88357F4AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72DE2F58-FA8E-4FE3-A385-6BA88357F4AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B941B0F-A852-4541-BE44-6C3278569297}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B941B0F-A852-4541-BE44-6C3278569297}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B941B0F-A852-4541-BE44-6C3278569297}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B941B0F-A852-4541-BE44-6C3278569297}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -25,11 +25,13 @@ namespace HttpServerConfig
         {
             InitializeComponent();
         }
-
         private void opfSelectSSLCert_OnClose(object sender, RoutedEventArgs e)
         {
             ((HttpServerConfigVM)this.DataContext).ShowSelectSSLCertWindow = false;
         }
-
+        private void opbNewRule_Click(object sender, RoutedEventArgs e)
+        {
+            svRules.ScrollToBottom();
+        }
     }
 }

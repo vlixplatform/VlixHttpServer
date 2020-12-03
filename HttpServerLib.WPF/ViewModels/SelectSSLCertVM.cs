@@ -56,6 +56,14 @@ namespace Vlix.HttpServer
         public ObservableCollection<SSLCertVM> SSLCerts { get; set; } = new ObservableCollection<SSLCertVM>();
 
 
+        public ICommand StoreRefreshClickCommand
+        {
+            get
+            {
+                return new DelegateCommand<object>(async (c) => await LoadVM(), (c) => true);
+            }
+        }
+
         //TODO
         //Import Nuget Package CERTES
         // https://github.com/fszlin/certes
@@ -99,7 +107,11 @@ namespace Vlix.HttpServer
                 {
                     AsnEncodedData data = new AsnEncodedData(extension.Oid, extension.RawData);
                     string[] sANs = data.Format(true).Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var sAN in sANs) this.SubjectAlternativeNames.Add(sAN);
+                    foreach (var sAN in sANs)
+                    {
+                        var sANOnly = sAN.ToFirstRegex("(?<=Name=)[^,]*");
+                        if (!string.IsNullOrWhiteSpace(sANOnly)) this.SubjectAlternativeNames.Add(sANOnly);
+                    }
                     break;
                 }              
             }
@@ -120,11 +132,14 @@ namespace Vlix.HttpServer
         { 
             this.ParentVM.SelectedSSLCert = this;
             this.ParentVM.ParentVM.ShowSelectSSLCertWindow = false;
-            this.ParentVM.ParentVM.SSLCertSubjectName = this.Subject;
-            this.ParentVM.ParentVM.SSLCertStoreName = this.StoreName;
-            this.ParentVM.ParentVM.SubjectAlternativeNames = this.SubjectAlternativeNames;
+            this.ParentVM.ParentVM.SSLCertificateSubjectName = this.Subject;
+            this.ParentVM.ParentVM.SSLCertificateStoreName = this.StoreName;
+            this.ParentVM.ParentVM.SubjectAlternativeNames.Clear();
+            foreach (var s in this.SubjectAlternativeNames) this.ParentVM.ParentVM.SubjectAlternativeNames.Add(s);
 
         }, (c) => true); } }
+
+        
     }
 
 }

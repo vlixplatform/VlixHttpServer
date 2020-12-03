@@ -11,8 +11,6 @@ namespace Vlix.HttpServer
 
     public interface IReponseAction
     {
-        [JsonIgnore]
-        string ActionName { get; }
         Task<ProcessResult> ProcessAsync(string callerIP,Scheme scheme, string host, int port, string path, HttpListenerContext context, HttpServer parent);
     }
 
@@ -26,27 +24,30 @@ namespace Vlix.HttpServer
 
     public class DenyAction : IReponseAction
     {
-        public string ActionName { get { return "Deny"; } }
         public Task<ProcessResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, HttpListenerContext context, HttpServer parent) { return Task.FromResult(new ProcessResult() { Message="Request denied!" });}
     }
 
+
     public class RedirectAction : IReponseAction
     {
-        public string ActionName { get { return "Redirect"; } }
 
         [JsonConverter(typeof(StringEnumConverter))]
+        public bool RedirectScheme { get; set; } = false;
         public Scheme? Scheme { get; set; } = null;
+        public bool RedirectHostName { get; set; } = false;
         public string HostName { get; set; } = null;
+        public bool RedirectPort { get; set; } = false;
         public int? Port { get; set; } = null;
+        public bool RedirectPath { get; set; } = false;
         public string Path { get; set; } = null;
 
         public Task<ProcessResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, HttpListenerContext context, HttpServer parent)
         {
-            string redirectScheme = (this.Scheme ?? scheme).ToString();
-            string redirectHost = this.HostName ?? host;
-            int redirectPort = this.Port ?? port;
-            string redirectPath = this.Path ?? path;
-            string redirectURL = redirectScheme + "://" + redirectHost + ":" + redirectPort + redirectPath;
+            string rScheme; if (this.RedirectScheme) rScheme = (this.Scheme ?? Scheme).ToString(); else rScheme = scheme.ToString();
+            string rHost; if (this.RedirectHostName) rHost = (this.HostName ?? host).ToString(); else rHost = host;
+            string rPath; if (this.RedirectPath) rPath = (this.Path ?? path).ToString(); else rPath = path;
+            string rPort; if (this.RedirectPort) rPort = (this.Port ?? port).ToString(); else rPort = port.ToString();            
+            string redirectURL = rScheme + "://" + rHost + ":" + rPort + rPath;
             context.Response.Redirect(redirectURL);
             return Task.FromResult(new ProcessResult() { Message="Redirected to '" + redirectURL + "'" });;
         }
@@ -54,9 +55,6 @@ namespace Vlix.HttpServer
 
     public class ReverseProxyAction : IReponseAction
     {
-        public string ActionName { get { return "Alternative WWW Directory"; } }
-        public string AlternativeWWWDirectory { get; set; } = null;
-
         public Task<ProcessResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, HttpListenerContext context, HttpServer parent)
         {
             throw new NotImplementedException();
@@ -65,7 +63,6 @@ namespace Vlix.HttpServer
     }    
     public class AlternativeWWWDirectoryAction : IReponseAction
     {
-        public string ActionName { get { return "Reverse Proxy"; } }
         public string AlternativeWWWDirectory { get; set; } = null;
 
         public async Task<ProcessResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, HttpListenerContext context, HttpServer parent)

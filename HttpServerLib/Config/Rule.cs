@@ -7,38 +7,18 @@ namespace Vlix.HttpServer
     public class Rule
     {
         public bool Enable { get; set; } = true;
+        public string Name { get; set; } = "New Rule";
         public RequestMatch RequestMatch { get; set; } = new RequestMatch();
         public IReponseAction ResponseAction { get; set; } = new RedirectAction();
 
-        public string Process(Scheme scheme, string host, int port, string path)
-        {
-            if (this.Enable)
-            {
-                bool portMatch = (this.RequestMatch.AnyPort || (!this.RequestMatch.AnyPort && (this.RequestMatch.Port == port)));
-                bool hostMatch = (this.RequestMatch.AnyHostName || (!this.RequestMatch.AnyHostName && (this.RequestMatch.GetHostRegex().IsMatch(host))));
-                bool uRLMatch = (this.RequestMatch.AnyPath || (!this.RequestMatch.AnyHostName && (this.RequestMatch.GetPathRegex().IsMatch(path))));
-                if (this.ResponseAction is RedirectAction redirectAction)
-                {
-                    if (portMatch && hostMatch && uRLMatch)
-                    {
-                        string redirectScheme = (redirectAction.Scheme ?? scheme).ToString();
-                        string redirectHost = redirectAction.HostName ?? host;
-                        int redirectPort = redirectAction.Port ?? port;
-                        string redirectPath = redirectAction.Path ?? path;
-                        string redirectURL = redirectScheme + "://" + redirectHost + ":" + redirectPort + redirectPath;
-                        return redirectURL;
-                    }
-                }
-            }
-            return null;
-        }
+      
         public bool IsMatch(Scheme scheme, string host, int port, string path)
         {            
             if (this.Enable)
             {
-                bool portMatch = (this.RequestMatch.AnyPort || (!this.RequestMatch.AnyPort && (this.RequestMatch.Port == port)));
-                bool hostMatch = (this.RequestMatch.AnyHostName || (!this.RequestMatch.AnyHostName && (this.RequestMatch.GetHostRegex().IsMatch(host))));
-                bool uRLMatch = (this.RequestMatch.AnyPath || (!this.RequestMatch.AnyPath && (this.RequestMatch.GetPathRegex().IsMatch(path))));
+                bool portMatch = (!this.RequestMatch.CheckPort || (this.RequestMatch.CheckPort && (this.RequestMatch.Port == port)));
+                bool hostMatch = (!this.RequestMatch.CheckHostName || (this.RequestMatch.CheckHostName && (this.RequestMatch.GetHostRegex().IsMatch(host))));
+                bool uRLMatch = (!this.RequestMatch.CheckPath || (this.RequestMatch.CheckPath && (this.RequestMatch.GetPathRegex().IsMatch(path))));
                 return (portMatch && hostMatch && uRLMatch);                    
             } 
             return false;
@@ -52,19 +32,19 @@ namespace Vlix.HttpServer
             this.Enable = true;
             this.RequestMatch = new RequestMatch()
             {
-                AnyHostName = true,
+                CheckHostName = true,
                 HostNameMatch = null,
-                AnyPort = false,
+                CheckPort = false,
                 Port = 80,
                 PathMatch = "*"
             };
 
             this.ResponseAction = new RedirectAction()
             {
+                RedirectScheme = true,
                 Scheme = Scheme.https,
-                HostName = null,
-                Port = 443,
-                Path = null
+                RedirectPort = true,
+                Port = 443                
             };
         }
     }
@@ -76,14 +56,15 @@ namespace Vlix.HttpServer
             this.Enable = true;
             this.RequestMatch = new RequestMatch()
             {
-                AnyHostName = false,
+                CheckHostName = false,
                 HostNameMatch = hostNameMatch,
                 HostNameMatchType = MatchType.Wildcard,
-                AnyPort = true,
-                AnyPath = true
+                CheckPort = true,
+                CheckPath = true
             };
             this.ResponseAction = new RedirectAction()
             {
+                RedirectHostName = true,
                 HostName = hostNameRedirect,
             };
         }

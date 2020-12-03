@@ -202,7 +202,6 @@
         <Setter Property="IsReadOnly" Value="True" />
         <Setter Property="RowBackground" Value="#FFFFFF" />
         <Setter Property="AlternatingRowBackground" Value="#FFF7F7F7" />
-        <Setter Property="RowHeight" Value="20" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="GridLinesVisibility" Value="All"/>
         <Setter Property="HeadersVisibility" Value="Column" />

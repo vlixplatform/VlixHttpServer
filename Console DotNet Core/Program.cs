@@ -20,7 +20,7 @@ namespace Vlix.HttpServer
 
             //config.Rules.Add(new Rule()
             //{
-            //    RequestMatch = new RequestMatch() { AnyPath = false, PathMatch = "/test.html" },
+            //    RequestMatch = new RequestMatch() { CheckPath = false, PathMatch = "/test.html" },
             //    ResponseAction = new DenyAction()
             //});
 

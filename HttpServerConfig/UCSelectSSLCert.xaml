@@ -34,7 +34,7 @@
                     <Run FontStyle="Italic">Let's Encrypt!</Run>
                 </TextBlock>
             </local:OPButton>-->
-            <local:OPDataGrid Grid.Row="1" Opacity="{Binding IsLoading, Converter={StaticResource BoolTrueToOpacity03Else1Converter}}" ItemsSource="{Binding SSLCerts}"  AutoGenerateColumns="False">
+            <local:OPDataGrid Grid.Row="1" HorizontalScrollBarVisibility="Visible" Opacity="{Binding IsLoading, Converter={StaticResource BoolTrueToOpacity03Else1Converter}}" ItemsSource="{Binding SSLCerts}"  AutoGenerateColumns="False">
                 <local:OPDataGrid.Resources>
                     <Style x:Key="dghStyle" TargetType="DataGridColumnHeader">
                         <Setter Property="FontWeight" Value="Bold" />
@@ -44,19 +44,36 @@
                     <DataGridTemplateColumn CanUserResize="False" Visibility="Visible" Width="auto">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <local:OPButton Height="16" FontSize="9" Command="{Binding SelectSSLCertClickCommand}">Select</local:OPButton>
+                                <local:OPButton VerticalAlignment="Top" Height="20" Command="{Binding SelectSSLCertClickCommand}">Select</local:OPButton>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Issued To"  Binding="{Binding IssuedTo}" HeaderStyle="{StaticResource dghStyle}"></DataGridTextColumn>
+                    <DataGridTemplateColumn Header="Subject Names" CanUserResize="False" Visibility="Visible" Width="auto" HeaderStyle="{StaticResource dghStyle}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="5,0,5,0">
+                                    <ItemsControl ItemsSource="{Binding SubjectAlternativeNames}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Issued By" Binding="{Binding IssuedBy}" HeaderStyle="{StaticResource dghStyle}"></DataGridTextColumn>
                     <DataGridTextColumn Header="Expires On" Binding="{Binding Expiry}" HeaderStyle="{StaticResource dghStyle}"></DataGridTextColumn>
-                    <DataGridTextColumn Header="Friendly Name" Width="*" Binding="{Binding FriendlyName}" HeaderStyle="{StaticResource dghStyle}"></DataGridTextColumn>
+                    <DataGridTextColumn Header="Friendly Name" Width="auto" Binding="{Binding FriendlyName}" HeaderStyle="{StaticResource dghStyle}"></DataGridTextColumn>
                 </local:OPDataGrid.Columns>
             </local:OPDataGrid>
             <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,2,0,0" HorizontalAlignment="Right">
                 <TextBlock VerticalAlignment="Center" Margin="0,0,3,2">SSL Store: </TextBlock>
-                <ComboBox Width="120" ItemsSource="{Binding Source={StaticResource StoreNameFromEnum}}" SelectedItem="{Binding StoreName}" SelectionChanged="sslStore_SelectionChanged"></ComboBox>
+                <ComboBox Width="120" ItemsSource="{Binding Source={StaticResource StoreNameFromEnum}}" SelectedItem="{Binding StoreName}" SelectionChanged="sslStore_SelectionChanged" Margin="0,0,5,0"></ComboBox>
+                <local:OPButton Width="80" Icon="ic_refresh" Command="{Binding StoreRefreshClickCommand }">Refresh</local:OPButton>
             </StackPanel>
         </Grid>
         <local:CentreMessage State="{Binding IsLoading, Converter={StaticResource BoolTrueToCentreMessageStateProcessElseNoMessageConverter}}" MessageProcess="Loading..."></local:CentreMessage>

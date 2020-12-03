@@ -6,13 +6,13 @@ namespace Vlix.HttpServer
 {
     public class RequestMatch
     {        
-        public bool AnyHostName { get; set; } = true;
+        public bool CheckHostName { get; set; } = false;
         [JsonConverter(typeof(StringEnumConverter))]
         public MatchType HostNameMatchType { get; set; } = MatchType.Wildcard;
         public string HostNameMatch { get; set; } = null;
-        public bool AnyPort { get; set; } = true;
+        public bool CheckPort { get; set; } = false;
         public int? Port { get; set; } = null;
-        public bool AnyPath { get; set; } = true;
+        public bool CheckPath { get; set; } = false;
         [JsonConverter(typeof(StringEnumConverter))]
         public MatchType PathMatchType { get; set; } = MatchType.Wildcard;
         public string PathMatch { get; set; } = null;

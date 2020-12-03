@@ -203,21 +203,19 @@ namespace  Vlix.HttpServer
                 //Process Rules
                 if (this.Config.Rules != null)
                 {
-                    int ruleNum = 0;
                     foreach (Rule rule in this.Config.Rules)
                     {
-                        ruleNum++;
                         Scheme scheme = Scheme.http;
                         if (string.Equals(schemeStr, "https", StringComparison.OrdinalIgnoreCase)) scheme = Scheme.https;
                         if (rule.IsMatch(scheme, host, port, absolutePath))
-                        {
-                            ProcessResult processResult = await rule.ResponseAction.ProcessAsync(callerIP,scheme,host, port,absolutePath, context, this);
+                        {                            
+                            ProcessResult processResult = await rule.ResponseAction.ProcessAsync(callerIP,scheme,host, port,absolutePath, context, this).ConfigureAwait(false);
                             if (processResult.Log)
                             {
                                 string msg = null; if (!string.IsNullOrWhiteSpace(processResult.Message)) msg = " > " + processResult.Message;
-                                if (processResult.LogLevel == LogLevel.Info) this.OnInfoLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > Rule #" + ruleNum + msg);                                    
-                                if (processResult.LogLevel == LogLevel.Warning) this.OnWarningLog?.Invoke(callerIP + " requested '" + absoluteURL + msg);
-                                if (processResult.LogLevel == LogLevel.Error) this.OnErrorLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > Rule #" + ruleNum + msg);                                
+                                if (processResult.LogLevel == LogLevel.Info) this.OnInfoLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > Rule '" + rule.Name + "'" + msg);                                    
+                                if (processResult.LogLevel == LogLevel.Warning) this.OnWarningLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > Rule '" + rule.Name + "'" + msg);
+                                if (processResult.LogLevel == LogLevel.Error) this.OnErrorLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > Rule '" + rule.Name + "'" + msg);                                
                             }
                             if (processResult.SendErrorResponsePage) { await this.SendErrorResponsePage(context, processResult.Message, processResult.SendErrorResponsePage_HttpStatusCode); return; }
                             if (!processResult.ContinueNextRule)

@@ -78,7 +78,7 @@ namespace HttpServer.Tests
 
 
         //[Theory]
-        //[InlineData(new Redirect() { From = new RedirectFrom() { AnyHostName=false, HostNameWildCard=null, AnyPort=false, Port=80,AnyPath=true,PathWildCard=null}, To= new RedirectTo() { HTTPS=true,HostName=null,Port= } }, null, null, false)]
+        //[InlineData(new Redirect() { From = new RedirectFrom() { CheckHostName=false, HostNameMatch=null, CheckPort=false, Port=80,CheckPath=true,PathMatch=null}, To= new RedirectTo() { HTTPS=true,HostName=null,Port= } }, null, null, false)]
         //public string Process(Redirect redirect, string requestURL, string redirectURL)
         //{
             

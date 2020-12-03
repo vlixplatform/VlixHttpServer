@@ -26,6 +26,8 @@ using System.Runtime.InteropServices;
 using System.Windows.Data;
 using System.Collections.ObjectModel;
 using System.Windows.Controls.Primitives;
+using Vlix.HttpServer;
+
 namespace HttpServerConfig
 {
 
@@ -1114,4 +1116,58 @@ namespace HttpServerConfig
         }
     }
 
+
+    public class ActionTypeToFriendlyNameConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is ActionType aT)
+            {
+                switch (aT)
+                {
+                    case ActionType.Redirect:
+                        return "Redirect To";
+                    case ActionType.Deny:
+                        return "Deny Request";
+                    case ActionType.ReverseProxy:
+                        return "Reverse Proxy";
+                    case ActionType.AlternativeWWWDirectory:
+                        return "Use Alternative WWW Directory";
+                }
+            }
+            return "Not an Action Type";
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string aTStr)
+            {
+                switch (aTStr)
+                {
+                    case "Redirect To":
+                        return ActionType.Redirect;
+                    case "Deny Request":
+                        return ActionType.Deny;
+                    case "Reverse Proxy":
+                        return ActionType.ReverseProxy;
+                    case "Use Alternative WWW Directory":
+                        return ActionType.AlternativeWWWDirectory;
+                }
+            }
+            return ActionType.Redirect;
+        }
+    }
+
+    public class ActionTypeToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is ActionType aT && parameter is ActionType selectedAT && aT == selectedAT) return Visibility.Visible;
+            else return Visibility.Collapsed;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    
 }

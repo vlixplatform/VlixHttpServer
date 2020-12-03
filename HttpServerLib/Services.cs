@@ -5,14 +5,11 @@ using System.IO;
 using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 using System.Text;
 using System.Security.Cryptography.X509Certificates;
 using System.Runtime.InteropServices;
 using System.Reflection;
 using System.Diagnostics;
-using Microsoft.WindowsAPICodePack.Dialogs;
 //using Certes;
 //using Certes.Acme;
 
@@ -40,83 +37,10 @@ namespace  Vlix.HttpServer
         }
 
 
-        public static string LocateDirectory()
-        {
-            CommonOpenFileDialog dialog = new CommonOpenFileDialog();
-            dialog.InitialDirectory = "C:\\Users";
-            dialog.IsFolderPicker = true;
-            if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
-            {
-                return dialog.FileName;
-            }
-            else return "";
-        }
+        
 
-        public static void SaveServerConfig(HttpServerConfigVM httpServerConfigVM)
+        public static void SaveServerConfig(HttpServerConfig httpServerConfig)
         {
-            HttpServerConfig httpServerConfig = new HttpServerConfig()
-            {
-                SSLCertificateStoreName = httpServerConfigVM.SSLCertificateStoreName,
-                SSLCertificateSubjectName = httpServerConfigVM.SSLCertificateSubjectName,
-                EnableHTTPS = httpServerConfigVM.EnableHTTPS,
-                HTTPSPort = httpServerConfigVM.HTTPSPort,
-                EnableHTTP = httpServerConfigVM.EnableHTTP,
-                HTTPPort = httpServerConfigVM.HTTPPort,
-                AllowLocalhostConnectionsOnly = httpServerConfigVM.AllowLocalhostConnectionsOnly,
-                EnableCache = httpServerConfigVM.EnableCache,
-                LogDirectory = httpServerConfigVM.LogDirectory,
-                MaximumCacheSizeInMB = httpServerConfigVM.MaximumCacheSizeInMB,
-                OnlyCacheItemsLessThenMB = httpServerConfigVM.OnlyCacheItemsLessThenMB,
-                WWWDirectory = httpServerConfigVM.WWWDirectory,
-            };
-            foreach (var ruleVM in httpServerConfigVM.Rules)
-            {
-                Rule r = new Rule()
-                {
-                    Name = ruleVM.Name,
-                    Enable = ruleVM.Enable,
-                    RequestMatch = new RequestMatch()
-                    {
-                        CheckHostName = ruleVM.RequestMatch.CheckHostName,
-                        CheckPath = ruleVM.RequestMatch.CheckPath,
-                        CheckPort = ruleVM.RequestMatch.CheckPort,
-                        HostNameMatch = ruleVM.RequestMatch.HostNameMatch,
-                        HostNameMatchType = ruleVM.RequestMatch.HostNameMatchType,
-                        PathMatch = ruleVM.RequestMatch.PathMatch,
-                        PathMatchType = ruleVM.RequestMatch.PathMatchType,
-                        Port = ruleVM.RequestMatch.Port
-                    }
-                };
-                switch (ruleVM.ResponseAction.ActionType)
-                {
-                    case ActionType.AlternativeWWWDirectory:
-                        r.ResponseAction = new AlternativeWWWDirectoryAction() { AlternativeWWWDirectory = ruleVM.ResponseAction.AlternativeWWWDirectory };
-                        break;
-                    case ActionType.Deny:
-                        r.ResponseAction = new DenyAction();
-                        break;
-                    case ActionType.Redirect:
-                        r.ResponseAction = new RedirectAction()
-                        {
-                            Scheme = ruleVM.ResponseAction.RedirectScheme,
-                            RedirectScheme = ruleVM.ResponseAction.UseRedirectScheme,
-                            HostName = ruleVM.ResponseAction.RedirectHostName,
-                            RedirectHostName = ruleVM.ResponseAction.UseRedirectHostName,
-                            Path = ruleVM.ResponseAction.RedirectPath,
-                            RedirectPath = ruleVM.ResponseAction.UseRedirectPath,
-                            Port = ruleVM.ResponseAction.RedirectPort,
-                            RedirectPort = ruleVM.ResponseAction.UseRedirectPort
-                        };
-                        break;
-                    case ActionType.ReverseProxy:
-                        r.ResponseAction = new ReverseProxyAction()
-                        {
-
-                        };
-                        break;
-                }
-                httpServerConfig.Rules.Add(r);
-            }
             httpServerConfig.SaveConfigFile();
         }
 

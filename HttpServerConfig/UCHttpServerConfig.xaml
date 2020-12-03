@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:hs="clr-namespace:Vlix.HttpServer;assembly=HttpServerLib"
+             xmlns:hslib="clr-namespace:Vlix.HttpServer;assembly=HttpServerLib"
+             xmlns:hs="clr-namespace:Vlix.HttpServer;assembly=HttpServerLib.WPF"
              xmlns:local="clr-namespace:HttpServerConfig"
              xmlns:dd="urn:gong-wpf-dragdrop"
              mc:Ignorable="d" 
@@ -226,7 +227,7 @@
                                                                     </DataTemplate>
                                                                 </ComboBox.ItemTemplate>
                                                             </ComboBox>
-                                                            <Grid Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hs:ActionType.AlternativeWWWDirectory}}">
+                                                            <Grid Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hslib:ActionType.AlternativeWWWDirectory}}">
                                                                 <DockPanel DockPanel.Dock="Top" Margin="0,2,0,0">
                                                                     <TextBlock DockPanel.Dock="Left"  Margin="0,1,2,0">Directory:</TextBlock>
                                                                     <local:OPButton Visibility="{Binding ParentVM.ClientIsLocal, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" DockPanel.Dock="Right" Width="30" 
@@ -234,7 +235,7 @@
                                                                     <TextBox DockPanel.Dock="Left" HorizontalAlignment="Stretch" Height="20" Text="{Binding ResponseAction.AlternativeWWWDirectory}"></TextBox>
                                                                 </DockPanel>
                                                             </Grid>
-                                                            <StackPanel Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hs:ActionType.Redirect}}">
+                                                            <StackPanel Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hslib:ActionType.Redirect}}">
                                                                 <DockPanel Margin="0,1,0,0" >
                                                                     <CheckBox Margin="0,3.5,5,0" IsChecked="{Binding ResponseAction.UseRedirectScheme}" />
                                                                     <TextBlock Width="50" Margin="0,2,0,0">Scheme:</TextBlock>
@@ -248,7 +249,7 @@
                                                                 <DockPanel Margin="0,1,0,0" >
                                                                     <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.UseRedirectHostName}" />
                                                                     <TextBlock Width="30">Host:</TextBlock>
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.HostName, UpdateSourceTrigger=PropertyChanged}" 
+                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.RedirectHostName, UpdateSourceTrigger=PropertyChanged}" 
                                                                              Opacity="{Binding ResponseAction.UseRedirectHostName, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}" />
                                                                 </DockPanel>
                                                                 <DockPanel Margin="0,1,0,0" >

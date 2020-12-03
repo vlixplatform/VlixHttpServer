@@ -152,6 +152,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\HttpServerLib.WPF\HttpServerLib.WPF.csproj">
+      <Project>{9b941b0f-a852-4541-be44-6c3278569297}</Project>
+      <Name>HttpServerLib.WPF</Name>
+    </ProjectReference>
     <ProjectReference Include="..\HttpServerLib\HttpServerLib.csproj">
       <Project>{403741ea-55a2-4ee6-8f81-c49d139c0f5e}</Project>
       <Name>HttpServerLib</Name>

@@ -13,6 +13,7 @@ using System.ComponentModel;
 using System.Windows.Input;
 using Prism.Commands;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace Vlix.HttpServer
 {
@@ -46,6 +47,73 @@ namespace Vlix.HttpServer
 
         }
 
+        public HttpServerConfig ToModel()
+        {
+            HttpServerConfig httpServerConfig = new HttpServerConfig()
+            {
+                SSLCertificateStoreName = this.SSLCertificateStoreName,
+                SSLCertificateSubjectName = this.SSLCertificateSubjectName,
+                EnableHTTPS = this.EnableHTTPS,
+                HTTPSPort = this.HTTPSPort,
+                EnableHTTP = this.EnableHTTP,
+                HTTPPort = this.HTTPPort,
+                AllowLocalhostConnectionsOnly = this.AllowLocalhostConnectionsOnly,
+                EnableCache = this.EnableCache,
+                LogDirectory = this.LogDirectory,
+                MaximumCacheSizeInMB = this.MaximumCacheSizeInMB,
+                OnlyCacheItemsLessThenMB = this.OnlyCacheItemsLessThenMB,
+                WWWDirectory = this.WWWDirectory,
+            };
+            foreach (var ruleVM in this.Rules)
+            {
+                Rule r = new Rule()
+                {
+                    Name = ruleVM.Name,
+                    Enable = ruleVM.Enable,
+                    RequestMatch = new RequestMatch()
+                    {
+                        CheckHostName = ruleVM.RequestMatch.CheckHostName,
+                        CheckPath = ruleVM.RequestMatch.CheckPath,
+                        CheckPort = ruleVM.RequestMatch.CheckPort,
+                        HostNameMatch = ruleVM.RequestMatch.HostNameMatch,
+                        HostNameMatchType = ruleVM.RequestMatch.HostNameMatchType,
+                        PathMatch = ruleVM.RequestMatch.PathMatch,
+                        PathMatchType = ruleVM.RequestMatch.PathMatchType,
+                        Port = ruleVM.RequestMatch.Port
+                    }
+                };
+                switch (ruleVM.ResponseAction.ActionType)
+                {
+                    case ActionType.AlternativeWWWDirectory:
+                        r.ResponseAction = new AlternativeWWWDirectoryAction() { AlternativeWWWDirectory = ruleVM.ResponseAction.AlternativeWWWDirectory };
+                        break;
+                    case ActionType.Deny:
+                        r.ResponseAction = new DenyAction();
+                        break;
+                    case ActionType.Redirect:
+                        r.ResponseAction = new RedirectAction()
+                        {
+                            Scheme = ruleVM.ResponseAction.RedirectScheme,
+                            RedirectScheme = ruleVM.ResponseAction.UseRedirectScheme,
+                            HostName = ruleVM.ResponseAction.RedirectHostName,
+                            RedirectHostName = ruleVM.ResponseAction.UseRedirectHostName,
+                            Path = ruleVM.ResponseAction.RedirectPath,
+                            RedirectPath = ruleVM.ResponseAction.UseRedirectPath,
+                            Port = ruleVM.ResponseAction.RedirectPort,
+                            RedirectPort = ruleVM.ResponseAction.UseRedirectPort
+                        };
+                        break;
+                    case ActionType.ReverseProxy:
+                        r.ResponseAction = new ReverseProxyAction()
+                        {
+
+                        };
+                        break;
+                }
+                httpServerConfig.Rules.Add(r);
+            }
+            return httpServerConfig;
+        }
         public async Task LoadVM()
         {
             this.IsLoading = true;
@@ -89,8 +157,14 @@ namespace Vlix.HttpServer
         public ObservableCollection<RuleVM> Rules { get; set; } = new ObservableCollection<RuleVM>();
         public ICommand RefreshClickCommand { get { return new DelegateCommand<object>(async (p) => await LoadVM(), (p) => true);}}
         public ICommand SelectSSLCertClickCommand { get { return new DelegateCommand<object>((p) => this.ShowSelectSSLCertWindow = true, (p) => true);}}
-        public ICommand OpenWWWDirectoryClickCommand { get { return new DelegateCommand<object>((c) => { this.WWWDirectory = Services.LocateDirectory(); }, (c) => true); } }       
-        public ICommand SaveAndApplyClickCommand { get { return new DelegateCommand<object>((c) => { Services.SaveServerConfig(this); }, (c) => true); } } 
+        public ICommand OpenWWWDirectoryClickCommand { get { return new DelegateCommand<object>((c) => 
+        {
+            CommonOpenFileDialog dialog = new CommonOpenFileDialog();
+            dialog.InitialDirectory = "C:\\Users";
+            dialog.IsFolderPicker = true;
+            if (dialog.ShowDialog() == CommonFileDialogResult.Ok) this.WWWDirectory = dialog.FileName; else this.WWWDirectory = null;
+        }, (c) => true); } }       
+        public ICommand SaveAndApplyClickCommand { get { return new DelegateCommand<object>((c) => { Services.SaveServerConfig(this.ToModel()); }, (c) => true); } } 
         public ICommand NewRuleClickCommand { get { return new DelegateCommand<object>((p) => this.Rules.Add(new RuleVM(this)), (p) => true); } }
     }
 

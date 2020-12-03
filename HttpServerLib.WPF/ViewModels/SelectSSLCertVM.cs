@@ -33,7 +33,9 @@ namespace Vlix.HttpServer
             return true;
         }
         #endregion
-
+        public SelectSSLCertVM()
+        {
+        }
         public SelectSSLCertVM(HttpServerConfigVM parentVM)
         {
             this.ParentVM = parentVM;

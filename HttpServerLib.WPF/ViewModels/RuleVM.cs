@@ -1,4 +1,5 @@
-﻿using Prism.Commands;
+﻿using Microsoft.WindowsAPICodePack.Dialogs;
+using Prism.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -136,7 +137,13 @@ namespace Vlix.HttpServer
         
         //Alternative WWW Drectory 
         string _AlternativeWWWDirectory = null; public string AlternativeWWWDirectory { get { return _AlternativeWWWDirectory; } set { SetField(ref _AlternativeWWWDirectory, value, "AlternativeWWWDirectory"); } }
-        public ICommand OpenAlternativeWWWDirectoryClickCommand { get { return new DelegateCommand<object>((c) => { this.AlternativeWWWDirectory = Services.LocateDirectory(); }, (c) => true); } }
+        public ICommand OpenAlternativeWWWDirectoryClickCommand { get { return new DelegateCommand<object>((c) => 
+        {
+            CommonOpenFileDialog dialog = new CommonOpenFileDialog();
+            dialog.InitialDirectory = "C:\\Users";
+            dialog.IsFolderPicker = true;
+            if (dialog.ShowDialog() == CommonFileDialogResult.Ok) this.AlternativeWWWDirectory = dialog.FileName; else this.AlternativeWWWDirectory = null;
+        }, (c) => true); } }
 
         //Redirect
         public IEnumerable<Scheme> RedirectSchemeTypes { get { return Enum.GetValues(typeof(Scheme)).Cast<Scheme>(); } }

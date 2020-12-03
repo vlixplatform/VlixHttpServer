@@ -209,7 +209,21 @@ namespace  Vlix.HttpServer
                         if (string.Equals(schemeStr, "https", StringComparison.OrdinalIgnoreCase)) scheme = Scheme.https;
                         if (rule.IsMatch(scheme, host, port, absolutePath))
                         {                            
-                            ProcessResult processResult = await rule.ResponseAction.ProcessAsync(callerIP,scheme,host, port,absolutePath, context, this).ConfigureAwait(false);
+                            ProcessResult processResult = await rule.ResponseAction.ProcessAsync(callerIP,scheme,host, port,absolutePath, this).ConfigureAwait(false);
+                            switch (processResult.ActionType)
+                            {
+                                case ActionType.AlternativeWWWDirectory:
+                                    this.OnHTTPStreamResult?.Invoke(processResult.AlternativeWWWDirectoryHttpStreamResult);
+                                    if (processResult.AlternativeWWWDirectoryHttpStreamResult.HttpStatusCode == HttpStatusCode.OK) await this.SendToOutputAsync(processResult.AlternativeWWWDirectoryHttpStreamResult, context);
+                                    break;
+                                case ActionType.Redirect:
+                                    context.Response.Redirect(processResult.RedirectURL);
+                                    break;
+                                case ActionType.Deny:
+                                    break;
+                                case ActionType.ReverseProxy:
+                                    break;
+                            }
                             if (processResult.Log)
                             {
                                 string msg = null; if (!string.IsNullOrWhiteSpace(processResult.Message)) msg = " > " + processResult.Message;
@@ -218,14 +232,9 @@ namespace  Vlix.HttpServer
                                 if (processResult.LogLevel == LogLevel.Error) this.OnErrorLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > Rule '" + rule.Name + "'" + msg);                                
                             }
                             if (processResult.SendErrorResponsePage) { await this.SendErrorResponsePage(context, processResult.Message, processResult.SendErrorResponsePage_HttpStatusCode); return; }
-                            if (!processResult.ContinueNextRule)
-                            {                                
-                                context.Response?.Close();
-                                return;
-                            }
+                            if (!processResult.ContinueNextRule) { context.Response?.Close(); return; }
                         }
                     }
-                    
                 }
 
                 //Process Request

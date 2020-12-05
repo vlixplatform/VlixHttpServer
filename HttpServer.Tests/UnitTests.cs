@@ -2,25 +2,26 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
-
 using Vlix.HttpServer;
 using Xunit;
 using Xunit.Abstractions;
-using static Vlix.HttpServer.Rule;
 
 namespace HttpServer.Tests
 {
-
     public class UnitTests
     {
-
+        string tempWWWPath, altTempWWWPath;
         private readonly ITestOutputHelper output;
         public UnitTests(ITestOutputHelper output)
         {
             this.output = output;
+            tempWWWPath = Path.Combine(Path.GetTempPath(), "VlixWebServer", "General", "www");
+            altTempWWWPath = Path.Combine(Path.GetTempPath(), "VlixWebServer", "Alternative", "www");
         }
 
 
@@ -64,7 +65,7 @@ namespace HttpServer.Tests
         [InlineData("/ss/../secret.txt", null, null, false )]      
         public void ParseAbsolutePath(string absolutePath, string xFileToRead, string xFileToReadDir, bool ErrorMsgIsNull)
         {
-            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer("C:\\www");
+            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer("C:\\www",80);
             output.WriteLine("absolutePath  = " + absolutePath);
             vlixHttpServer.TryParseAbsolutePath(vlixHttpServer.Config.WWWDirectory, absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg);
             output.WriteLine("fileToRead    = " + fileToRead);
@@ -78,30 +79,88 @@ namespace HttpServer.Tests
 
 
         //[Theory]
-        //[InlineData(new Redirect() { From = new RedirectFrom() { CheckHostName=false, HostNameMatch=null, CheckPort=false, Port=80,CheckPath=true,PathMatch=null}, To= new RedirectTo() { HTTPS=true,HostName=null,Port= } }, null, null, false)]
+        //[InlineData(new Redirect() { From = new RedirectFrom() { CheckHostName = false, HostNameMatch = null, CheckPort = false, Port = 80, CheckPath = true, PathMatch = null }, To = new RedirectTo() { HTTPS = true, HostName = null, Port = } }, null, null, false)]
         //public string Process(Redirect redirect, string requestURL, string redirectURL)
         //{
-            
+
         //}
 
+        private void CreateWWWDirectory(string parent, string wWWPath)
+        {
+            string LongText = "";
+            for (int n = 1; n < 10; n++)
+            {
+                string tempFile = Path.Combine(wWWPath, "Page" + n + ".html");
+                Directory.CreateDirectory(wWWPath);
+                if (!File.Exists(tempFile)) File.WriteAllText(tempFile, "<h1>Hello World From " + parent + "/Page" + n + "!/h1>" + LongText);
+            }
+        }
 
+        [Fact]
+        public async void SSLCertTest()
+        {
+            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer(tempWWWPath, 80, 443, "ThisSSLCERTDoesNotExist", StoreName.My, true, 10, 10, true);
+            bool errorThrown = false;
+            try { await vlixHttpServer.StartAsync(); } catch { errorThrown = true; }
+            Assert.True(errorThrown);         
+        }
 
-        [Fact(Skip = "Too long")]
+        [Fact]
+        public async void RulesTest()
+        {
+            Vlix.HttpServer.HttpServer vlixHttpServer  = new Vlix.HttpServer.HttpServer(tempWWWPath, 80, 443, "CN=azrin.vlix.me", StoreName.My, true, 10, 10, true);                        
+            await vlixHttpServer.StartAsync();
+
+            CreateWWWDirectory("General",tempWWWPath);
+            CreateWWWDirectory("Alternative", altTempWWWPath);
+
+            using (var httpClient = new HttpClient())
+            {
+                //Test Redirect
+                vlixHttpServer.Config.Rules.Add(new SimplePathRedirectRule("/Page1.html", "/Page2.html"));                
+                var resp = await httpClient.GetAsync("http://localhost/Page1.html"); //This should redirect to page2
+                var redirectResult1 = await resp.Content.ReadAsStringAsync();
+                Assert.Equal("<h1>Hello World From General/Page2!/h1>", redirectResult1);
+
+                //Test Redirect Failure
+                vlixHttpServer.Config.Rules.Add(new SimplePathRedirectRule("/Page3.html", "/SomePageThatDoesNotExist.html"));
+                resp = await httpClient.GetAsync("http://localhost/Page3.html"); 
+                Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+
+                //Test Alternative WWW Directory
+                vlixHttpServer.Config.Rules.Add(new Rule()
+                {
+                    RequestMatch = new RequestMatch() { CheckPath = true, PathMatch = "*Page5.*", PathMatchType = MatchType.Wildcard },
+                    ResponseAction = new AlternativeWWWDirectoryAction() { AlternativeWWWDirectory = altTempWWWPath }
+                });
+                resp = await httpClient.GetAsync("http://localhost/Page5.html");
+                var altWWWResult = await resp.Content.ReadAsStringAsync();
+                Assert.Equal("<h1>Hello World From Alternative/Page5!/h1>", altWWWResult);
+
+                //Test Deny Action
+                vlixHttpServer.Config.Rules.Add(new SimplePathDenyRule("/Page6.html*"));
+                resp = await httpClient.GetAsync("http://localhost/Page6.html");
+                Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+            }
+            vlixHttpServer.Stop();
+        }
+
+        //[Fact(Skip = "Too long")]
+        [Fact]
         public async void CacheTest()
         {
-            string tempWWWPath = Path.Combine(Path.GetTempPath(),"www");
-            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer(tempWWWPath, 80,443,true,10,10,true);
+            //C:\Users\azrin\AppData\Local\Temp\VlixWebServer\CacheTest\www
+            string tempCacheTestPath = Path.Combine(Path.GetTempPath(),"VlixWebServer", "CacheTest", "www");
+            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer(tempCacheTestPath, 80,443, null, StoreName.My,true,10,10,true);
             string LongText = "";
             for (int n2 = 0; n2 < 10000; n2++) LongText += Guid.NewGuid().ToString() + "<br />";
             for (int n =0;n<30;n++)
             {
-                string tempFile = Path.Combine(tempWWWPath, "test" + n + ".html");
+                string tempFile = Path.Combine(tempCacheTestPath, "test" + n + ".html");
                 
-                Directory.CreateDirectory(tempWWWPath);
+                Directory.CreateDirectory(tempCacheTestPath);
                 if (!File.Exists(tempFile)) File.WriteAllText(tempFile, "<h1>TEST" + n + "</h1>" + LongText);
             }
-            HTTPStreamResult hTTPStreamResult = null;
-            vlixHttpServer.OnHTTPStreamResult = (sR) => hTTPStreamResult = sR;
             await vlixHttpServer.StartAsync();
             double prevTotalCacheInKB = vlixHttpServer.CacheFiles.TotalCacheInKB;
             using (var httpClient = new HttpClient())
@@ -109,9 +168,7 @@ namespace HttpServer.Tests
                 for (int n = 0; n < 30; n++)
                 {
                     await httpClient.GetAsync("http://localhost/test" + n + ".html");
-                    Assert.True(!hTTPStreamResult.ObtainedFromCache);
-                    await httpClient.GetAsync("http://localhost/test" + n + ".html");
-                    Assert.True(hTTPStreamResult.ObtainedFromCache);
+                    await httpClient.GetAsync("http://localhost/test" + n + ".html");                    
                     if (vlixHttpServer.CacheFiles.TotalCacheInKB < vlixHttpServer.Config.MaximumCacheSizeInMB * 1024)
                     {
                         Assert.True(vlixHttpServer.CacheFiles.TotalCacheInKB > prevTotalCacheInKB);

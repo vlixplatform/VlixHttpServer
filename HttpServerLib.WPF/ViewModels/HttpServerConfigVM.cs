@@ -36,13 +36,13 @@ namespace Vlix.HttpServer
         HttpServerConfig configBeforeChange;
         public HttpServerConfigVM()
         {
-            RuleVM sss = new RuleVM(new HttpToHttpsRedirectRule() { Name = "Rule 1" }, this);
-            sss.ResponseAction.ActionType = ActionType.AlternativeWWWDirectory;
-            this.Rules.Add(sss);
-            this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule() { Name = "Rule 2", Enable=false }, this));
-            this.Rules.Add(new RuleVM(new SimpleHostNameRedirectRule("cat","dog") { Name = "Rule 3" }, this));
-            this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule() { Name = "Rule 4", Enable = true }, this));
-            this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule() { Name = "Rule 5", Enable = false }, this));
+            this.Rules.Add(new RuleVM(new SimpleReverseProxyRule("somehost", "wildard", 5000), this));
+            this.Rules.Add(new RuleVM(new SimplePathDenyRule("NonAllowedPath"), this));
+            //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 2", Enable=false }, this));
+            //this.Rules.Add(new RuleVM(new SimpleHostNameRedirectRule("cat","dog") { Name = "Rule 3" }, this));
+            //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 4", Enable = true }, this));
+            //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 5", Enable = false }, this));
+            //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 5", Enable = false }, this));
             this.SelectSSLCertVM = new SelectSSLCertVM(this);
 
         }
@@ -94,19 +94,26 @@ namespace Vlix.HttpServer
                         r.ResponseAction = new RedirectAction()
                         {
                             Scheme = ruleVM.ResponseAction.RedirectScheme,
-                            RedirectScheme = ruleVM.ResponseAction.UseRedirectScheme,
+                            SetScheme = ruleVM.ResponseAction.SetRedirectScheme,
                             HostName = ruleVM.ResponseAction.RedirectHostName,
-                            RedirectHostName = ruleVM.ResponseAction.UseRedirectHostName,
+                            SetHostName = ruleVM.ResponseAction.SetRedirectHostName,
                             Path = ruleVM.ResponseAction.RedirectPath,
-                            RedirectPath = ruleVM.ResponseAction.UseRedirectPath,
+                            SetPath = ruleVM.ResponseAction.SetRedirectPath,
                             Port = ruleVM.ResponseAction.RedirectPort,
-                            RedirectPort = ruleVM.ResponseAction.UseRedirectPort
+                            SetPort = ruleVM.ResponseAction.SetRedirectPort
                         };
                         break;
                     case ActionType.ReverseProxy:
                         r.ResponseAction = new ReverseProxyAction()
                         {
-
+                            SetScheme = ruleVM.ResponseAction.SetReverseProxyScheme,
+                            Scheme = ruleVM.ResponseAction.ReverseProxyScheme,
+                            SetHostName = ruleVM.ResponseAction.SetReverseProxyHostName,
+                            HostName = ruleVM.ResponseAction.ReverseProxyHostName,
+                            SetPort = ruleVM.ResponseAction.SetReverseProxyPort,
+                            Port = ruleVM.ResponseAction.ReverseProxyPort,
+                            SetPath = ruleVM.ResponseAction.SetReverseProxyPath,
+                            Path = ruleVM.ResponseAction.ReverseProxyPath
                         };
                         break;
                 }
@@ -165,7 +172,10 @@ namespace Vlix.HttpServer
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok) this.WWWDirectory = dialog.FileName; else this.WWWDirectory = null;
         }, (c) => true); } }       
         public ICommand SaveAndApplyClickCommand { get { return new DelegateCommand<object>((c) => { Services.SaveServerConfig(this.ToModel()); }, (c) => true); } } 
-        public ICommand NewRuleClickCommand { get { return new DelegateCommand<object>((p) => this.Rules.Add(new RuleVM(this)), (p) => true); } }
+        public ICommand NewRuleClickCommand { get { return new DelegateCommand<object>((p) =>
+        {
+            this.Rules.Add(new RuleVM(this));
+        }, (p) => true); } }
     }
 
 }

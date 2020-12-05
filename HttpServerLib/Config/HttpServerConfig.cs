@@ -78,6 +78,4 @@ namespace Vlix.HttpServer
             foreach (var r in config.Rules) this.Rules.Add(r);
         }
     }
-
-  
 }

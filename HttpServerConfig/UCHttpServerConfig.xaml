@@ -195,25 +195,50 @@
                                                             <DockPanel Margin="0,5,0,0" >
                                                                 <CheckBox Margin="0,1,5,0" IsChecked="{Binding RequestMatch.CheckHostName}"  />
                                                                 <TextBlock Width="30">Host:</TextBlock>
-                                                                <DockPanel Opacity="{Binding RequestMatch.CheckHostName, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}">
-                                                                    <ComboBox DockPanel.Dock="Right" SelectedItem="{Binding RequestMatch.HostNameMatchType}" Width="75" Margin="0,0,0,0" ItemsSource="{Binding RequestMatch.ComboBoxMatchTypes, Mode=OneTime}"  HorizontalAlignment="Right" />
-                                                                    <TextBox Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" Text="{Binding HostNameMatch}" />
-                                                                </DockPanel>
+                                                                <Grid>
+                                                                    <DockPanel Opacity="{Binding RequestMatch.CheckHostName, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
+                                                                               Visibility="{Binding RequestMatch.CheckHostName, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}">
+                                                                        <ComboBox DockPanel.Dock="Right" SelectedItem="{Binding RequestMatch.HostNameMatchType}" Width="75" Margin="0,0,0,0" ItemsSource="{Binding RequestMatch.ComboBoxMatchTypes, Mode=OneTime}"  HorizontalAlignment="Right" />
+                                                                        <local:OPTextBox PlaceHolder="www.mydomain.com" Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" Text="{Binding HostNameMatch}" />
+                                                                    </DockPanel>
+                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding RequestMatch.CheckHostName, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Any Host --" />
+                                                                </Grid>
+                                                               
                                                             </DockPanel>
 
                                                             <DockPanel Margin="0,2,0,0" >
                                                                 <CheckBox Margin="0,1,5,0" IsChecked="{Binding RequestMatch.CheckPath}"  />
                                                                 <TextBlock Width="30">Path:</TextBlock>
-                                                                <DockPanel Opacity="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}">
+                                                                <!--<DockPanel Opacity="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}">
                                                                     <ComboBox DockPanel.Dock="Right" SelectedItem="{Binding RequestMatch.PathMatchType}" Margin="0,0,0,0" Width="75"  ItemsSource="{Binding RequestMatch.ComboBoxMatchTypes, Mode=OneTime}"  HorizontalAlignment="Right" />
                                                                     <TextBox Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding PathMatch}" />
-                                                                </DockPanel>
+                                                                </DockPanel>-->
+
+                                                                <Grid>
+                                                                    <DockPanel Opacity="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
+                                                                               Visibility="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}">
+                                                                        <ComboBox DockPanel.Dock="Right" SelectedItem="{Binding RequestMatch.PathMatchType}" Width="75" Margin="0,0,0,0" ItemsSource="{Binding RequestMatch.ComboBoxMatchTypes, Mode=OneTime}"  HorizontalAlignment="Right" />
+                                                                        <local:OPTextBox PlaceHolder="/SomePath/*" Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" Text="{Binding HostNameMatch}" />
+                                                                    </DockPanel>
+                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Any Path --" />
+                                                                </Grid>
                                                             </DockPanel>
 
                                                             <DockPanel HorizontalAlignment="Left" Margin="0,2,0,0" >
                                                                 <CheckBox Margin="0,1,5,0" IsChecked="{Binding RequestMatch.CheckPort}"  />
                                                                 <TextBlock Width="30">Port:</TextBlock>
-                                                                <TextBox Height="22" Width="75" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding Port}" Opacity="{Binding RequestMatch.CheckPort, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}" />
+                                                                
+                                                                <Grid>
+                                                                    <local:OPTextBox Height="22" PlaceHolder="80" Width="85" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding Port}" Opacity="{Binding RequestMatch.CheckPort, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
+                                                                             Visibility="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                    <TextBox Height="22" MinWidth="85" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding RequestMatch.CheckPort, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Any Port --" />
+                                                                </Grid>
                                                             </DockPanel>
                                                         </StackPanel>
                                                         <mi:MaterialIcon HorizontalAlignment="Center" Grid.Column="3" Icon="ic_arrow_forward" Foreground="#2a4c68" Width="50" Height="50"></mi:MaterialIcon>
@@ -227,6 +252,8 @@
                                                                     </DataTemplate>
                                                                 </ComboBox.ItemTemplate>
                                                             </ComboBox>
+
+                                                            <!-- Alternative WWW Directory  -->
                                                             <Grid Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hslib:ActionType.AlternativeWWWDirectory}}">
                                                                 <DockPanel DockPanel.Dock="Top" Margin="0,2,0,0">
                                                                     <TextBlock DockPanel.Dock="Left"  Margin="0,1,2,0">Directory:</TextBlock>
@@ -235,36 +262,115 @@
                                                                     <TextBox DockPanel.Dock="Left" HorizontalAlignment="Stretch" Height="20" Text="{Binding ResponseAction.AlternativeWWWDirectory}"></TextBox>
                                                                 </DockPanel>
                                                             </Grid>
+
+                                                            <!-- Redirect -->
                                                             <StackPanel Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hslib:ActionType.Redirect}}">
                                                                 <DockPanel Margin="0,1,0,0" >
-                                                                    <CheckBox Margin="0,3.5,5,0" IsChecked="{Binding ResponseAction.UseRedirectScheme}" />
-                                                                    <TextBlock Width="50" Margin="0,2,0,0">Scheme:</TextBlock>
+                                                                    <CheckBox Margin="0,3.5,5,0" IsChecked="{Binding ResponseAction.SetRedirectScheme}" />
+                                                                    <TextBlock Width="50" Margin="0,2,0,0"> Scheme:</TextBlock>
                                                                     <Grid>
-                                                                        <ComboBox SelectedItem="{Binding ResponseAction.RedirectScheme}" ItemsSource="{Binding ResponseAction.RedirectSchemeTypes, Mode=OneTime}"
-                                                                                  Visibility="{Binding ResponseAction.UseRedirectScheme, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-                                                                        <ComboBox IsReadOnly="True" Visibility="{Binding ResponseAction.UseRedirectScheme, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}" 
-                                                                                  Opacity="0.5"  />
+                                                                        <ComboBox SelectedItem="{Binding ResponseAction.RedirectScheme}" ItemsSource="{Binding ResponseAction.SchemeTypes, Mode=OneTime}"
+                                                                                  Visibility="{Binding ResponseAction.SetRedirectScheme, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                        <!--<ComboBox IsReadOnly="True" Visibility="{Binding ResponseAction.SetRedirectScheme, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}" 
+                                                                                  Opacity="0.5">
+                                                                        </ComboBox>-->
+                                                                        <TextBox Height="22" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectScheme, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
                                                                     </Grid>
                                                                 </DockPanel>
                                                                 <DockPanel Margin="0,1,0,0" >
-                                                                    <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.UseRedirectHostName}" />
+                                                                    <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetRedirectHostName}" />
                                                                     <TextBlock Width="30">Host:</TextBlock>
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.RedirectHostName, UpdateSourceTrigger=PropertyChanged}" 
-                                                                             Opacity="{Binding ResponseAction.UseRedirectHostName, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}" />
+                                                                    <Grid DockPanel.Dock="Left">
+                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.RedirectHostName, UpdateSourceTrigger=PropertyChanged}" 
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectHostName, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectHostName, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
+                                                                    </Grid>
                                                                 </DockPanel>
                                                                 <DockPanel Margin="0,1,0,0" >
-                                                                    <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.UseRedirectPath}" />
+                                                                    <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetRedirectPath}" />
                                                                     <TextBlock Width="30">Path:</TextBlock>
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.RedirectPath, UpdateSourceTrigger=PropertyChanged}" 
-                                                                             Opacity="{Binding ResponseAction.UseRedirectPath, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}" />
+                                                                    <Grid DockPanel.Dock="Left">
+                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.RedirectPath, UpdateSourceTrigger=PropertyChanged}" 
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectPath, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectPath, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
+                                                                    </Grid>
                                                                 </DockPanel>
                                                                 <DockPanel Margin="0,1,0,5" >
-                                                                    <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.UseRedirectPort}" />
+                                                                    <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetRedirectPort}" />
                                                                     <TextBlock Width="30">Port:</TextBlock>
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.RedirectPort, UpdateSourceTrigger=PropertyChanged}" 
-                                                                             Opacity="{Binding ResponseAction.UseRedirectPort, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}" />
+                                                                    <Grid DockPanel.Dock="Left">
+                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.RedirectPort, UpdateSourceTrigger=PropertyChanged}" 
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectPort, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectPort, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
+                                                                    </Grid>
                                                                 </DockPanel>
                                                             </StackPanel>
+
+                                                            <!-- Reverse Proxy -->
+                                                            <StackPanel Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hslib:ActionType.ReverseProxy}}">
+                                                                <DockPanel Margin="0,1,0,0" >
+                                                                    <CheckBox Margin="0,3.5,5,0" IsChecked="{Binding ResponseAction.SetReverseProxyScheme}" />
+                                                                    <TextBlock Width="50" Margin="0,2,0,0">Scheme:</TextBlock>
+                                                                    <Grid>
+                                                                        <ComboBox SelectedItem="{Binding ResponseAction.ReverseProxyScheme}" ItemsSource="{Binding ResponseAction.SchemeTypes, Mode=OneTime}"
+                                                                                  Visibility="{Binding ResponseAction.SetReverseProxyScheme, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                        <!--<ComboBox IsReadOnly="True" Visibility="{Binding ResponseAction.SetReverseProxyScheme, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}" 
+                                                                                  Opacity="0.5"  />-->
+                                                                        <TextBox Height="22" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding ResponseAction.SetReverseProxyScheme, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
+                                                                    </Grid>
+                                                                </DockPanel>
+                                                                <DockPanel Margin="0,1,0,0" >
+                                                                    <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetReverseProxyHostName}" />
+                                                                    <TextBlock Width="30">Host:</TextBlock>
+                                                                    <!--<TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.ReverseProxyHostName, UpdateSourceTrigger=PropertyChanged}" 
+                                                                             Opacity="{Binding ResponseAction.SetReverseProxyHostName, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}" />-->
+                                                                    <Grid DockPanel.Dock="Left">
+                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.ReverseProxyHostName, UpdateSourceTrigger=PropertyChanged}" 
+                                                                                 Visibility="{Binding ResponseAction.SetReverseProxyHostName, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding ResponseAction.SetReverseProxyHostName, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
+                                                                    </Grid>
+                                                                </DockPanel>
+                                                                <DockPanel Margin="0,1,0,0" >
+                                                                    <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetReverseProxyPath}" />
+                                                                    <TextBlock Width="30">Path:</TextBlock>
+                                                                    <!--<TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.ReverseProxyPath, UpdateSourceTrigger=PropertyChanged}" 
+                                                                             Opacity="{Binding ResponseAction.SetReverseProxyPath, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}" />-->
+                                                                    <Grid DockPanel.Dock="Left">
+                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.ReverseProxyPath, UpdateSourceTrigger=PropertyChanged}" 
+                                                                                 Visibility="{Binding ResponseAction.SetReverseProxyPath, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding ResponseAction.SetReverseProxyPath, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
+                                                                    </Grid>
+                                                                </DockPanel>
+                                                                <DockPanel Margin="0,1,0,5" >
+                                                                    <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetReverseProxyPort}" />
+                                                                    <TextBlock Width="30">Port:</TextBlock>
+                                                                    <!--<TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.ReverseProxyPort, UpdateSourceTrigger=PropertyChanged}" 
+                                                                             Opacity="{Binding ResponseAction.SetReverseProxyPort, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}" />-->
+                                                                    <Grid DockPanel.Dock="Left">
+                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.ReverseProxyPort, UpdateSourceTrigger=PropertyChanged}" 
+                                                                                 Visibility="{Binding ResponseAction.SetReverseProxyPort, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding ResponseAction.SetReverseProxyPort, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
+                                                                    </Grid>
+                                                                </DockPanel>
+                                                            </StackPanel>
+
+
                                                         </StackPanel>
 
                                                         <Grid Visibility="{Binding Enable, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}" Margin="0,0,-5,5" Grid.Column="2" Grid.ColumnSpan="3" Background="#ccffffff">

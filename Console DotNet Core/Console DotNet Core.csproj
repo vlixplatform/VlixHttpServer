@@ -15,12 +15,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Sample\forbidden.html" />
     <None Remove="Sample\index.html" />
+    <None Remove="Sample\internal.html" />
     <None Remove="Sample\test.html" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Sample\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sample\forbidden.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sample\internal.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Sample\test.html">

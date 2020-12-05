@@ -1,7 +1,11 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
+using System.Collections.Specialized;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Vlix.HttpServer
@@ -11,7 +15,8 @@ namespace Vlix.HttpServer
 
     public interface IReponseAction
     {
-        Task<ProcessResult> ProcessAsync(string callerIP,Scheme scheme, string host, int port, string path, StaticFileProcessor parent);
+        string ShortName { get; }
+        Task<ProcessRuleResult> ProcessAsync(string callerIP,Scheme scheme, string host, int port, string path, NameValueCollection headers, StaticFileProcessor parent);
     }
 
 
@@ -24,106 +29,145 @@ namespace Vlix.HttpServer
 
     public class DenyAction : IReponseAction
     {
-        public Task<ProcessResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, StaticFileProcessor parent) 
+        public string ShortName { get { return "Deny"; } }
+        public Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, NameValueCollection headers,StaticFileProcessor parent) 
         { 
-            return Task.FromResult(new ProcessResult() { ActionType = ActionType.Deny,Message = "Request denied!" });
+            return Task.FromResult(new ProcessRuleResult() { IsSuccess = true, ActionType = ActionType.Deny,Message = "Request denied!" });
         }
     }
 
 
     public class RedirectAction : IReponseAction
     {
-
+        public string ShortName { get { return "Redirect"; } }
+        public bool SetScheme { get; set; } = false;
         [JsonConverter(typeof(StringEnumConverter))]
-        public bool RedirectScheme { get; set; } = false;
         public Scheme? Scheme { get; set; } = null;
-        public bool RedirectHostName { get; set; } = false;
+        public bool SetHostName { get; set; } = false;
         public string HostName { get; set; } = null;
-        public bool RedirectPort { get; set; } = false;
+        public bool SetPort { get; set; } = false;
         public int? Port { get; set; } = null;
-        public bool RedirectPath { get; set; } = false;
+        public bool SetPath { get; set; } = false;
         public string Path { get; set; } = null;
 
-        public Task<ProcessResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, StaticFileProcessor parent)
+        public Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, NameValueCollection headers,StaticFileProcessor parent)
         {
-            string rScheme; if (this.RedirectScheme) rScheme = (this.Scheme ?? Scheme).ToString(); else rScheme = scheme.ToString();
-            string rHost; if (this.RedirectHostName) rHost = (this.HostName ?? host).ToString(); else rHost = host;
-            string rPath; if (this.RedirectPath) rPath = (this.Path ?? path).ToString(); else rPath = path;
-            string rPort; if (this.RedirectPort) rPort = (this.Port ?? port).ToString(); else rPort = port.ToString();
+            string rScheme; if (this.SetScheme) rScheme = (this.Scheme ?? Scheme).ToString(); else rScheme = scheme.ToString();
+            string rHost; if (this.SetHostName) rHost = (this.HostName ?? host).ToString(); else rHost = host;
+            string rPath; if (this.SetPath) rPath = (this.Path ?? path).ToString(); else rPath = path;
+            string rPort; if (this.SetPort) rPort = (this.Port ?? port).ToString(); else rPort = port.ToString();
             string redirectURL = rScheme + "://" + rHost + ":" + rPort + rPath;
-            return Task.FromResult(new ProcessResult() { ActionType=ActionType.Redirect, RedirectURL = redirectURL, Message = "Redirected to '" + redirectURL + "'" }); ;
+            return Task.FromResult(new ProcessRuleResult() { IsSuccess=true, ActionType=ActionType.Redirect, RedirectURL = redirectURL, Message = "Redirected to '" + redirectURL + "'" }); ;
         }
-        //public Task<ProcessResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, StaticFileProcessor parent)
-        //{
-        //    string rScheme; if (this.RedirectScheme) rScheme = (this.Scheme ?? Scheme).ToString(); else rScheme = scheme.ToString();
-        //    string rHost; if (this.RedirectHostName) rHost = (this.HostName ?? host).ToString(); else rHost = host;
-        //    string rPath; if (this.RedirectPath) rPath = (this.Path ?? path).ToString(); else rPath = path;
-        //    string rPort; if (this.RedirectPort) rPort = (this.Port ?? port).ToString(); else rPort = port.ToString();            
-        //    string redirectURL = rScheme + "://" + rHost + ":" + rPort + rPath;
-        //    context.Response.Redirect(redirectURL);
-        //    return Task.FromResult(new ProcessResult() { Message="Redirected to '" + redirectURL + "'" });;
-        //}
-
     }
 
     public class ReverseProxyAction : IReponseAction
     {
-        public Task<ProcessResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, StaticFileProcessor parent)
+        public string ShortName { get { return "RProxy"; } }
+        public bool SetScheme { get; set; } = false;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public Scheme? Scheme { get; set; } = null;
+        public bool SetHostName { get; set; } = false;
+        public string HostName { get; set; } = null;
+        public bool SetPort { get; set; } = false;
+        public int? Port { get; set; } = null;
+        public bool SetPath { get; set; } = false;
+        public string Path { get; set; } = null;
+        public async Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, NameValueCollection headers,StaticFileProcessor parent)
         {
-            throw new NotImplementedException();
-            //return Task.FromResult(new ProcessResult() { LogLevel = LogLevel.Warning, Message = "Denied!" });
+            string portStr = port.ToString();
+            string pScheme; if (this.SetScheme) pScheme = (this.Scheme ?? Scheme).ToString(); else pScheme = scheme.ToString();
+            string pHost; if (this.SetHostName) pHost = (this.HostName ?? host).ToString(); else pHost = host;
+            string pPath; if (this.SetPath) pPath = (this.Path ?? path).ToString(); else pPath = path;
+            string pPort; if (this.SetPort) pPort = (this.Port ?? port).ToString(); else pPort = portStr;
+            string rProxyURL = pScheme + "://" + pHost + ":" + pPort + pPath;
+            using (var httpClient = new HttpClient())
+            {
+                //AddOriginal Headers
+                var items = headers.AllKeys.SelectMany(headers.GetValues, (k, v) => new { key = k, value = v });
+                string originalHost = null; 
+                bool AddXFFor = true; bool AddXFProto = true; bool AddXFHost = true; bool AddXFPort = true;
+                foreach (var item in items)
+                {
+                    if (string.Equals(item.key, "Host")) { originalHost = item.value; continue; }// AddHost = false;
+                    if (string.Equals(item.key, "X-Forwarded-For")) AddXFFor = false;
+                    if (string.Equals(item.key, "X-Forwarded-Proto")) AddXFProto = false;
+                    if (string.Equals(item.key, "X-Forwarded-Host")) AddXFHost = false;
+                    if (string.Equals(item.key, "X-Forwarded-Port")) AddXFPort = false;
+                    httpClient.DefaultRequestHeaders.Add(item.key, item.value);
+                }
+                if (originalHost == null) originalHost = host;
+
+                //Add Proxy Headers
+                //if (AddHost) httpClient.DefaultRequestHeaders.Add("Host", host + ":" + portStr);
+                if (AddXFFor) httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", callerIP);
+                if (AddXFProto) httpClient.DefaultRequestHeaders.Add("X-Forwarded-Proto", pScheme);
+                if (AddXFHost) httpClient.DefaultRequestHeaders.Add("X-Forwarded-Host", originalHost);
+                if (AddXFPort) httpClient.DefaultRequestHeaders.Add("X-Forwarded-Port", portStr);
+
+
+                HttpResponseMessage resp = await httpClient.GetAsync(rProxyURL); 
+                Stream rProxyResult = await resp.Content.ReadAsStreamAsync();
+                string contentType = null;
+                if (resp.IsSuccessStatusCode)
+                    if (resp.Content.Headers.Contains("Content-Type")) contentType = resp.Content.Headers.GetValues("Content-Type").FirstOrDefault();
+                if (resp.IsSuccessStatusCode)
+                {
+                    return new ProcessRuleResult()
+                    {
+                        IsSuccess = true,
+                        ActionType = ActionType.ReverseProxy,
+                        HttpStreamResult = new HTTPStreamResult(false, null, resp.StatusCode, contentType, rProxyResult, null, false),
+                        Message = rProxyURL
+                    };
+                }
+                else
+                {
+                    return new ProcessRuleResult() 
+                    {
+                        IsSuccess = false, ActionType = ActionType.ReverseProxy, SendErrorResponsePage_HttpStatusCode = resp.StatusCode, 
+                        LogLevel = LogLevel.Warning, Message = rProxyURL + " > " + resp.ReasonPhrase 
+                    };
+                }
+                //return new ProcessRuleResult() { ActionType = ActionType.ReverseProxy,  HttpStreamResult = new HTTPStreamResult(false, null, resp.StatusCode,null,proxyResult,null,false) };
+            }
         }
     }    
     public class AlternativeWWWDirectoryAction : IReponseAction
     {
+        public string ShortName { get { return "AltWWWDir"; } }
         public string AlternativeWWWDirectory { get; set; } = null;
-        public async Task<ProcessResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, StaticFileProcessor parent)
+        public async Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, NameValueCollection headers,StaticFileProcessor parent)
         {
             HTTPStreamResult httpStreamResult = await parent.ProcessRequestAsync(callerIP, path, this.AlternativeWWWDirectory).ConfigureAwait(false);
-            if (httpStreamResult.HttpStatusCode == HttpStatusCode.OK)
+            if ((int)httpStreamResult.HttpStatusCode >= 200 && (int)httpStreamResult.HttpStatusCode < 300)
             {
-                return new ProcessResult() { ActionType = ActionType.AlternativeWWWDirectory, AlternativeWWWDirectoryHttpStreamResult = httpStreamResult, Message = "Served '" + httpStreamResult.FileToRead + "'" };
+                return new ProcessRuleResult() { IsSuccess = true, ActionType = ActionType.AlternativeWWWDirectory, HttpStreamResult = httpStreamResult, Message = "Served '" + httpStreamResult.FileToRead + "'" };
             }
             else
             {
-                if (httpStreamResult.HttpStatusCode == HttpStatusCode.NotFound) 
-                    return new ProcessResult() { ActionType=ActionType.AlternativeWWWDirectory, SendErrorResponsePage = true, SendErrorResponsePage_HttpStatusCode = HttpStatusCode.NotFound, LogLevel = LogLevel.Warning, Message = httpStreamResult.FileToRead + "' does not exist" };
-                return new ProcessResult() { ActionType = ActionType.AlternativeWWWDirectory, SendErrorResponsePage = true, SendErrorResponsePage_HttpStatusCode = httpStreamResult.HttpStatusCode, LogLevel = LogLevel.Error, Message = httpStreamResult.ErrorMsg };
+                return new ProcessRuleResult()
+                {
+                    IsSuccess = false,
+                    ActionType = ActionType.AlternativeWWWDirectory,
+                    SendErrorResponsePage_HttpStatusCode = httpStreamResult.HttpStatusCode,
+                    LogLevel = LogLevel.Warning,
+                    Message = httpStreamResult.ErrorMsg
+                };            
             }
         }
-        //public async Task<ProcessResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, HttpListenerContext context, HttpServer parent)
-        //{
-        //    HTTPStreamResult httpStreamResult = await parent.ProcessRequestAsync(callerIP, path, this.AlternativeWWWDirectory).ConfigureAwait(false);
-        //    parent.OnHTTPStreamResult?.Invoke(httpStreamResult);
-        //    if (httpStreamResult.HttpStatusCode == HttpStatusCode.OK)
-        //    {
-        //        await parent.SendToOutputAsync(httpStreamResult, context);
-        //        return new ProcessResult() { Message = "Served '" + httpStreamResult.FileToRead + "'" };
-        //    }
-        //    else
-        //    {
-        //        if (httpStreamResult.HttpStatusCode == HttpStatusCode.NotFound)
-        //        {
-        //            return new ProcessResult() { SendErrorResponsePage = true, SendErrorResponsePage_HttpStatusCode = HttpStatusCode.NotFound, LogLevel = LogLevel.Warning, Message = httpStreamResult.FileToRead + "' does not exist" };
-        //        }
-        //        return new ProcessResult() { SendErrorResponsePage = true, SendErrorResponsePage_HttpStatusCode = httpStreamResult.HttpStatusCode, LogLevel = LogLevel.Error, Message = httpStreamResult.ErrorMsg };
-        //    }
-        //}
     }
 
 
-    public class ProcessResult
+    public class ProcessRuleResult
     {
-        public bool Log { get; set; } = true;
-        [JsonConverter(typeof(StringEnumConverter))]
+        public bool IsSuccess { get; set; } = true;
         public LogLevel LogLevel { get; set; } = LogLevel.Info;        
         public string Message { get; set; } = null;
-        public bool SendErrorResponsePage { get; set; } = false;
         public HttpStatusCode SendErrorResponsePage_HttpStatusCode { get; set; } = HttpStatusCode.BadRequest;
         public bool ContinueNextRule { get; set; } = false;
-
         public ActionType ActionType { get; set; } = ActionType.AlternativeWWWDirectory;
-        public HTTPStreamResult AlternativeWWWDirectoryHttpStreamResult { get; set; } = null;
+        public HTTPStreamResult HttpStreamResult { get; set; } = null;
         public string RedirectURL { get; set; } = null;
 
     }

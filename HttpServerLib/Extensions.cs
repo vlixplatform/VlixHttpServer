@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -99,6 +100,13 @@ namespace  Vlix.HttpServer
             MultipleLinesText = MultipleLinesText.Replace('\r', ' ');
             MultipleLinesText = MultipleLinesText.Replace("\n", "");
             return MultipleLinesText;
+        }
+
+        public static string ReadToEnd(this MemoryStream BASE)
+        {
+            BASE.Position = 0;
+            StreamReader R = new StreamReader(BASE);
+            return R.ReadToEnd();
         }
 
     }

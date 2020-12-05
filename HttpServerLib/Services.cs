@@ -60,34 +60,48 @@ namespace  Vlix.HttpServer
         
         public async static Task<bool> TryBindSSLCertToPort(int PortNumber, string subject, StoreName storeName = StoreName.My, Action<string> OnInfoLog = null, Action<string> OnErrorLog = null, bool RemoveAnyPreviousBinding = true, string IP = "0.0.0.0")
         {
+            if (string.IsNullOrWhiteSpace(subject))
+            {
+                OnErrorLog?.Invoke("Unable to bind SSL Cert to Port as no certificate subject was specified.");
+                return false;
+            }
             //List<X509Certificate2> x509Certificates = new List<X509Certificate2>(); 
             var certs = await Services.GetSSLCertificates(storeName);
             X509Certificate2 x509Certificate = certs.Where(c => c.HasPrivateKey && c.Subject ==subject).OrderByDescending(c=>c.NotAfter).FirstOrDefault();
-            if (x509Certificate==null) OnErrorLog.Invoke("Unable to find SSL Certificate with subject '" + subject + "' in certificte store '" + storeName.ToString() + "'");
+            if (x509Certificate == null)
+            {
+                OnErrorLog?.Invoke("Unable to find SSL Certificate with subject '" + subject + "' in certificte store '" + storeName.ToString() + "'");
+                return false;
+            }
             
             string applicationId = null;
-            try
+            var asm = Assembly.GetEntryAssembly();
+            if (asm == null)  applicationId = Guid.NewGuid().ToString();
+            else
             {
-                applicationId = ((GuidAttribute)Assembly.GetEntryAssembly().GetCustomAttributes(typeof(GuidAttribute), true)[0]).Value;
+                try
+                {
+                    applicationId = ((GuidAttribute)Assembly.GetEntryAssembly().GetCustomAttributes(typeof(GuidAttribute), true)[0]).Value;
+                }
+                catch
+                { }
             }
-            catch
-            { }
             if (applicationId == null) applicationId = Guid.NewGuid().ToString();
 
 
             //Remove any Previously Binded SSL Sert at PORT
-            if (RemoveAnyPreviousBinding) RemoveSSLCertFromPort(IP,PortNumber, (log) => OnInfoLog.Invoke(log));
+            if (RemoveAnyPreviousBinding) RemoveSSLCertFromPort(IP,PortNumber, (log) => OnInfoLog?.Invoke(log));
 
-            string BindCommand = "netsh http add sslcert ipport=" + IP + ":" + PortNumber + " certhash=" + x509Certificate.Thumbprint + " appid={" + applicationId + "}";
-            OnInfoLog?.Invoke("Binding SSL Certificate '" + subject + "' to " + IP + ":" + PortNumber); // + " via Command=" + BindCommand);
             try
             {
+                string BindCommand = "netsh http add sslcert ipport=" + IP + ":" + PortNumber + " certhash=" + x509Certificate.Thumbprint + " appid={" + applicationId + "}";
+                OnInfoLog?.Invoke("Binding SSL Certificate '" + subject + "' to " + IP + ":" + PortNumber); // + " via Command=" + BindCommand)
                 string BindResultText = ExecuteCommand(BindCommand).RemoveAllNewLines().Trim(' ');
                 OnInfoLog?.Invoke(BindResultText);
             }
             catch (Exception ex)
             {
-                OnErrorLog.Invoke("Unable to bind generate SSL Certificate to Port " + PortNumber + "\r\n" + ex.ToString());
+                OnErrorLog?.Invoke("Unable to bind generate SSL Certificate to Port " + PortNumber + "\r\n" + ex.ToString());
                 return false;
             }
             return true;

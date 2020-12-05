@@ -1130,7 +1130,7 @@ namespace HttpServerConfig
                     case ActionType.Deny:
                         return "Deny Request";
                     case ActionType.ReverseProxy:
-                        return "Reverse Proxy";
+                        return "Reverse Proxy To";
                     case ActionType.AlternativeWWWDirectory:
                         return "Use Alternative WWW Directory";
                 }
@@ -1147,7 +1147,7 @@ namespace HttpServerConfig
                         return ActionType.Redirect;
                     case "Deny Request":
                         return ActionType.Deny;
-                    case "Reverse Proxy":
+                    case "Reverse Proxy To":
                         return ActionType.ReverseProxy;
                     case "Use Alternative WWW Directory":
                         return ActionType.AlternativeWWWDirectory;

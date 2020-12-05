@@ -24,6 +24,7 @@ namespace HttpServerConfig
         public UCHttpServerConfig()
         {
             InitializeComponent();
+            var ddd = ((HttpServerConfigVM)this.DataContext);
         }
         private void opfSelectSSLCert_OnClose(object sender, RoutedEventArgs e)
         {

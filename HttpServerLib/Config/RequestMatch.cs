@@ -8,7 +8,7 @@ namespace Vlix.HttpServer
     {        
         public bool CheckHostName { get; set; } = false;
         [JsonConverter(typeof(StringEnumConverter))]
-        public MatchType HostNameMatchType { get; set; } = MatchType.Wildcard;
+        public MatchType HostNameMatchType { get; set; } = MatchType.Exact;
         public string HostNameMatch { get; set; } = null;
         public bool CheckPort { get; set; } = false;
         public int? Port { get; set; } = null;
@@ -18,18 +18,26 @@ namespace Vlix.HttpServer
         public string PathMatch { get; set; } = null;
 
         Regex hostRegex = null;
-        public Regex GetHostRegex()
+        public bool IsHostMatch(string host)
         {
-            if (hostRegex == null) { if (HostNameMatchType == MatchType.Wildcard) hostRegex = new Wildcard(HostNameMatch); else hostRegex = new Regex(HostNameMatch); }
-                return hostRegex;
+            if (this.HostNameMatchType == MatchType.Exact) return this.HostNameMatch == host;
+            else
+            {
+                if (hostRegex == null) { if (HostNameMatchType == MatchType.Wildcard) hostRegex = new Wildcard(HostNameMatch, RegexOptions.IgnoreCase); else hostRegex = new Regex(HostNameMatch, RegexOptions.IgnoreCase); }
+                return hostRegex.IsMatch(host);
+            }            
         }
         Regex pathRegex = null;
-        public Regex GetPathRegex()
+        public bool IsPathMatch(string path)
         {
-            if (pathRegex == null) { if (PathMatchType == MatchType.Wildcard) pathRegex = new Wildcard(PathMatch); else pathRegex = new Regex(PathMatch); }
-            return pathRegex;
+            if (this.PathMatchType == MatchType.Exact) return this.PathMatch == path;
+            else
+            {
+                if (pathRegex == null) { if (PathMatchType == MatchType.Wildcard) pathRegex = new Wildcard(PathMatch); else pathRegex = new Regex(PathMatch); }
+                return pathRegex.IsMatch(path);
+            }
         }
     }
 
-    public enum MatchType { Wildcard, Regex }
+    public enum MatchType { Exact, Wildcard, Regex }
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using System.Text;
+using System.Security.Cryptography.X509Certificates;
 
 namespace  Vlix.HttpServer
 {
@@ -97,9 +98,10 @@ namespace  Vlix.HttpServer
         public Action<string> OnErrorLog { get; set; }
         public Action<string> OnWarningLog { get; set; }
         public Action<string> OnInfoLog { get; set; }
-        public Action<HTTPStreamResult> OnHTTPStreamResult { get; set; }
 
-        public HttpServer(string wWWDirectory, int httpPort = 80, int httpsPort = 443, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, int maximumCacheSizeInMB = 500,
+
+
+        public HttpServer(string wWWDirectory, int httpPort, int httpsPort = 443, string certSubjectName = null, StoreName certStoreName = StoreName.My, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, int maximumCacheSizeInMB = 500,
             bool allowLocalhostConnectionsOnly = false) : base(new StaticFileProcessorConfig() { WWWDirectory = wWWDirectory, EnableCache = enableCache, MaximumCacheSizeInMB = maximumCacheSizeInMB, OnlyCacheItemsLessThenMB = onlyCacheItemsLessThenMB })
         {
             CommonConstructor((new CancellationTokenSource()).Token, new HttpServerConfig()
@@ -107,16 +109,18 @@ namespace  Vlix.HttpServer
                 WWWDirectory = wWWDirectory,
                 EnableHTTP = true,
                 HTTPPort = httpPort,
-                EnableHTTPS = true,
+                EnableHTTPS = (string.IsNullOrWhiteSpace(certSubjectName)) ? false : true,
                 HTTPSPort = httpsPort,
                 EnableCache = enableCache,
                 OnlyCacheItemsLessThenMB =  onlyCacheItemsLessThenMB,
                 MaximumCacheSizeInMB = maximumCacheSizeInMB,
-                AllowLocalhostConnectionsOnly = allowLocalhostConnectionsOnly
+                AllowLocalhostConnectionsOnly = allowLocalhostConnectionsOnly,
+                SSLCertificateSubjectName = certSubjectName,
+                SSLCertificateStoreName = StoreName.My,
             });
         }
 
-        public HttpServer(CancellationToken cancellationToken, string wWWDirectory, int httpPort = 80, int httpsPort = 443, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, 
+        public HttpServer(CancellationToken cancellationToken, string wWWDirectory, int httpPort = 80, int httpsPort = 443, string certSubjectName = null, StoreName certStoreName = StoreName.My, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, 
             int maximumCacheSizeInMB = 500, bool allowLocalhostConnectionsOnly = false) : base(new StaticFileProcessorConfig() { WWWDirectory = wWWDirectory, EnableCache = enableCache, OnlyCacheItemsLessThenMB = onlyCacheItemsLessThenMB, MaximumCacheSizeInMB = maximumCacheSizeInMB })
         {
             CommonConstructor(cancellationToken, new HttpServerConfig()
@@ -124,12 +128,14 @@ namespace  Vlix.HttpServer
                 WWWDirectory = wWWDirectory,
                 EnableHTTP = true,
                 HTTPPort = httpPort,
-                EnableHTTPS = true,
+                EnableHTTPS = (string.IsNullOrWhiteSpace(certSubjectName)) ? false : true,
                 HTTPSPort = httpsPort,
                 EnableCache = enableCache,
                 OnlyCacheItemsLessThenMB = onlyCacheItemsLessThenMB,
                 MaximumCacheSizeInMB = maximumCacheSizeInMB,
-                AllowLocalhostConnectionsOnly = allowLocalhostConnectionsOnly
+                AllowLocalhostConnectionsOnly = allowLocalhostConnectionsOnly,
+                SSLCertificateSubjectName = certSubjectName,
+                SSLCertificateStoreName = StoreName.My
             });            
         }
         public HttpServer(CancellationToken cancellationToken, HttpServerConfig httpServerConfig) : 
@@ -154,8 +160,15 @@ namespace  Vlix.HttpServer
      
         public async Task StartAsync()
         {
-            this.OnInfoLog?.Invoke("Starting Vlix HTTP Server...");
-            await Services.TryBindSSLCertToPort(443, this.Config.SSLCertificateSubjectName, this.Config.SSLCertificateStoreName, (log) => this.OnInfoLog?.Invoke(log), (log) => this.OnErrorLog?.Invoke(log)); //Vlix Platform
+            this.OnInfoLog?.Invoke("Starting Vlix Web Server...");
+            if (this.Config.EnableHTTPS)
+            {
+                if (!await Services.TryBindSSLCertToPort(443, this.Config.SSLCertificateSubjectName, this.Config.SSLCertificateStoreName, (log) => this.OnInfoLog?.Invoke(log), (log) => this.OnErrorLog?.Invoke(log)))
+                {
+                    this.OnErrorLog?.Invoke("Failed to Start Web Server (Unable to bind SSL Cert to Port)!");
+                    throw new Exception("Failed to Start Web Server (Unable to bind SSL Cert to Port)!");
+                };
+            }
 
             _listener = new HttpListener();
             
@@ -163,7 +176,7 @@ namespace  Vlix.HttpServer
             if (this.Config.EnableHTTPS) _listener.Prefixes.Add("https://*:" + this.Config.HTTPSPort.ToString() + "/");
             if (!this.Config.EnableHTTP && !this.Config.EnableHTTPS)
             {
-                this.OnInfoLog?.Invoke("Both HTTP (Port " + this.Config.HTTPPort + ") and HTTPS (Port " + this.Config.HTTPSPort + ") is disabled");
+                this.OnInfoLog?.Invoke("Unable to start as both HTTP (Port " + this.Config.HTTPPort + ") and HTTPS (Port " + this.Config.HTTPSPort + ") is disabled");
                 return;
             }
             if (this.Config.EnableHTTP && !this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPPort + "(HTTP), Directory = '" + this.Config.WWWDirectory + "'");
@@ -209,37 +222,37 @@ namespace  Vlix.HttpServer
                         if (string.Equals(schemeStr, "https", StringComparison.OrdinalIgnoreCase)) scheme = Scheme.https;
                         if (rule.IsMatch(scheme, host, port, absolutePath))
                         {                            
-                            ProcessResult processResult = await rule.ResponseAction.ProcessAsync(callerIP,scheme,host, port,absolutePath, this).ConfigureAwait(false);
-                            switch (processResult.ActionType)
+                            ProcessRuleResult processRuleResult = await rule.ResponseAction.ProcessAsync(callerIP,scheme,host, port,absolutePath, context.Request.Headers, this).ConfigureAwait(false);
+                            switch (processRuleResult.ActionType)
                             {
                                 case ActionType.AlternativeWWWDirectory:
-                                    this.OnHTTPStreamResult?.Invoke(processResult.AlternativeWWWDirectoryHttpStreamResult);
-                                    if (processResult.AlternativeWWWDirectoryHttpStreamResult.HttpStatusCode == HttpStatusCode.OK) await this.SendToOutputAsync(processResult.AlternativeWWWDirectoryHttpStreamResult, context);
+                                    if (processRuleResult.IsSuccess) await this.SendToOutputAsync(processRuleResult.HttpStreamResult, context);
                                     break;
                                 case ActionType.Redirect:
-                                    context.Response.Redirect(processResult.RedirectURL);
+                                    context.Response.Redirect(processRuleResult.RedirectURL);
                                     break;
                                 case ActionType.Deny:
+                                    context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                                    //context.Response?.Close();
                                     break;
                                 case ActionType.ReverseProxy:
+                                    if (processRuleResult.IsSuccess) await this.SendToOutputAsync(processRuleResult.HttpStreamResult, context);
                                     break;
                             }
-                            if (processResult.Log)
-                            {
-                                string msg = null; if (!string.IsNullOrWhiteSpace(processResult.Message)) msg = " > " + processResult.Message;
-                                if (processResult.LogLevel == LogLevel.Info) this.OnInfoLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > Rule '" + rule.Name + "'" + msg);                                    
-                                if (processResult.LogLevel == LogLevel.Warning) this.OnWarningLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > Rule '" + rule.Name + "'" + msg);
-                                if (processResult.LogLevel == LogLevel.Error) this.OnErrorLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > Rule '" + rule.Name + "'" + msg);                                
-                            }
-                            if (processResult.SendErrorResponsePage) { await this.SendErrorResponsePage(context, processResult.Message, processResult.SendErrorResponsePage_HttpStatusCode); return; }
-                            if (!processResult.ContinueNextRule) { context.Response?.Close(); return; }
+                            
+                            string msg = null; if (!string.IsNullOrWhiteSpace(processRuleResult.Message)) msg = processRuleResult.Message;
+                            string ruleName = rule.ResponseAction.ShortName + (string.IsNullOrWhiteSpace(rule.Name)? "": "-" + rule.Name);
+                            if (processRuleResult.LogLevel == LogLevel.Info) this.OnInfoLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > " + ruleName + " > " + msg);                                    
+                            else if (processRuleResult.LogLevel == LogLevel.Warning) this.OnWarningLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > " + ruleName + " > " + msg);
+                            else if (processRuleResult.LogLevel == LogLevel.Error) this.OnErrorLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > " + ruleName + " > " + msg);
+                            if (!processRuleResult.IsSuccess) { await this.SendErrorResponsePage(context, processRuleResult.Message, processRuleResult.SendErrorResponsePage_HttpStatusCode); return; }
+                            if (!processRuleResult.ContinueNextRule) { context.Response?.Close(); return; }
                         }
                     }
                 }
 
-                //Process Request
+                //Process Request Normally (Static Http Server)
                 HTTPStreamResult httpStreamResult = await this.ProcessRequestAsync(callerIP, absolutePath, this.Config.WWWDirectory).ConfigureAwait(false);
-                this.OnHTTPStreamResult?.Invoke(httpStreamResult);
                 if (httpStreamResult.HttpStatusCode == HttpStatusCode.OK)
                 {
                     await this.SendToOutputAsync(httpStreamResult, context);
@@ -247,14 +260,10 @@ namespace  Vlix.HttpServer
                 }
                 else
                 {
-                    if (httpStreamResult.HttpStatusCode == HttpStatusCode.NotFound)
-                    {
-                        if (!httpStreamResult.FaviconError) this.OnWarningLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > '" + httpStreamResult.FileToRead + "' does not exist. Returning NOT FOUND");
-                    }
-                    if (httpStreamResult.HttpStatusCode == HttpStatusCode.InternalServerError)
-                    {
+                    if (httpStreamResult.HttpStatusCode == HttpStatusCode.NotFound && !httpStreamResult.FaviconError)
+                        this.OnWarningLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > '" + httpStreamResult.FileToRead + "' does not exist. Returning NOT FOUND");
+                    if (httpStreamResult.HttpStatusCode == HttpStatusCode.InternalServerError) 
                         this.OnErrorLog?.Invoke(httpStreamResult.ErrorMsg);
-                    }
                     await SendErrorResponsePage(context, httpStreamResult.ErrorMsg, httpStreamResult.HttpStatusCode);
                 }
             }
@@ -267,12 +276,13 @@ namespace  Vlix.HttpServer
 
         internal async Task SendToOutputAsync(HTTPStreamResult httpStreamResult, HttpListenerContext context)
         {
-            context.Response.ContentLength64 = httpStreamResult.MemoryStream.Length;
-            context.Response.ContentType = _mimeTypeMappings.TryGetValue(System.IO.Path.GetExtension(httpStreamResult.FileToRead), out string mime) ? mime : "application/octet-stream";
+            context.Response.ContentLength64 = httpStreamResult.Stream.Length;
+            context.Response.ContentType = httpStreamResult.ContentType;
+            //context.Response.ContentType = _mimeTypeMappings.TryGetValue(System.IO.Path.GetExtension(httpStreamResult.FileToRead), out string mime) ? mime : "application/octet-stream";            
             context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
             if (!String.IsNullOrEmpty(httpStreamResult?.FileToRead)) context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(httpStreamResult.FileToRead).ToString("r"));
             context.Response.StatusCode = (int)HttpStatusCode.OK;
-            await httpStreamResult.MemoryStream.CopyToAsync(context.Response.OutputStream);
+            await httpStreamResult.Stream.CopyToAsync(context.Response.OutputStream);
         }
 
         internal async Task SendErrorResponsePage(HttpListenerContext context, string errorMsg, HttpStatusCode httpStatusCode)

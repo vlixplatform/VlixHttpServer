@@ -14,7 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Vlix.HttpServer;
 
-namespace HttpServerConfig
+namespace Vlix.HttpServerConfig
 {
     /// <summary>
     /// Interaction logic for UCHttpServerConfig.xaml
@@ -33,6 +33,19 @@ namespace HttpServerConfig
         private void opbNewRule_Click(object sender, RoutedEventArgs e)
         {
             svRules.ScrollToBottom();
+        }
+
+        private void UCSelectSSLCert_OnCertificateSelected(object sender, RoutedEventArgs e)
+        {
+            if (e.OriginalSource is SSLCertVM sSLCertVM)
+            {
+                HttpServerConfigVM httpServerConfigVM = ((HttpServerConfigVM)this.DataContext);
+                httpServerConfigVM.SSLCertificateSubjectName = sSLCertVM.Subject;
+                httpServerConfigVM.SSLCertificateStoreName = sSLCertVM.StoreName;
+                httpServerConfigVM.SubjectAlternativeNames.Clear();
+                foreach (var s in sSLCertVM.SubjectAlternativeNames) httpServerConfigVM.SubjectAlternativeNames.Add(s);
+                httpServerConfigVM.ShowSelectSSLCertWindow = false;
+            }
         }
     }
 }

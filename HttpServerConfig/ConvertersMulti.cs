@@ -28,7 +28,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Controls.Primitives;
 
 
-namespace HttpServerConfig
+namespace Vlix.HttpServerConfig
 {
     public class Combine2StringWithSpaceBetweenMultiConverter : IMultiValueConverter
     {

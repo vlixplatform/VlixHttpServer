@@ -11,7 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
-namespace HttpServerConfig
+namespace Vlix.HttpServerConfig
 {
     //A Separate MyDataGrid class has to be derived as the Official DataGrid Class Enter Key behavior had to be overridden
     //The default enter key causes the grid to change lines

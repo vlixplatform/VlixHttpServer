@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Vlix.HttpServer
@@ -13,6 +15,7 @@ namespace Vlix.HttpServer
     public enum Scheme { http, https }
     public enum ActionType { AlternativeWWWDirectory, Redirect, Deny, ReverseProxy }
 
+    
     public interface IReponseAction
     {
         string ShortName { get; }
@@ -26,7 +29,6 @@ namespace Vlix.HttpServer
     //    public ActionType ActionType { get; set; } = ActionType.Redirect;
         
     //}
-
     public class DenyAction : IReponseAction
     {
         public string ShortName { get { return "Deny"; } }
@@ -72,13 +74,33 @@ namespace Vlix.HttpServer
         public bool SetPort { get; set; } = false;
         public int? Port { get; set; } = null;
         public bool SetPath { get; set; } = false;
+        public bool UsePathVariable { get; set; } = false;
         public string Path { get; set; } = null;
         public async Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, NameValueCollection headers,StaticFileProcessor parent)
         {
             string portStr = port.ToString();
             string pScheme; if (this.SetScheme) pScheme = (this.Scheme ?? Scheme).ToString(); else pScheme = scheme.ToString();
             string pHost; if (this.SetHostName) pHost = (this.HostName ?? host).ToString(); else pHost = host;
-            string pPath; if (this.SetPath) pPath = (this.Path ?? path).ToString(); else pPath = path;
+            string pPath = null;
+            if (this.SetPath)
+            {
+                if (this.UsePathVariable)
+                {
+                    // {$Path|^.sdsdd$}
+                    string newPath = this.Path.Replace("%PATH%", path);
+                    Regex regex = new Regex(@"\%[^\%]*\%", RegexOptions.IgnoreCase);
+                    MatchCollection matches = regex.Matches(this.Path);
+                    foreach (Match match in matches)
+                    {
+                        string innerRegex = match.Value.Trim('%');
+                        string innerRegexResult = regex.Match(this.Path).Value;
+                        newPath = newPath.Replace(match.Value, innerRegexResult);
+                    }
+                    pPath = newPath;
+                }
+                else pPath = path;
+            }
+            else pPath = path;
             string pPort; if (this.SetPort) pPort = (this.Port ?? port).ToString(); else pPort = portStr;
             string rProxyURL = pScheme + "://" + pHost + ":" + pPort + pPath;
             using (var httpClient = new HttpClient())

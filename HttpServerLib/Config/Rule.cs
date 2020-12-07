@@ -1,14 +1,21 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 namespace Vlix.HttpServer
 {
+    [KnownType(typeof(DenyAction))]
+    [KnownType(typeof(AlternativeWWWDirectoryAction))]
+    [KnownType(typeof(ReverseProxyAction))]
+    [KnownType(typeof(RedirectAction))]
     public class Rule
     {
         public bool Enable { get; set; } = true;
         public string Name { get; set; } = "New Rule";
         public RequestMatch RequestMatch { get; set; } = new RequestMatch();
+
+        
         public IReponseAction ResponseAction { get; set; } = new RedirectAction();
 
         
@@ -119,13 +126,13 @@ namespace Vlix.HttpServer
 
     public class SimpleReverseProxyRule : Rule
     {
-        public SimpleReverseProxyRule(string host, string pathWildCard, int reverseProxyPort = 80)
+        public SimpleReverseProxyRule(string hostMatch, string pathWildCard, int reverseProxyPort = 80)
         {
             this.Enable = true;
             this.RequestMatch = new RequestMatch()
             {
                 CheckHostName = true,
-                HostNameMatch = host,
+                HostNameMatch = hostMatch,
                 CheckPath = true,
                 PathMatch = pathWildCard
             };

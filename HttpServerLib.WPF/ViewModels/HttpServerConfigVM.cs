@@ -43,7 +43,6 @@ namespace Vlix.HttpServer
             //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 4", Enable = true }, this));
             //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 5", Enable = false }, this));
             //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 5", Enable = false }, this));
-            this.SelectSSLCertVM = new SelectSSLCertVM(this);
 
         }
 
@@ -112,6 +111,7 @@ namespace Vlix.HttpServer
                             HostName = ruleVM.ResponseAction.ReverseProxyHostName,
                             SetPort = ruleVM.ResponseAction.SetReverseProxyPort,
                             Port = ruleVM.ResponseAction.ReverseProxyPort,
+                            UsePathVariable = ruleVM.ResponseAction.ReverseProxyUsePathVariable,
                             SetPath = ruleVM.ResponseAction.SetReverseProxyPath,
                             Path = ruleVM.ResponseAction.ReverseProxyPath
                         };
@@ -160,7 +160,6 @@ namespace Vlix.HttpServer
         bool _ShowDisabledRules = true; public bool ShowDisabledRules { get { return _ShowDisabledRules; } set { SetField(ref _ShowDisabledRules, value, "ShowDisabledRules"); } }
         int _OnlyCacheItemsLessThenMB = 10; public int OnlyCacheItemsLessThenMB { get { return _OnlyCacheItemsLessThenMB; } set { SetField(ref _OnlyCacheItemsLessThenMB, value, "OnlyCacheItemsLessThenMB"); } }
         int _MaximumCacheSizeInMB = 250; public int MaximumCacheSizeInMB { get { return _MaximumCacheSizeInMB; } set { SetField(ref _MaximumCacheSizeInMB, value, "MaximumCacheSizeInMB"); } }
-        SelectSSLCertVM _SelectSSLCertVM = null; public SelectSSLCertVM SelectSSLCertVM { get { return _SelectSSLCertVM; } set { SetField(ref _SelectSSLCertVM, value, "SelectSSLCertVM"); } }
         public ObservableCollection<RuleVM> Rules { get; set; } = new ObservableCollection<RuleVM>();
         public ICommand RefreshClickCommand { get { return new DelegateCommand<object>(async (p) => await LoadVM(), (p) => true);}}
         public ICommand SelectSSLCertClickCommand { get { return new DelegateCommand<object>((p) => this.ShowSelectSSLCertWindow = true, (p) => true);}}

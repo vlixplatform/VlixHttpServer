@@ -15,7 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace HttpServerConfig
+namespace Vlix.HttpServerConfig
 {
     public enum CentreMessageState { NoMessage, Processing, Error, Success }
 

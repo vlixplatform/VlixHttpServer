@@ -78,12 +78,6 @@ namespace HttpServer.Tests
 
 
 
-        //[Theory]
-        //[InlineData(new Redirect() { From = new RedirectFrom() { CheckHostName = false, HostNameMatch = null, CheckPort = false, Port = 80, CheckPath = true, PathMatch = null }, To = new RedirectTo() { HTTPS = true, HostName = null, Port = } }, null, null, false)]
-        //public string Process(Redirect redirect, string requestURL, string redirectURL)
-        //{
-
-        //}
 
         private void CreateWWWDirectory(string parent, string wWWPath)
         {
@@ -110,6 +104,8 @@ namespace HttpServer.Tests
         {
             Vlix.HttpServer.HttpServer vlixHttpServer  = new Vlix.HttpServer.HttpServer(tempWWWPath, 80, 443, "CN=azrin.vlix.me", StoreName.My, true, 10, 10, true);                        
             await vlixHttpServer.StartAsync();
+            Vlix.HttpServer.HttpServer reverseProxiedServer = new Vlix.HttpServer.HttpServer(altTempWWWPath, 5072);
+            await reverseProxiedServer.StartAsync();
 
             CreateWWWDirectory("General",tempWWWPath);
             CreateWWWDirectory("Alternative", altTempWWWPath);
@@ -137,15 +133,33 @@ namespace HttpServer.Tests
                 var altWWWResult = await resp.Content.ReadAsStringAsync();
                 Assert.Equal("<h1>Hello World From Alternative/Page5!/h1>", altWWWResult);
 
-                //Test Deny Action
-                vlixHttpServer.Config.Rules.Add(new SimplePathDenyRule("/Page6.html*"));
+                //Test Alternative WWW Directory Failure
+                vlixHttpServer.Config.Rules.Add(new Rule()
+                {
+                    RequestMatch = new RequestMatch() { CheckPath = true, PathMatch = "*Page6.*", PathMatchType = MatchType.Wildcard },
+                    ResponseAction = new AlternativeWWWDirectoryAction() { AlternativeWWWDirectory = "C:\\SomeDirectoryThatDoesNotExist" }
+                });
                 resp = await httpClient.GetAsync("http://localhost/Page6.html");
+                var altWWWResultFailure = await resp.Content.ReadAsStringAsync();
+                Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+                Assert.Equal(@"File 'C:\SomeDirectoryThatDoesNotExist\Page6.html' does not exist!", altWWWResultFailure);
+                
+
+                //Test Deny Action
+                vlixHttpServer.Config.Rules.Add(new SimplePathDenyRule("/Page7.html*"));
+                resp = await httpClient.GetAsync("http://localhost/Page7.html");
                 Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+
+                //Test Revese Proxy Action
+                vlixHttpServer.Config.Rules.Add(new SimpleReverseProxyRule("localhost","/Page8.html",5072));
+                resp = await httpClient.GetAsync("http://localhost/Page8.html");
+                var revProxyResult = await resp.Content.ReadAsStringAsync();
+                Assert.Equal("<h1>Hello World From Alternative/Page8!/h1>", revProxyResult);
             }
             vlixHttpServer.Stop();
         }
 
-        //[Fact(Skip = "Too long")]
+        
         [Fact]
         public async void CacheTest()
         {

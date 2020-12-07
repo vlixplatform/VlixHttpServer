@@ -15,7 +15,7 @@ using Prism.Commands;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
 
-namespace Vlix.HttpServer
+namespace Vlix.HttpServerConfig
 {
     public class SelectSSLCertVM : INotifyPropertyChanged
     {
@@ -36,21 +36,19 @@ namespace Vlix.HttpServer
         public SelectSSLCertVM()
         {
         }
-        public SelectSSLCertVM(HttpServerConfigVM parentVM)
-        {
-            this.ParentVM = parentVM;
-        }
 
-        public async Task LoadVM()
+        public Task LoadVM()
         {
             this.IsLoading = true;
-            var certs = await Services.GetSSLCertificates(this.StoreName);
+            X509Store store = new X509Store(this.StoreName, StoreLocation.LocalMachine);
+            store.Open(OpenFlags.ReadOnly);
+            List<X509Certificate2> certs = new List<X509Certificate2>();
+            foreach (X509Certificate2 certificate in store.Certificates) certs.Add(certificate);            
             this.SSLCerts.Clear();
             foreach (var c in certs) if (c.HasPrivateKey) this.SSLCerts.Add(new SSLCertVM(c, this));
             this.IsLoading = false;
+            return Task.CompletedTask;
         }
-
-        public HttpServerConfigVM ParentVM;
         bool _EnableCache = false; public bool EnableCache { get { return _EnableCache; } set { SetField(ref _EnableCache, value, "EnableCache"); } }
         StoreName _StoreName = StoreName.My; public StoreName StoreName { get { return _StoreName; } set { SetField(ref _StoreName, value, "StoreName"); } }
         bool _IsLoading = false; public bool IsLoading { get { return _IsLoading; } set { SetField(ref _IsLoading, value, "IsLoading"); } }
@@ -62,7 +60,7 @@ namespace Vlix.HttpServer
         {
             get
             {
-                return new DelegateCommand<object>(async (c) => await LoadVM(), (c) => true);
+                return new DelegateCommand<object>(async (c) => await Task.Run(()=> LoadVM()), (c) => true);
             }
         }
 
@@ -130,18 +128,6 @@ namespace Vlix.HttpServer
         string _ThumbPrint = null; public string ThumbPrint { get { return _ThumbPrint; } set { SetField(ref _ThumbPrint, value, "ThumbPrint"); } }
         StoreName _StoreName = StoreName.My; public StoreName StoreName { get { return _StoreName; } set { SetField(ref _StoreName, value, "StoreName"); } }
         public ObservableCollection<string> SubjectAlternativeNames { get; set; } = new ObservableCollection<string>();
-        public ICommand SelectSSLCertClickCommand { get { return new DelegateCommand<object>((c) => 
-        { 
-            this.ParentVM.SelectedSSLCert = this;
-            this.ParentVM.ParentVM.ShowSelectSSLCertWindow = false;
-            this.ParentVM.ParentVM.SSLCertificateSubjectName = this.Subject;
-            this.ParentVM.ParentVM.SSLCertificateStoreName = this.StoreName;
-            this.ParentVM.ParentVM.SubjectAlternativeNames.Clear();
-            foreach (var s in this.SubjectAlternativeNames) this.ParentVM.ParentVM.SubjectAlternativeNames.Add(s);
-
-        }, (c) => true); } }
-
-        
     }
 
 }

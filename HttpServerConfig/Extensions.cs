@@ -29,7 +29,7 @@ The following Assemblies need to be added
 -   Sytem.ServiceModel
 */
 
-namespace HttpServerConfig
+namespace Vlix.HttpServerConfig
 {
     public static partial class Extensions
     {

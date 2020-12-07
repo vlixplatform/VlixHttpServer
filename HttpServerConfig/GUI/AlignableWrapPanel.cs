@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace HttpServerConfig
+namespace Vlix.HttpServerConfig
 {
     public class AlignableWrapPanel : Panel
     {

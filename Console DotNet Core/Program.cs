@@ -18,9 +18,7 @@ namespace Vlix.HttpServer
             HttpServerConfig config = new HttpServerConfig() { SSLCertificateSubjectName = "CN=azrin.vlix.me" };
             config.Rules.Add(new HttpToHttpsRedirectRule("azrin.vlix.me"));
             config.Rules.Add(new SimpleReverseProxyRule("azrin.vlix.me", "/rproxy/*",5000));
-            //config.Rules.Add(new SimpleHostNameRedirectRule("*.vlixplatform.com", "vlixplatform.com"));
-            
-            //config.Rules.Add(new SimplePathDenyRule("/forbidden.html"));
+            config.Rules.Add(new SimplePathDenyRule("/forbidden.html"));
 
             config.SaveConfigFile();
             config.LoadConfigFile();

@@ -17,7 +17,7 @@ using System.Threading;
 using MaterialIcons;
 using System.Reflection;
 
-namespace HttpServerConfig
+namespace Vlix.HttpServerConfig
 {
 
     public class OPTextBox : TextBox

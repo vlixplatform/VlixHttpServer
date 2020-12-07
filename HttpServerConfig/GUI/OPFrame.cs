@@ -19,7 +19,7 @@ using System.Reflection;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media.Animation;
 
-namespace HttpServerConfig
+namespace Vlix.HttpServerConfig
 {
     /* EXAMPLE:
      * 

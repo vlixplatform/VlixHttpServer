@@ -11,24 +11,12 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Collections;
 using System.Globalization;
-using Microsoft.Win32;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Media;
 using System.Windows;
-using System.ComponentModel;
-using System.Threading;
-using System.Windows.Controls;
-using System.Windows.Shapes;
-
-using System.Windows.Markup;
-using System.Windows.Interop;
-using System.Runtime.InteropServices;
 using System.Windows.Data;
-using System.Collections.ObjectModel;
-using System.Windows.Controls.Primitives;
 using Vlix.HttpServer;
 
-namespace HttpServerConfig
+namespace Vlix.HttpServerConfig
 {
 
     [DebuggerStepThroughAttribute]

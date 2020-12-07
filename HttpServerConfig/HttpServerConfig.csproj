@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{72DE2F58-FA8E-4FE3-A385-6BA88357F4AF}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>HttpServerConfig</RootNamespace>
+    <RootNamespace>Vlix.HttpServerConfig</RootNamespace>
     <AssemblyName>HttpServerConfig</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -44,6 +44,9 @@
     <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.WindowsAPICodePack-Core.1.1.0.2\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
     </Reference>
+    <Reference Include="Prism, Version=8.0.0.1909, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
+      <HintPath>..\packages\Prism.Core.8.0.0.1909\lib\net47\Prism.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -76,6 +79,7 @@
     <Compile Include="GUI\OPFrame.cs" />
     <Compile Include="GUI\OPLogo.cs" />
     <Compile Include="GUI\OPTextBox.cs" />
+    <Compile Include="SelectSSLCertVM.cs" />
     <Compile Include="UCSelectSSLCert.xaml.cs">
       <DependentUpon>UCSelectSSLCert.xaml</DependentUpon>
     </Compile>

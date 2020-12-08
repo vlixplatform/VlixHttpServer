@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:hslib="clr-namespace:Vlix.HttpServer;assembly=HttpServerLib"
-             xmlns:hs="clr-namespace:Vlix.HttpServer;assembly=HttpServerLib.WPF"
              xmlns:System="clr-namespace:System;assembly=mscorlib" 
              xmlns:secure="clr-namespace:System.Security.Cryptography.X509Certificates;assembly=System"
              xmlns:local="clr-namespace:Vlix.HttpServerConfig"             

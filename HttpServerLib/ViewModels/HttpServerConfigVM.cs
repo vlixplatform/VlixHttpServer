@@ -161,10 +161,10 @@ namespace Vlix.HttpServer
         int _OnlyCacheItemsLessThenMB = 10; public int OnlyCacheItemsLessThenMB { get { return _OnlyCacheItemsLessThenMB; } set { SetField(ref _OnlyCacheItemsLessThenMB, value, "OnlyCacheItemsLessThenMB"); } }
         int _MaximumCacheSizeInMB = 250; public int MaximumCacheSizeInMB { get { return _MaximumCacheSizeInMB; } set { SetField(ref _MaximumCacheSizeInMB, value, "MaximumCacheSizeInMB"); } }
         public ObservableCollection<RuleVM> Rules { get; set; } = new ObservableCollection<RuleVM>();
-        public ICommand RefreshClickCommand { get { return new DelegateCommand<object>(async (p) => await LoadVM(), (p) => true);}}
+        //public ICommand RefreshClickCommand { get { return new DelegateCommand<object>(async (p) => await LoadVM(), (p) => true);}}
         public ICommand SelectSSLCertClickCommand { get { return new DelegateCommand<object>((p) => this.ShowSelectSSLCertWindow = true, (p) => true);}}
-        public ICommand ShowAdvanceSettingsClickCommand { get { return new DelegateCommand<object>((p) => this.ShowAdvanceSettingsWindow = true, (p) => true);}}   
-        public ICommand SaveAndApplyClickCommand { get { return new DelegateCommand<object>((c) => { Services.SaveServerConfig(this.ToModel()); }, (c) => true); } } 
+        public ICommand ShowAdvanceSettingsClickCommand { get { return new DelegateCommand<object>((p) => this.ShowAdvanceSettingsWindow = true, (p) => true);}}  
+        //public ICommand SaveAndApplyClickCommand { get { return new DelegateCommand<object>((c) => { Services.SaveServerConfig(this.ToModel()); }, (c) => true); } } 
         public ICommand NewRuleClickCommand { get { return new DelegateCommand<object>((p) =>
         {
             this.Rules.Add(new RuleVM(this));

@@ -58,7 +58,7 @@ namespace Vlix.HttpServer
             this.MaximumCacheSizeInMB = config.MaximumCacheSizeInMB;
             this.OnlyCacheItemsLessThenMB = config.OnlyCacheItemsLessThenMB;
             this.WWWDirectory = config.WWWDirectory;
-            this.AllowLocalhostConnectionsOnly = config.AllowLocalhostConnectionsOnly;
+            this.AllowLocalhostConnectionsOnlyForHttp = config.AllowLocalhostConnectionsOnlyForHttp;
             this.EnableCache = config.EnableCache;
             this.Rules.Clear();
             foreach (var r in config.Rules) this.Rules.Add(r);
@@ -80,7 +80,7 @@ namespace Vlix.HttpServer
         [JsonConverter(typeof(StringEnumConverter))]
         public StoreName SSLCertificateStoreName { get; set; } = StoreName.My;
         [JsonProperty(Order = 11)]
-        public bool AllowLocalhostConnectionsOnly { get; set; } = false;
+        public bool AllowLocalhostConnectionsOnlyForHttp { get; set; } = false;
         
       
     }

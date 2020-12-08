@@ -19,7 +19,7 @@ namespace  Vlix.HttpServer
         //public int HTTPPort { get; internal set; }
         //public bool EnableHTTPS { get; internal set; }
         //public int HTTPSPort { get; internal set; }
-        //public bool AllowLocalhostConnectionsOnly { get; set; } = false;
+        //public bool AllowLocalhostConnectionsOnlyForHttp { get; set; } = false;
         public CancellationToken CancellationToken { get; internal set; }
         //public List<Rule> Rules { get; set; } = null;
 
@@ -102,7 +102,7 @@ namespace  Vlix.HttpServer
 
 
         public HttpServer(string wWWDirectory, int httpPort, int httpsPort = 443, string certSubjectName = null, StoreName certStoreName = StoreName.My, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, int maximumCacheSizeInMB = 500,
-            bool allowLocalhostConnectionsOnly = false) : base(new StaticFileProcessorConfig() { WWWDirectory = wWWDirectory, EnableCache = enableCache, MaximumCacheSizeInMB = maximumCacheSizeInMB, OnlyCacheItemsLessThenMB = onlyCacheItemsLessThenMB })
+            bool allowLocalhostConnectionsOnlyForHttp = false) : base(new StaticFileProcessorConfig() { WWWDirectory = wWWDirectory, EnableCache = enableCache, MaximumCacheSizeInMB = maximumCacheSizeInMB, OnlyCacheItemsLessThenMB = onlyCacheItemsLessThenMB })
         {
             CommonConstructor((new CancellationTokenSource()).Token, new HttpServerConfig()
             {
@@ -114,14 +114,14 @@ namespace  Vlix.HttpServer
                 EnableCache = enableCache,
                 OnlyCacheItemsLessThenMB =  onlyCacheItemsLessThenMB,
                 MaximumCacheSizeInMB = maximumCacheSizeInMB,
-                AllowLocalhostConnectionsOnly = allowLocalhostConnectionsOnly,
+                AllowLocalhostConnectionsOnlyForHttp = allowLocalhostConnectionsOnlyForHttp,
                 SSLCertificateSubjectName = certSubjectName,
                 SSLCertificateStoreName = StoreName.My,
             });
         }
 
         public HttpServer(CancellationToken cancellationToken, string wWWDirectory, int httpPort = 80, int httpsPort = 443, string certSubjectName = null, StoreName certStoreName = StoreName.My, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, 
-            int maximumCacheSizeInMB = 500, bool allowLocalhostConnectionsOnly = false) : base(new StaticFileProcessorConfig() { WWWDirectory = wWWDirectory, EnableCache = enableCache, OnlyCacheItemsLessThenMB = onlyCacheItemsLessThenMB, MaximumCacheSizeInMB = maximumCacheSizeInMB })
+            int maximumCacheSizeInMB = 500, bool allowLocalhostConnectionsOnlyForHttp = false) : base(new StaticFileProcessorConfig() { WWWDirectory = wWWDirectory, EnableCache = enableCache, OnlyCacheItemsLessThenMB = onlyCacheItemsLessThenMB, MaximumCacheSizeInMB = maximumCacheSizeInMB })
         {
             CommonConstructor(cancellationToken, new HttpServerConfig()
             {
@@ -133,7 +133,7 @@ namespace  Vlix.HttpServer
                 EnableCache = enableCache,
                 OnlyCacheItemsLessThenMB = onlyCacheItemsLessThenMB,
                 MaximumCacheSizeInMB = maximumCacheSizeInMB,
-                AllowLocalhostConnectionsOnly = allowLocalhostConnectionsOnly,
+                AllowLocalhostConnectionsOnlyForHttp = allowLocalhostConnectionsOnlyForHttp,
                 SSLCertificateSubjectName = certSubjectName,
                 SSLCertificateStoreName = StoreName.My
             });            
@@ -163,7 +163,7 @@ namespace  Vlix.HttpServer
             this.OnInfoLog?.Invoke("Starting Vlix Web Server...");
             if (this.Config.EnableHTTPS)
             {
-                if (!await Services.TryBindSSLCertToPort(443, this.Config.SSLCertificateSubjectName, this.Config.SSLCertificateStoreName, (log) => this.OnInfoLog?.Invoke(log), (log) => this.OnErrorLog?.Invoke(log)))
+                if (!await SSLCertificateServices.TryBindSSLCertToPort(443, this.Config.SSLCertificateSubjectName, this.Config.SSLCertificateStoreName, (log) => this.OnInfoLog?.Invoke(log), (log) => this.OnErrorLog?.Invoke(log)))
                 {
                     this.OnErrorLog?.Invoke("Failed to Start Web Server (Unable to bind SSL Cert to Port)!");
                     throw new Exception("Failed to Start Web Server (Unable to bind SSL Cert to Port)!");
@@ -197,16 +197,17 @@ namespace  Vlix.HttpServer
             {
                 string callerIP = context.Request.RemoteEndPoint.Address.ToString();
                 string schemeStr = context.Request.Url.Scheme;
+                Scheme scheme; if (string.Equals(schemeStr, "https", StringComparison.OrdinalIgnoreCase)) scheme = Scheme.https; else scheme = Scheme.http;
                 string host = context.Request.Url.Host;
                 int port = context.Request.Url.Port;
                 string absolutePath = context.Request.Url.AbsolutePath;
                 string absoluteURL = context.Request.Url.AbsoluteUri;
                 if (string.IsNullOrWhiteSpace(absolutePath)) absolutePath = "/";
-                if (this.Config.AllowLocalhostConnectionsOnly)
+                if (scheme == Scheme.http && this.Config.AllowLocalhostConnectionsOnlyForHttp)
                 {
                     if (!context.Request.IsLocal)
                     {
-                        string msg = callerIP + " requested '" + absoluteURL + "' > Blocked as caller is not local ('AllowLocalhostConnectionsOnly' is set to 'true')";
+                        string msg = callerIP + " requested '" + absoluteURL + "' > Blocked as caller is not local ('AllowLocalhostConnectionsOnlyForHttp' is set to 'true')";
                         this.OnWarningLog?.Invoke(msg);
                         await SendErrorResponsePage(context, msg, HttpStatusCode.Unauthorized).ConfigureAwait(false);
                         return;
@@ -217,9 +218,7 @@ namespace  Vlix.HttpServer
                 if (this.Config.Rules != null)
                 {
                     foreach (Rule rule in this.Config.Rules)
-                    {
-                        Scheme scheme = Scheme.http;
-                        if (string.Equals(schemeStr, "https", StringComparison.OrdinalIgnoreCase)) scheme = Scheme.https;
+                    {                        
                         if (rule.IsMatch(scheme, host, port, absolutePath))
                         {                            
                             ProcessRuleResult processRuleResult = await rule.ResponseAction.ProcessAsync(callerIP,scheme,host, port,absolutePath, context.Request.Headers, this).ConfigureAwait(false);

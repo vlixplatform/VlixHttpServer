@@ -87,7 +87,7 @@ The default port for the server is *80 for Http* and *443 for Https* and the def
     <add key="MaximumCacheSizeInMB" value="250"/>
     <add key="LogDirectory" value="[ProgramDataDirectory]\Vlix\HTTPServer\Logs"/>
     <add key="WWWDirectory" value="[ProgramDataDirectory]\Vlix\HTTPServer\www"/>
-    <add key="AllowLocalhostConnectionsOnly" value="False"/>
+    <add key="AllowLocalhostConnectionsOnlyForHttp" value="False"/>
   </appSettings>
     <startup> 
         <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.5.2" />

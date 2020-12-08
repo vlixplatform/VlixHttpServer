@@ -43,27 +43,12 @@ namespace Vlix.HttpServerConfig
 
 
 
-        //public void CertificateSelected()
-        //{
-
-        //    RaiseOnCertificateSelected();
-        //    //this.StoryboardClose.Completed -= StoryboardClose_Completed;
-        //    //this.StoryboardClose.Completed += StoryboardClose_Completed;
-        //}
-
-
-        public static readonly RoutedEvent OnCertificateSelectedEvent = EventManager.RegisterRoutedEvent("OnCertificateSelected", RoutingStrategy.Direct, typeof(RoutedEventHandler), typeof(OPFrame));
+        public static readonly RoutedEvent OnCertificateSelectedEvent = EventManager.RegisterRoutedEvent("OnCertificateSelected", RoutingStrategy.Direct, typeof(RoutedEventHandler), typeof(UCSelectSSLCert));
         public event RoutedEventHandler OnCertificateSelected
         {
             add { AddHandler(OnCertificateSelectedEvent, value); }
             remove { RemoveHandler(OnCertificateSelectedEvent, value); }
         }
-        //void RaiseOnCertificateSelected()
-        //{
-        //    RoutedEventArgs newEventArgs = new RoutedEventArgs(UCSelectSSLCert.OnCertificateSelectedEvent,);
-        //    RaiseEvent(newEventArgs);
-        //}
-
         private void SSLCertSelect_Click(object sender, RoutedEventArgs e)
         {
             if (sender is FrameworkElement fe && fe.DataContext is SSLCertVM sSLCertVM)
@@ -74,19 +59,5 @@ namespace Vlix.HttpServerConfig
         }
     }
 
-    //public class SelectedSSLCertificate
-    //{
-    //    public SelectedSSLCertificate(SSLCertVM sSLCertVM)
-    //    {
-    //        this.SubjectName = sSLCertVM.Subject;
-    //        this.StoreName = sSLCertVM.StoreName;
-    //        foreach (var s in sSLCertVM.SubjectAlternativeNames) this.SubjectAlternativeNames.Add(s);
-    //    }
-
-    //    public string SubjectName { get; private set; } = null;
-    //    public StoreName StoreName { get; private set; } = StoreName.My;
-    //    public List<string> SubjectAlternativeNames { get; private set; } = new List<string>();
-            
-    //}
 
 }

@@ -27,423 +27,407 @@
         <local:ActionTypeToVisibilityConverter x:Key="ActionTypeToVisibilityConverter" />
     </UserControl.Resources>
     <Grid>
-        <Grid IsEnabled="{Binding IsLoading, Converter={StaticResource InvertBoolConverter}}" Background="White" Opacity="{Binding IsLoading, Converter={StaticResource BoolTrueToOpacity03Else1Converter}}"
-              HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <DockPanel Margin="5" >
-                <Grid DockPanel.Dock="Top" Margin="0,0,0,-22" Panel.ZIndex="100">
-                    <local:OPButton HorizontalAlignment="Right" Width="120" IconLocation="Left" Click="opbRefresh_Click" Height="25" Grid.Column="1" Icon="ic_refresh">Refresh</local:OPButton>
-                </Grid>
-                <TabControl>
-                    <TabItem Header="  Web Server  ">
-                        <DockPanel>
-                            <local:OPBorder DockPanel.Dock="Top" Margin="3" Background="#ddd">
-                                <StackPanel Orientation="Vertical">
-                                    <Grid Margin="10,10,10,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="auto" />
-                                            <ColumnDefinition Width="auto" />
-                                            <ColumnDefinition Width="*" MaxWidth="450" />
-                                            <ColumnDefinition Width="auto" />
-                                            <ColumnDefinition Width="*"  />
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0" Orientation="Vertical" Margin="0,0,5,0">
-                                            <CheckBox VerticalAlignment="Center" IsChecked="{Binding EnableHTTP}"  FontWeight="Bold">Enable HTTP</CheckBox>
-                                            <StackPanel IsEnabled="{Binding EnableHTTP}"  Opacity="{Binding EnableHTTP, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}">
-                                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                                    <TextBlock Margin="20.5,0,2,0" FontWeight="Normal" VerticalAlignment="Center" >Port:</TextBlock>
-                                                    <TextBox Text="{Binding HTTPPort}" Height="20" Width="60" ToolTip="The port used to accept HTTP Connections. The default port is 80"></TextBox>
-                                                </StackPanel>
-                                                <CheckBox Grid.Row="1" VerticalAlignment="Center"  Margin="18,2,0,0" IsChecked="{Binding AllowLocalhostConnectionsOnlyForHttp}">Localhost Only</CheckBox>
-                                            </StackPanel>
-                                        </StackPanel>
-                                        <Border Grid.Column="1" BorderBrush="#ccc"  Margin="5,0,5,0" BorderThickness="1" Width="1"></Border>
-                                        <StackPanel Grid.Column="2" Orientation="Vertical"  Margin="5,0,0,0">
-                                            <CheckBox VerticalAlignment="Center" IsChecked="{Binding EnableHTTPS}" FontWeight="Bold">Enable HTTPS</CheckBox>
-                                            <DockPanel IsEnabled="{Binding EnableHTTPS}" Opacity="{Binding EnableHTTPS, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}">
-                                                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,2,0,0">
-                                                    <TextBlock Margin="20.5,0,2,0" FontWeight="Normal"  Width="60" VerticalAlignment="Center">Port:</TextBlock>
-                                                    <TextBox Text="{Binding HTTPSPort}" Height="20" Width="60" ToolTip="The port used to accept HTTPS Connections. The default port is 443"></TextBox>
-                                                </StackPanel>
-                                                <Grid Margin="0,2,0,3" HorizontalAlignment="Stretch" DockPanel.Dock="Top">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="auto" />
-                                                        <ColumnDefinition Width="*" MinWidth="70"  />
-                                                        <ColumnDefinition Width="auto" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" Margin="20.5,2,2,0" FontWeight="Normal" Width="60" VerticalAlignment="Top">Certificate:</TextBlock>
-                                                    <TextBox Grid.Column="1" IsReadOnly="True" Background="#ccc" Text="{Binding SSLCertificateSubjectName, Mode=OneWay}" Height="20">
-                                                        <TextBox.ToolTip>
-                                                            <StackPanel>
-                                                                <TextBlock Visibility="{Binding SSLCertificateSubjectName, Converter={StaticResource EmptyStringOrNullToVisibilityVisibleElseCollapsedConverter}}" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"  >
-                                                                    <Run Text="Select a Certificate"></Run>
-                                                                </TextBlock>
-                                                                <TextBlock Visibility="{Binding SSLCertificateSubjectName, Converter={StaticResource EmptyStringOrNullToVisibilityCollapsedConverter}}" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"  >
-                                                                    <Run Text="Certificate '"/><Run Text="{Binding SSLCertificateSubjectName}"></Run><Run Text="'"/>
-                                                                </TextBlock>
-                                                                <TextBlock>
-                                                                    <Run>The (SSL/TLS) Cerificate is a document used to secure/encrypt communication.</Run><LineBreak />
-                                                                    <Run>This certificate secures:</Run>
-                                                                </TextBlock>
-                                                                <TextBlock Visibility="{Binding SubjectAlternativeNames.Count, Converter={StaticResource ZeroOrNullToVisibilityVisibleElseCollapsedConverter}}"  Foreground="#2a4c68" FontWeight="SemiBold">- No domains</TextBlock>
-                                                                <TextBlock Foreground="#2a4c68">
-                                                                <ItemsControl ItemsSource="{Binding SubjectAlternativeNames}">
-                                                                    <ItemsControl.ItemTemplate>
-                                                                        <DataTemplate>
-                                                                            <TextBlock FontStyle="Normal" FontWeight="SemiBold">
-                                                                                <Run Text="- https://" /><Run Text="{Binding Mode=OneWay}" /><Run>/</Run>
-                                                                            </TextBlock>
-                                                                        </DataTemplate>
-                                                                    </ItemsControl.ItemTemplate>
-                                                                </ItemsControl>
-                                                            </TextBlock>
-                                                                <TextBlock>
-                                                                <LineBreak />
-                                                                <Run FontSize="13" FontWeight="Bold">Notes on Certificate renewal</Run><LineBreak />
-                                                                <Run>Every 5 minutes, the web server checks for the latest certificate (in the Windows</Run><LineBreak />
-                                                                certificate store '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateStoreName}"></Run>') with subject '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateSubjectName}" />'.<LineBreak />
-                                                                <Run>If a new certificate exists, it will replace the current one</Run><LineBreak />
-                                                                </TextBlock>
-                                                            </StackPanel>
-                                                        </TextBox.ToolTip>
-                                                    </TextBox>
-                                                    <local:OPButton Grid.Column="2" Content="Select" Margin="0,0,0,0" Command="{Binding SelectSSLCertClickCommand}" Width="70" IconLocation="Left" Height="21" Icon="ic_launch">
-                                                        <local:OPButton.ToolTip>
-                                                            <TextBlock>
-                                                            <Run>For Microsoft Windows, certificates are stored in the</Run><LineBreak />
-                                                            <Run FontWeight="Bold">Windows Certificate Store.</Run>
-                                                            <Run>Click here to to access this store.</Run>
-                                                            <Run></Run>
-                                                            </TextBlock>
-                                                        </local:OPButton.ToolTip>
-                                                    </local:OPButton>
-                                                </Grid>
-                                            </DockPanel>
-                                        </StackPanel>
-                                        <Border Grid.Column="3" BorderBrush="#ccc" Margin="5,0,5,0" BorderThickness="1" Width="1"></Border>
-                                        <StackPanel Orientation="Vertical" Grid.Column="4" HorizontalAlignment="Stretch">
-                                            <TextBlock FontWeight="Bold" HorizontalAlignment="Left">WWW Directory:</TextBlock>
-                                            <Grid HorizontalAlignment="Stretch">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" MaxWidth="400" />
-                                                    <ColumnDefinition Width="auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBox Grid.Column="0" Height="20"  Text="{Binding WWWDirectory}"></TextBox>
-                                                <local:OPButton Grid.Column="1" Visibility="{Binding ClientIsLocal, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" Width="30" IconLocation="Top" 
-                                                Click="opbSelectWWWDirectory_Click" Height="21" Icon="ic_folder"></local:OPButton>
-                                            </Grid>
-                                        </StackPanel>
-                                    </Grid>
-                                    <Border  BorderBrush="#ccc"  Margin="5,0,5,0" BorderThickness="1" Height="1"></Border>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="5,5,5,2">
-                                        <local:OPButton Command="{Binding ShowAdvanceSettingsClickCommand}" Margin="0,0,2,0" Height="23" Width="140" Icon="ic_settings">Advance Settings</local:OPButton>
-                                        <local:OPButton Click="opbSaveApply_Click" Icon="ic_save" Height="23" Width="140" IconLocation="Left">Save and Apply</local:OPButton>
-                                    </StackPanel>
-
-
+        <DockPanel IsEnabled="{Binding IsLoading, Converter={StaticResource InvertBoolConverter}}"  Background="White" Opacity="{Binding IsLoading, Converter={StaticResource BoolTrueToOpacity03Else1Converter}}">
+            <local:OPBorder DockPanel.Dock="Top" Background="#ddd">
+                <StackPanel Orientation="Vertical">
+                    <Grid Margin="10,10,10,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="*" MaxWidth="450" />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="*"  />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Vertical" Margin="0,0,5,0">
+                            <CheckBox VerticalAlignment="Center" IsChecked="{Binding EnableHTTP}"  FontWeight="Bold">Enable HTTP</CheckBox>
+                            <StackPanel IsEnabled="{Binding EnableHTTP}"  Opacity="{Binding EnableHTTP, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}">
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <TextBlock Margin="20.5,0,2,0" FontWeight="Normal" VerticalAlignment="Center" >Port:</TextBlock>
+                                    <TextBox Text="{Binding HTTPPort}" Height="20" Width="60" ToolTip="The port used to accept HTTP Connections. The default port is 80"></TextBox>
                                 </StackPanel>
-                            </local:OPBorder>
-                            <Grid DockPanel.Dock="Top" Margin="3">
-                                <local:UCLogConsole x:Name="ucLogConsole" />
+                                <CheckBox Grid.Row="1" VerticalAlignment="Center"  Margin="18,2,0,0" IsChecked="{Binding AllowLocalhostConnectionsOnlyForHttp}">Localhost Only</CheckBox>
+                            </StackPanel>
+                        </StackPanel>
+                        <Border Grid.Column="1" BorderBrush="#ccc"  Margin="5,0,5,0" BorderThickness="1" Width="1"></Border>
+                        <StackPanel Grid.Column="2" Orientation="Vertical"  Margin="5,0,0,0">
+                            <CheckBox VerticalAlignment="Center" IsChecked="{Binding EnableHTTPS}" FontWeight="Bold">Enable HTTPS</CheckBox>
+                            <DockPanel IsEnabled="{Binding EnableHTTPS}" Opacity="{Binding EnableHTTPS, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}">
+                                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,2,0,0">
+                                    <TextBlock Margin="20.5,0,2,0" FontWeight="Normal"  Width="60" VerticalAlignment="Center">Port:</TextBlock>
+                                    <TextBox Text="{Binding HTTPSPort}" Height="20" Width="60" ToolTip="The port used to accept HTTPS Connections. The default port is 443"></TextBox>
+                                </StackPanel>
+                                <Grid Margin="0,2,0,3" HorizontalAlignment="Stretch" DockPanel.Dock="Top">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition Width="*" MinWidth="70"  />
+                                        <ColumnDefinition Width="auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Margin="20.5,2,2,0" FontWeight="Normal" Width="60" VerticalAlignment="Top">Certificate:</TextBlock>
+                                    <TextBox Grid.Column="1" IsReadOnly="True" Background="#ccc" Text="{Binding SSLCertificateSubjectName, Mode=OneWay}" Height="20">
+                                        <TextBox.ToolTip>
+                                            <StackPanel>
+                                                <TextBlock Visibility="{Binding SSLCertificateSubjectName, Converter={StaticResource EmptyStringOrNullToVisibilityVisibleElseCollapsedConverter}}" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"  >
+                                                                        <Run Text="Select a Certificate"></Run>
+                                                </TextBlock>
+                                                <TextBlock Visibility="{Binding SSLCertificateSubjectName, Converter={StaticResource EmptyStringOrNullToVisibilityCollapsedConverter}}" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"  >
+                                                                        <Run Text="Certificate '"/><Run Text="{Binding SSLCertificateSubjectName}"></Run><Run Text="'"/>
+                                                </TextBlock>
+                                                <TextBlock>
+                                                                        <Run>The (SSL/TLS) Cerificate is a document used to secure/encrypt communication.</Run><LineBreak />
+                                                                        <Run>This certificate secures:</Run>
+                                                </TextBlock>
+                                                <TextBlock Visibility="{Binding SubjectAlternativeNames.Count, Converter={StaticResource ZeroOrNullToVisibilityVisibleElseCollapsedConverter}}"  Foreground="#2a4c68" FontWeight="SemiBold">- No domains</TextBlock>
+                                                <TextBlock Foreground="#2a4c68">
+                                                                    <ItemsControl ItemsSource="{Binding SubjectAlternativeNames}">
+                                                                        <ItemsControl.ItemTemplate>
+                                                                            <DataTemplate>
+                                                                                <TextBlock FontStyle="Normal" FontWeight="SemiBold">
+                                                                                    <Run Text="- https://" /><Run Text="{Binding Mode=OneWay}" /><Run>/</Run>
+                                                                                </TextBlock>
+                                                                            </DataTemplate>
+                                                                        </ItemsControl.ItemTemplate>
+                                                                    </ItemsControl>
+                                                                </TextBlock>
+                                                <TextBlock>
+                                                                    <LineBreak />
+                                                                    <Run FontSize="13" FontWeight="Bold">Notes on Certificate renewal</Run><LineBreak />
+                                                                    <Run>Every 5 minutes, the web server checks for the latest certificate (in the Windows</Run><LineBreak />
+                                                                    certificate store '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateStoreName}"></Run>') with subject '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateSubjectName}" />'.<LineBreak />
+                                                                    <Run>If a new certificate exists, it will replace the current one</Run><LineBreak />
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </TextBox.ToolTip>
+                                    </TextBox>
+                                    <local:OPButton Grid.Column="2" Content="Select" Margin="0,0,0,0" Command="{Binding SelectSSLCertClickCommand}" Width="70" IconLocation="Left" Height="21" Icon="ic_launch">
+                                        <local:OPButton.ToolTip>
+                                            <TextBlock>
+                                                                <Run>For Microsoft Windows, certificates are stored in the</Run><LineBreak />
+                                                                <Run FontWeight="Bold">Windows Certificate Store.</Run>
+                                                                <Run>Click here to to access this store.</Run>
+                                                                <Run></Run>
+                                            </TextBlock>
+                                        </local:OPButton.ToolTip>
+                                    </local:OPButton>
+                                </Grid>
+                            </DockPanel>
+                        </StackPanel>
+                        <Border Grid.Column="3" BorderBrush="#ccc" Margin="5,0,5,0" BorderThickness="1" Width="1"></Border>
+                        <StackPanel Orientation="Vertical" Grid.Column="4" HorizontalAlignment="Stretch">
+                            <TextBlock FontWeight="Bold" HorizontalAlignment="Left">WWW Directory:</TextBlock>
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" MaxWidth="400" />
+                                    <ColumnDefinition Width="auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Height="20"  Text="{Binding WWWDirectory}"></TextBox>
+                                <local:OPButton Grid.Column="1" Visibility="{Binding ClientIsLocal, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" Width="30" IconLocation="Top" 
+                                                    Click="opbSelectWWWDirectory_Click" Height="21" Icon="ic_folder"></local:OPButton>
                             </Grid>
-                        </DockPanel>
-                    </TabItem>
-                    <TabItem Header="  FTP Server  ">
-                       
-                    
-                    </TabItem>
-                </TabControl>
-            </DockPanel>
-            <local:OPFrame Shown="{Binding ShowSelectSSLCertWindow}" BorderThickness="0" InnerMargin="10" CornerRadius="5"  TopLeftContent="Select SSL Certificate" TopLeftIcon="ic_lock_outline" InnerWindowMargin="15" 
+                        </StackPanel>
+                    </Grid>
+                    <Border  BorderBrush="#ccc"  Margin="5,0,5,0" BorderThickness="1" Height="1"></Border>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="5,5,5,2">
+                        <local:OPButton Command="{Binding ShowAdvanceSettingsClickCommand}" Margin="0,0,2,0" Height="23" Width="140" Icon="ic_settings">Advance Settings</local:OPButton>
+                        <local:OPButton Click="opbSaveApply_Click" Icon="ic_save" Height="23" Width="140" IconLocation="Left">Save and Apply</local:OPButton>
+                    </StackPanel>
+
+
+                </StackPanel>
+            </local:OPBorder>
+            <Grid DockPanel.Dock="Top" Margin="0,3,0,0">
+                <local:UCLogConsole x:Name="ucLogConsole" />
+            </Grid>
+        </DockPanel>
+        <local:OPFrame Shown="{Binding ShowSelectSSLCertWindow}" BorderThickness="0" InnerMargin="10" CornerRadius="5"  TopLeftContent="Select SSL Certificate" TopLeftIcon="ic_lock_outline" InnerWindowMargin="15" 
                                     Visibility="Collapsed" Background="#aa000000" OnClose="opfSelectSSLCert_OnClose">
-                <Grid Margin="0,5,0,0" >
-                    <local:UCSelectSSLCert Margin="5" OnCertificateSelected="UCSelectSSLCert_OnCertificateSelected" />
-                </Grid>
-            </local:OPFrame>
-            <local:OPFrame Shown="{Binding ShowAdvanceSettingsWindow}" BorderThickness="0" InnerMargin="10" CornerRadius="5"  TopLeftContent="Advance Settings" TopLeftIcon="ic_settings" InnerWindowMargin="15" 
+            <Grid Margin="0,5,0,0" >
+                <local:UCSelectSSLCert Margin="5" OnCertificateSelected="UCSelectSSLCert_OnCertificateSelected" />
+            </Grid>
+        </local:OPFrame>
+        <local:OPFrame Shown="{Binding ShowAdvanceSettingsWindow}" BorderThickness="0" InnerMargin="10" CornerRadius="5"  TopLeftContent="Advance Settings" TopLeftIcon="ic_settings" InnerWindowMargin="15" 
                                     Visibility="Collapsed" Background="#aa000000" OnClose="opfAdvanceSettings_OnClose">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="auto" />
-                    </Grid.RowDefinitions>
-                    <local:OPBorder Grid.Row="0" Margin="0,5,0,0" Background="#ddd">
-                        <DockPanel Margin="5" DockPanel.Dock="Top">
-                            <Grid DockPanel.Dock="Top" HorizontalAlignment="Stretch">
-                                <TextBlock FontWeight="Bold" Foreground="#333" FontSize="18" VerticalAlignment="Center">Rules</TextBlock>
-                                <local:OPButton Margin="0,0,0,0" HorizontalAlignment="Right" Click="opbNewRule_Click" Command="{Binding NewRuleClickCommand}" IconMargin="-3,1,0,0" Width="120" Icon="ic_add" Content="New Rule" />
-                            </Grid>
-                            <ScrollViewer x:Name="svRules" DockPanel.Dock="Top" VerticalScrollBarVisibility="Visible" CanContentScroll="True" Margin="0,5,0,0">
-                                <ItemsControl dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True" ItemsSource="{Binding Rules}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border CornerRadius="5" Margin="0,0,2,2" BorderBrush="#999" BorderThickness="1">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="#fff" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Enable}" Value="false">
-                                                                <Setter Property="Background" Value="#eee"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <Grid Margin="10,5,10,0">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="0.5*" />
-                                                        <ColumnDefinition Width="11" />
-                                                        <ColumnDefinition Width="*"  />
-                                                        <ColumnDefinition Width="auto" />
-                                                        <ColumnDefinition Width="0.7*" />
-                                                    </Grid.ColumnDefinitions>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+                <local:OPBorder Grid.Row="0" Margin="0,5,0,0" Background="#ddd">
+                    <DockPanel Margin="5" DockPanel.Dock="Top">
+                        <Grid DockPanel.Dock="Top" HorizontalAlignment="Stretch">
+                            <TextBlock FontWeight="Bold" Foreground="#333" FontSize="15" VerticalAlignment="Center">Rules</TextBlock>
+                            <local:OPButton Margin="0,0,0,0" HorizontalAlignment="Right" Click="opbNewRule_Click" Command="{Binding NewRuleClickCommand}" IconMargin="-3,1,0,0" Width="120" Icon="ic_add" Content="New Rule" />
+                        </Grid>
+                        <ScrollViewer x:Name="svRules" DockPanel.Dock="Top" VerticalScrollBarVisibility="Visible" CanContentScroll="True" Margin="0,5,0,0">
+                            <ItemsControl dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True" ItemsSource="{Binding Rules}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="5" Margin="0,0,2,2" BorderBrush="#999" BorderThickness="1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#fff" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Enable}" Value="false">
+                                                            <Setter Property="Background" Value="#eee"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid Margin="10,5,10,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="0.5*" />
+                                                    <ColumnDefinition Width="11" />
+                                                    <ColumnDefinition Width="*"  />
+                                                    <ColumnDefinition Width="auto" />
+                                                    <ColumnDefinition Width="0.7*" />
+                                                </Grid.ColumnDefinitions>
 
-                                                    <DockPanel Grid.Column="0" DockPanel.Dock="Left" Margin="0,0,0,5">
-                                                        <StackPanel DockPanel.Dock="Top">
-                                                            <TextBlock Foreground="#666" FontSize="14" FontWeight="SemiBold">Rule Name:</TextBlock>
-                                                            <TextBox Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding Name}" MaxLength="55" />
-                                                        </StackPanel>
-                                                        <CheckBox DockPanel.Dock="Top" VerticalAlignment="Center" Margin="0,1,0,0" Opacity="1" IsChecked="{Binding Enable}">Enable Rule</CheckBox>
-                                                        <local:OPButton Command="{Binding DeleteClickCommand}" DockPanel.Dock="Top" Width="60" FontSize="10" IconMargin="-2,0,0,0" Height="20" VerticalAlignment="Bottom" Background="Red" Icon="ic_delete" IconSize="11" HorizontalAlignment="Left">Delete</local:OPButton>
-                                                    </DockPanel>
-                                                    <Border Grid.Column="1" DockPanel.Dock="Left" Margin="5,0,5,0" HorizontalAlignment="Left" BorderBrush="#ddd" BorderThickness="1" Width="1"></Border>
+                                                <DockPanel Grid.Column="0" DockPanel.Dock="Left" Margin="0,0,0,5">
+                                                    <StackPanel DockPanel.Dock="Top">
+                                                        <TextBlock Foreground="#666" FontSize="14" FontWeight="SemiBold">Rule Name:</TextBlock>
+                                                        <TextBox Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding Name}" MaxLength="55" />
+                                                    </StackPanel>
+                                                    <CheckBox DockPanel.Dock="Top" VerticalAlignment="Center" Margin="0,1,0,0" Opacity="1" IsChecked="{Binding Enable}">Enable Rule</CheckBox>
+                                                    <local:OPButton Command="{Binding DeleteClickCommand}" DockPanel.Dock="Top" Width="60" FontSize="10" IconMargin="-2,0,0,0" Height="20" VerticalAlignment="Bottom" Background="Red" Icon="ic_delete" IconSize="11" HorizontalAlignment="Left">Delete</local:OPButton>
+                                                </DockPanel>
+                                                <Border Grid.Column="1" DockPanel.Dock="Left" Margin="5,0,5,0" HorizontalAlignment="Left" BorderBrush="#ddd" BorderThickness="1" Width="1"></Border>
 
 
-                                                    <StackPanel  Grid.Column="2" HorizontalAlignment="Stretch" DockPanel.Dock="Left" Margin="0,1,0,5">
-                                                        <TextBlock Foreground="#666" FontSize="14" FontWeight="SemiBold">If request matches:</TextBlock>
-                                                        <Border Height="1" BorderBrush="#ddd" BorderThickness="1" />
-                                                        <DockPanel Margin="0,5,0,0" >
-                                                            <CheckBox Margin="0,1,5,0" IsChecked="{Binding RequestMatch.CheckHostName}"  />
-                                                            <TextBlock Width="30">Host:</TextBlock>
-                                                            <Grid>
-                                                                <DockPanel Opacity="{Binding RequestMatch.CheckHostName, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
+                                                <StackPanel  Grid.Column="2" HorizontalAlignment="Stretch" DockPanel.Dock="Left" Margin="0,1,0,5">
+                                                    <TextBlock Foreground="#666" FontSize="14" FontWeight="SemiBold">If request matches:</TextBlock>
+                                                    <Border Height="1" BorderBrush="#ddd" BorderThickness="1" />
+                                                    <DockPanel Margin="0,5,0,0" >
+                                                        <CheckBox Margin="0,1,5,0" IsChecked="{Binding RequestMatch.CheckHostName}"  />
+                                                        <TextBlock Width="30">Host:</TextBlock>
+                                                        <Grid>
+                                                            <DockPanel Opacity="{Binding RequestMatch.CheckHostName, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
                                                                                Visibility="{Binding RequestMatch.CheckHostName, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}">
-                                                                    <ComboBox DockPanel.Dock="Right" SelectedItem="{Binding RequestMatch.HostNameMatchType}" Width="75" Margin="0,0,0,0" ItemsSource="{Binding RequestMatch.ComboBoxMatchTypes, Mode=OneTime}"  HorizontalAlignment="Right" />
-                                                                    <local:OPTextBox PlaceHolder="www.mydomain.com" Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" Text="{Binding HostNameMatch}" />
-                                                                </DockPanel>
-                                                                <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                <ComboBox DockPanel.Dock="Right" SelectedItem="{Binding RequestMatch.HostNameMatchType}" Width="75" Margin="0,0,0,0" ItemsSource="{Binding RequestMatch.ComboBoxMatchTypes, Mode=OneTime}"  HorizontalAlignment="Right" />
+                                                                <local:OPTextBox PlaceHolder="www.mydomain.com" Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" Text="{Binding HostNameMatch}" />
+                                                            </DockPanel>
+                                                            <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
                                                                                  Visibility="{Binding RequestMatch.CheckHostName, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
                                                                                  Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Any Host --" />
-                                                            </Grid>
+                                                        </Grid>
 
-                                                        </DockPanel>
+                                                    </DockPanel>
 
-                                                        <DockPanel Margin="0,2,0,0" >
-                                                            <CheckBox Margin="0,1,5,0" IsChecked="{Binding RequestMatch.CheckPath}"  />
-                                                            <TextBlock Width="30">Path:</TextBlock>
-                                                            <!--<DockPanel Opacity="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}">
+                                                    <DockPanel Margin="0,2,0,0" >
+                                                        <CheckBox Margin="0,1,5,0" IsChecked="{Binding RequestMatch.CheckPath}"  />
+                                                        <TextBlock Width="30">Path:</TextBlock>
+                                                        <!--<DockPanel Opacity="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}">
                                                                     <ComboBox DockPanel.Dock="Right" SelectedItem="{Binding RequestMatch.PathMatchType}" Margin="0,0,0,0" Width="75"  ItemsSource="{Binding RequestMatch.ComboBoxMatchTypes, Mode=OneTime}"  HorizontalAlignment="Right" />
                                                                     <TextBox Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding PathMatch}" />
                                                                 </DockPanel>-->
 
-                                                            <Grid>
-                                                                <DockPanel Opacity="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
+                                                        <Grid>
+                                                            <DockPanel Opacity="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
                                                                                Visibility="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}">
-                                                                    <ComboBox DockPanel.Dock="Right" SelectedItem="{Binding RequestMatch.PathMatchType}" Width="75" Margin="0,0,0,0" ItemsSource="{Binding RequestMatch.ComboBoxMatchTypes, Mode=OneTime}"  HorizontalAlignment="Right" />
-                                                                    <local:OPTextBox PlaceHolder="/SomePath/*" Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" Text="{Binding HostNameMatch}" />
-                                                                </DockPanel>
-                                                                <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                <ComboBox DockPanel.Dock="Right" SelectedItem="{Binding RequestMatch.PathMatchType}" Width="75" Margin="0,0,0,0" ItemsSource="{Binding RequestMatch.ComboBoxMatchTypes, Mode=OneTime}"  HorizontalAlignment="Right" />
+                                                                <local:OPTextBox PlaceHolder="/SomePath/*" Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" Text="{Binding HostNameMatch}" />
+                                                            </DockPanel>
+                                                            <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
                                                                                  Visibility="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
                                                                                  Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Any Path --" />
-                                                            </Grid>
-                                                        </DockPanel>
+                                                        </Grid>
+                                                    </DockPanel>
 
-                                                        <DockPanel HorizontalAlignment="Left" Margin="0,2,0,0" >
-                                                            <CheckBox Margin="0,1,5,0" IsChecked="{Binding RequestMatch.CheckPort}"  />
-                                                            <TextBlock Width="30">Port:</TextBlock>
+                                                    <DockPanel HorizontalAlignment="Left" Margin="0,2,0,0" >
+                                                        <CheckBox Margin="0,1,5,0" IsChecked="{Binding RequestMatch.CheckPort}"  />
+                                                        <TextBlock Width="30">Port:</TextBlock>
 
-                                                            <Grid>
-                                                                <local:OPTextBox Height="22" PlaceHolder="80" Width="85" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding Port}" Opacity="{Binding RequestMatch.CheckPort, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
+                                                        <Grid>
+                                                            <local:OPTextBox Height="22" PlaceHolder="80" Width="85" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding Port}" Opacity="{Binding RequestMatch.CheckPort, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
                                                                              Visibility="{Binding RequestMatch.CheckPort, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-                                                                <TextBox Height="22" MinWidth="85" Background="#FFFEFEEB"
+                                                            <TextBox Height="22" MinWidth="85" Background="#FFFEFEEB"
                                                                                  Visibility="{Binding RequestMatch.CheckPort, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
                                                                                  Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Any Port --" />
+                                                        </Grid>
+                                                    </DockPanel>
+                                                </StackPanel>
+                                                <mi:MaterialIcon HorizontalAlignment="Center" Grid.Column="3" Icon="ic_arrow_forward" Foreground="#2a4c68" Width="50" Height="50"></mi:MaterialIcon>
+                                                <StackPanel Grid.Column="4" HorizontalAlignment="Stretch">
+                                                    <TextBlock Foreground="#666" FontSize="14" FontWeight="SemiBold">Do the following:</TextBlock>
+                                                    <Border Height="1" BorderBrush="#ddd" BorderThickness="1" />
+                                                    <ComboBox SelectedItem="{Binding ResponseAction.ActionType}" Margin="0,5,0,0"  ItemsSource="{Binding ResponseAction.ActionTypes, Mode=OneTime}">
+                                                        <ComboBox.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <TextBlock Text="{Binding Converter={StaticResource ActionTypeToFriendlyNameConverter}}" />
+                                                            </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                    </ComboBox>
+
+                                                    <!-- Alternative WWW Directory  -->
+                                                    <Grid Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hslib:ActionType.AlternativeWWWDirectory}}">
+                                                        <DockPanel DockPanel.Dock="Top" Margin="0,2,0,0">
+                                                            <TextBlock DockPanel.Dock="Left"  Margin="0,1,2,0">Directory:</TextBlock>
+                                                            <local:OPButton Visibility="{Binding ParentVM.ClientIsLocal, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" DockPanel.Dock="Right" Width="30" 
+                                                                                    IconLocation="Top" Click="opbOpenAlternativeWWWDirectory_Click" Height="21" Icon="ic_folder"></local:OPButton>
+                                                            <TextBox DockPanel.Dock="Left" HorizontalAlignment="Stretch" Height="20" Text="{Binding ResponseAction.AlternativeWWWDirectory}"></TextBox>
+                                                        </DockPanel>
+                                                    </Grid>
+
+                                                    <!-- Redirect -->
+                                                    <StackPanel Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hslib:ActionType.Redirect}}">
+                                                        <DockPanel Margin="0,1,0,0" >
+                                                            <CheckBox Margin="0,3.5,5,0" IsChecked="{Binding ResponseAction.SetRedirectScheme}" />
+                                                            <TextBlock Width="50" Margin="0,2,0,0"> Scheme:</TextBlock>
+                                                            <Grid>
+                                                                <ComboBox SelectedItem="{Binding ResponseAction.RedirectScheme}" ItemsSource="{Binding ResponseAction.SchemeTypes, Mode=OneTime}"
+                                                                                  Visibility="{Binding ResponseAction.SetRedirectScheme, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                <!--<ComboBox IsReadOnly="True" Visibility="{Binding ResponseAction.SetRedirectScheme, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}" 
+                                                                                  Opacity="0.5">
+                                                                        </ComboBox>-->
+                                                                <TextBox Height="22" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectScheme, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
+                                                            </Grid>
+                                                        </DockPanel>
+                                                        <DockPanel Margin="0,1,0,0" >
+                                                            <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetRedirectHostName}" />
+                                                            <TextBlock Width="30">Host:</TextBlock>
+                                                            <Grid DockPanel.Dock="Left">
+                                                                <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.RedirectHostName, UpdateSourceTrigger=PropertyChanged}" 
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectHostName, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectHostName, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
+                                                            </Grid>
+                                                        </DockPanel>
+                                                        <DockPanel Margin="0,1,0,0" >
+                                                            <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetRedirectPath}" />
+                                                            <TextBlock Width="30">Path:</TextBlock>
+                                                            <Grid DockPanel.Dock="Left">
+                                                                <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.RedirectPath, UpdateSourceTrigger=PropertyChanged}" 
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectPath, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectPath, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
+                                                            </Grid>
+                                                        </DockPanel>
+                                                        <DockPanel Margin="0,1,0,5" >
+                                                            <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetRedirectPort}" />
+                                                            <TextBlock Width="30">Port:</TextBlock>
+                                                            <Grid DockPanel.Dock="Left">
+                                                                <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.RedirectPort, UpdateSourceTrigger=PropertyChanged}" 
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectPort, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                                                                <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                                 Visibility="{Binding ResponseAction.SetRedirectPort, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
+                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
                                                             </Grid>
                                                         </DockPanel>
                                                     </StackPanel>
-                                                    <mi:MaterialIcon HorizontalAlignment="Center" Grid.Column="3" Icon="ic_arrow_forward" Foreground="#2a4c68" Width="50" Height="50"></mi:MaterialIcon>
-                                                    <StackPanel Grid.Column="4" HorizontalAlignment="Stretch">
-                                                        <TextBlock Foreground="#666" FontSize="14" FontWeight="SemiBold">Do the following:</TextBlock>
-                                                        <Border Height="1" BorderBrush="#ddd" BorderThickness="1" />
-                                                        <ComboBox SelectedItem="{Binding ResponseAction.ActionType}" Margin="0,5,0,0"  ItemsSource="{Binding ResponseAction.ActionTypes, Mode=OneTime}">
-                                                            <ComboBox.ItemTemplate>
-                                                                <DataTemplate>
-                                                                    <TextBlock Text="{Binding Converter={StaticResource ActionTypeToFriendlyNameConverter}}" />
-                                                                </DataTemplate>
-                                                            </ComboBox.ItemTemplate>
-                                                        </ComboBox>
 
-                                                        <!-- Alternative WWW Directory  -->
-                                                        <Grid Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hslib:ActionType.AlternativeWWWDirectory}}">
-                                                            <DockPanel DockPanel.Dock="Top" Margin="0,2,0,0">
-                                                                <TextBlock DockPanel.Dock="Left"  Margin="0,1,2,0">Directory:</TextBlock>
-                                                                <local:OPButton Visibility="{Binding ParentVM.ClientIsLocal, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" DockPanel.Dock="Right" Width="30" 
-                                                                                    IconLocation="Top" Click="opbOpenAlternativeWWWDirectory_Click" Height="21" Icon="ic_folder"></local:OPButton>
-                                                                <TextBox DockPanel.Dock="Left" HorizontalAlignment="Stretch" Height="20" Text="{Binding ResponseAction.AlternativeWWWDirectory}"></TextBox>
-                                                            </DockPanel>
-                                                        </Grid>
-
-                                                        <!-- Redirect -->
-                                                        <StackPanel Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hslib:ActionType.Redirect}}">
-                                                            <DockPanel Margin="0,1,0,0" >
-                                                                <CheckBox Margin="0,3.5,5,0" IsChecked="{Binding ResponseAction.SetRedirectScheme}" />
-                                                                <TextBlock Width="50" Margin="0,2,0,0"> Scheme:</TextBlock>
-                                                                <Grid>
-                                                                    <ComboBox SelectedItem="{Binding ResponseAction.RedirectScheme}" ItemsSource="{Binding ResponseAction.SchemeTypes, Mode=OneTime}"
-                                                                                  Visibility="{Binding ResponseAction.SetRedirectScheme, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-                                                                    <!--<ComboBox IsReadOnly="True" Visibility="{Binding ResponseAction.SetRedirectScheme, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}" 
-                                                                                  Opacity="0.5">
-                                                                        </ComboBox>-->
-                                                                    <TextBox Height="22" Background="#FFFEFEEB"
-                                                                                 Visibility="{Binding ResponseAction.SetRedirectScheme, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
-                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
-                                                                </Grid>
-                                                            </DockPanel>
-                                                            <DockPanel Margin="0,1,0,0" >
-                                                                <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetRedirectHostName}" />
-                                                                <TextBlock Width="30">Host:</TextBlock>
-                                                                <Grid DockPanel.Dock="Left">
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.RedirectHostName, UpdateSourceTrigger=PropertyChanged}" 
-                                                                                 Visibility="{Binding ResponseAction.SetRedirectHostName, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
-                                                                                 Visibility="{Binding ResponseAction.SetRedirectHostName, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
-                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
-                                                                </Grid>
-                                                            </DockPanel>
-                                                            <DockPanel Margin="0,1,0,0" >
-                                                                <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetRedirectPath}" />
-                                                                <TextBlock Width="30">Path:</TextBlock>
-                                                                <Grid DockPanel.Dock="Left">
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.RedirectPath, UpdateSourceTrigger=PropertyChanged}" 
-                                                                                 Visibility="{Binding ResponseAction.SetRedirectPath, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
-                                                                                 Visibility="{Binding ResponseAction.SetRedirectPath, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
-                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
-                                                                </Grid>
-                                                            </DockPanel>
-                                                            <DockPanel Margin="0,1,0,5" >
-                                                                <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetRedirectPort}" />
-                                                                <TextBlock Width="30">Port:</TextBlock>
-                                                                <Grid DockPanel.Dock="Left">
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.RedirectPort, UpdateSourceTrigger=PropertyChanged}" 
-                                                                                 Visibility="{Binding ResponseAction.SetRedirectPort, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
-                                                                                 Visibility="{Binding ResponseAction.SetRedirectPort, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
-                                                                                 Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
-                                                                </Grid>
-                                                            </DockPanel>
-                                                        </StackPanel>
-
-                                                        <!-- Reverse Proxy -->
-                                                        <StackPanel Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hslib:ActionType.ReverseProxy}}">
-                                                            <DockPanel Margin="0,1,0,0" >
-                                                                <CheckBox Margin="0,3.5,5,0" IsChecked="{Binding ResponseAction.SetReverseProxyScheme}" />
-                                                                <TextBlock Width="50" Margin="0,2,0,0">Scheme:</TextBlock>
-                                                                <Grid>
-                                                                    <ComboBox SelectedItem="{Binding ResponseAction.ReverseProxyScheme}" ItemsSource="{Binding ResponseAction.SchemeTypes, Mode=OneTime}"
+                                                    <!-- Reverse Proxy -->
+                                                    <StackPanel Visibility="{Binding ResponseAction.ActionType, Converter={StaticResource ActionTypeToVisibilityConverter}, ConverterParameter={x:Static hslib:ActionType.ReverseProxy}}">
+                                                        <DockPanel Margin="0,1,0,0" >
+                                                            <CheckBox Margin="0,3.5,5,0" IsChecked="{Binding ResponseAction.SetReverseProxyScheme}" />
+                                                            <TextBlock Width="50" Margin="0,2,0,0">Scheme:</TextBlock>
+                                                            <Grid>
+                                                                <ComboBox SelectedItem="{Binding ResponseAction.ReverseProxyScheme}" ItemsSource="{Binding ResponseAction.SchemeTypes, Mode=OneTime}"
                                                                                   Visibility="{Binding ResponseAction.SetReverseProxyScheme, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-                                                                    <!--<ComboBox IsReadOnly="True" Visibility="{Binding ResponseAction.SetReverseProxyScheme, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}" 
+                                                                <!--<ComboBox IsReadOnly="True" Visibility="{Binding ResponseAction.SetReverseProxyScheme, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}" 
                                                                                   Opacity="0.5"  />-->
-                                                                    <TextBox Height="22" Background="#FFFEFEEB"
+                                                                <TextBox Height="22" Background="#FFFEFEEB"
                                                                                  Visibility="{Binding ResponseAction.SetReverseProxyScheme, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
                                                                                  Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
-                                                                </Grid>
-                                                            </DockPanel>
-                                                            <DockPanel Margin="0,1,0,0" >
-                                                                <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetReverseProxyHostName}" />
-                                                                <TextBlock Width="30">Host:</TextBlock>
-                                                                <!--<TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.ReverseProxyHostName, UpdateSourceTrigger=PropertyChanged}" 
+                                                            </Grid>
+                                                        </DockPanel>
+                                                        <DockPanel Margin="0,1,0,0" >
+                                                            <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetReverseProxyHostName}" />
+                                                            <TextBlock Width="30">Host:</TextBlock>
+                                                            <!--<TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.ReverseProxyHostName, UpdateSourceTrigger=PropertyChanged}" 
                                                                              Opacity="{Binding ResponseAction.SetReverseProxyHostName, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}" />-->
-                                                                <Grid DockPanel.Dock="Left">
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.ReverseProxyHostName, UpdateSourceTrigger=PropertyChanged}" 
+                                                            <Grid DockPanel.Dock="Left">
+                                                                <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.ReverseProxyHostName, UpdateSourceTrigger=PropertyChanged}" 
                                                                                  Visibility="{Binding ResponseAction.SetReverseProxyHostName, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
                                                                                  Visibility="{Binding ResponseAction.SetReverseProxyHostName, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
                                                                                  Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
-                                                                </Grid>
-                                                            </DockPanel>
-                                                            <DockPanel Margin="0,1,0,0" >
-                                                                <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetReverseProxyPath}" />
-                                                                <TextBlock Width="30">Path:</TextBlock>
-                                                                <!--<TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.ReverseProxyPath, UpdateSourceTrigger=PropertyChanged}" 
+                                                            </Grid>
+                                                        </DockPanel>
+                                                        <DockPanel Margin="0,1,0,0" >
+                                                            <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetReverseProxyPath}" />
+                                                            <TextBlock Width="30">Path:</TextBlock>
+                                                            <!--<TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.ReverseProxyPath, UpdateSourceTrigger=PropertyChanged}" 
                                                                              Opacity="{Binding ResponseAction.SetReverseProxyPath, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}" />-->
-                                                                <Grid DockPanel.Dock="Left">
-                                                                    <StackPanel Visibility="{Binding ResponseAction.SetReverseProxyPath, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}">
-                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.ReverseProxyPath, UpdateSourceTrigger=PropertyChanged}"  />
-                                                                        <CheckBox HorizontalAlignment="Right" IsChecked="{Binding ResponseAction.ReverseProxyUsePathVariable}">Use %PATH% Variable</CheckBox>
-                                                                    </StackPanel>
-                                                                    <StackPanel>
-                                                                        <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                            <Grid DockPanel.Dock="Left">
+                                                                <StackPanel Visibility="{Binding ResponseAction.SetReverseProxyPath, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}">
+                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.ReverseProxyPath, UpdateSourceTrigger=PropertyChanged}"  />
+                                                                    <CheckBox HorizontalAlignment="Right" IsChecked="{Binding ResponseAction.ReverseProxyUsePathVariable}">Use %PATH% Variable</CheckBox>
+                                                                </StackPanel>
+                                                                <StackPanel>
+                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
                                                                                  Visibility="{Binding ResponseAction.SetReverseProxyPath, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
                                                                                  Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
-                                                                    </StackPanel>
-                                                                </Grid>
-                                                            </DockPanel>
-                                                            <DockPanel Margin="0,1,0,5" >
-                                                                <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetReverseProxyPort}" />
-                                                                <TextBlock Width="30">Port:</TextBlock>
-                                                                <!--<TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.ReverseProxyPort, UpdateSourceTrigger=PropertyChanged}" 
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </DockPanel>
+                                                        <DockPanel Margin="0,1,0,5" >
+                                                            <CheckBox Margin="0,1,5,0" IsChecked="{Binding ResponseAction.SetReverseProxyPort}" />
+                                                            <TextBlock Width="30">Port:</TextBlock>
+                                                            <!--<TextBox Height="22" MinWidth="150" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding ResponseAction.ReverseProxyPort, UpdateSourceTrigger=PropertyChanged}" 
                                                                              Opacity="{Binding ResponseAction.SetReverseProxyPort, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}" />-->
-                                                                <Grid DockPanel.Dock="Left">
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.ReverseProxyPort, UpdateSourceTrigger=PropertyChanged}" 
+                                                            <Grid DockPanel.Dock="Left">
+                                                                <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.ReverseProxyPort, UpdateSourceTrigger=PropertyChanged}" 
                                                                                  Visibility="{Binding ResponseAction.SetReverseProxyPort, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
+                                                                <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
                                                                                  Visibility="{Binding ResponseAction.SetReverseProxyPort, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
                                                                                  Opacity="0.5" IsReadOnly="True" TextAlignment="Center" Text="-- Same as Request --" />
-                                                                </Grid>
-                                                            </DockPanel>
-                                                        </StackPanel>
-
-
+                                                            </Grid>
+                                                        </DockPanel>
                                                     </StackPanel>
 
-                                                    <Grid Visibility="{Binding Enable, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}" Margin="0,0,-5,5" Grid.Column="2" Grid.ColumnSpan="3" Background="#ccffffff">
-                                                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="#838383" FontSize="32">Disabled</TextBlock>
-                                                    </Grid>
 
-                                                    <Grid Visibility="{Binding ShowConfirmDelete, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" Margin="0,0,-5,5" Grid.Column="0" Grid.ColumnSpan="5" Background="#ccffffff">
-                                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                            <TextBlock FontWeight="Bold" Foreground="#838383" FontSize="24">Confirm Delete?</TextBlock>
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <local:OPButton Command="{Binding DeleteConfirmYesClickCommand}" Width="100" Margin="0,0,1,0" Background="Red" >Yes</local:OPButton>
-                                                                <local:OPButton Command="{Binding DeleteConfirmCancelClickCommand}" Width="100" Margin="1,0,0,0">Cancel</local:OPButton>
-                                                            </StackPanel>
-                                                        </StackPanel>
+                                                </StackPanel>
 
-                                                    </Grid>
+                                                <Grid Visibility="{Binding Enable, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}" Margin="0,0,-5,5" Grid.Column="2" Grid.ColumnSpan="3" Background="#ccffffff">
+                                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="#838383" FontSize="32">Disabled</TextBlock>
                                                 </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-                        </DockPanel>
-                    </local:OPBorder>
-                    <local:OPBorder Margin="0,5,0,0" Grid.Row="1" Background="#ddd">
-                        <StackPanel Orientation="Horizontal" >
-                            <TextBlock FontWeight="Bold" Margin="5,0,15,2" Foreground="#333" FontSize="18" VerticalAlignment="Center">WWW Directory Cache</TextBlock>
-                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10,10,10,10">
-                                <CheckBox VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold" IsChecked="{Binding EnableCache}">Enable</CheckBox>
-                                <local:OPBorder BorderBrush="#bbb">
-                                    <StackPanel Orientation="Horizontal" Margin="15,2,5,2">
-                                        <TextBlock FontWeight="Normal" VerticalAlignment="Center" Margin="0,0,2,2" >Only cache items less than:</TextBlock>
-                                        <TextBox Text="{Binding OnlyCacheItemsLessThenMB}" Height="20" Width="30"></TextBox>
-                                        <TextBlock FontWeight="Normal" VerticalAlignment="Center" Margin="2,0,10,2" >MB</TextBlock>
-                                        <Border BorderBrush="#bbb" BorderThickness="1,0,0,0" Margin="10,0,10,0"></Border>
-                                        <TextBlock FontWeight="Normal" VerticalAlignment="Center" Margin="10,0,2,2" >Maximum Cache size:</TextBlock>
-                                        <TextBox Text="{Binding MaximumCacheSizeInMB}" Height="20" Width="40"></TextBox>
-                                        <TextBlock FontWeight="Normal" VerticalAlignment="Center" Margin="2,0,10,2" >MB</TextBlock>
-                                    </StackPanel>
-                                </local:OPBorder>
-                            </StackPanel>
+
+                                                <Grid Visibility="{Binding ShowConfirmDelete, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" Margin="0,0,-5,5" Grid.Column="0" Grid.ColumnSpan="5" Background="#ccffffff">
+                                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <TextBlock FontWeight="Bold" Foreground="#838383" FontSize="24">Confirm Delete?</TextBlock>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <local:OPButton Command="{Binding DeleteConfirmYesClickCommand}" Width="100" Margin="0,0,1,0" Background="Red" >Yes</local:OPButton>
+                                                            <local:OPButton Command="{Binding DeleteConfirmCancelClickCommand}" Width="100" Margin="1,0,0,0">Cancel</local:OPButton>
+                                                        </StackPanel>
+                                                    </StackPanel>
+
+                                                </Grid>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                </local:OPBorder>
+                <local:OPBorder Margin="0,5,0,0" Grid.Row="1" Background="#ddd">
+                    <StackPanel Orientation="Horizontal" >
+                        <TextBlock FontWeight="Bold" Margin="5,0,15,2" Foreground="#333" FontSize="15" VerticalAlignment="Center">WWW Directory Cache</TextBlock>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10,10,10,10">
+                            <CheckBox VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold" IsChecked="{Binding EnableCache}">Enable</CheckBox>
+                            <local:OPBorder BorderBrush="#bbb">
+                                <StackPanel Orientation="Horizontal" Margin="15,2,5,2">
+                                    <TextBlock FontWeight="Normal" VerticalAlignment="Center" Margin="0,0,2,2" >Only cache items less than:</TextBlock>
+                                    <TextBox Text="{Binding OnlyCacheItemsLessThenMB}" Height="20" Width="30"></TextBox>
+                                    <TextBlock FontWeight="Normal" VerticalAlignment="Center" Margin="2,0,10,2" >MB</TextBlock>
+                                    <Border BorderBrush="#bbb" BorderThickness="1,0,0,0" Margin="10,0,10,0"></Border>
+                                    <TextBlock FontWeight="Normal" VerticalAlignment="Center" Margin="10,0,2,2" >Maximum Cache size:</TextBlock>
+                                    <TextBox Text="{Binding MaximumCacheSizeInMB}" Height="20" Width="40"></TextBox>
+                                    <TextBlock FontWeight="Normal" VerticalAlignment="Center" Margin="2,0,10,2" >MB</TextBlock>
+                                </StackPanel>
+                            </local:OPBorder>
                         </StackPanel>
-                    </local:OPBorder>
-                </Grid>
-            </local:OPFrame>
-        </Grid>
+                    </StackPanel>
+                </local:OPBorder>
+            </Grid>
+        </local:OPFrame>
         <local:CentreMessage ShowDesignTimeMessageProcess="False" State="{Binding IsLoading, Converter={StaticResource BoolTrueToCentreMessageStateProcessElseNoMessageConverter}}" MessageProcess="Loading.."></local:CentreMessage>
     </Grid>
 </UserControl>

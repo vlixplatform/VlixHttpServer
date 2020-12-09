@@ -38,7 +38,6 @@ namespace Vlix.HttpServerConfig
         {
             svRules.ScrollToBottom();
         }
-
         private void UCSelectSSLCert_OnCertificateSelected(object sender, RoutedEventArgs e)
         {
             if (e.OriginalSource is SSLCertVM sSLCertVM)
@@ -52,6 +51,9 @@ namespace Vlix.HttpServerConfig
             }
         }
 
+
+
+
         private void opbSelectWWWDirectory_Click(object sender, RoutedEventArgs e)
         {
             CommonOpenFileDialog dialog = new CommonOpenFileDialog();
@@ -59,7 +61,6 @@ namespace Vlix.HttpServerConfig
             dialog.IsFolderPicker = true;
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok) ((HttpServerConfigVM)this.DataContext).WWWDirectory = dialog.FileName; else ((HttpServerConfigVM)this.DataContext).WWWDirectory = null;
         }
-
         private void opbOpenAlternativeWWWDirectory_Click(object sender, RoutedEventArgs e)
         {
             if (sender is FrameworkElement fe && fe.DataContext is RuleVM ruleVM)
@@ -70,6 +71,10 @@ namespace Vlix.HttpServerConfig
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok) ruleVM.ResponseAction.AlternativeWWWDirectory = dialog.FileName; else ruleVM.ResponseAction.AlternativeWWWDirectory = null;
             }
         }
+
+
+
+
 
         public static readonly RoutedEvent OnSaveApplyClickEvent = EventManager.RegisterRoutedEvent("OnSaveApplyClick", RoutingStrategy.Direct, typeof(RoutedEventHandler), typeof(UCHttpServerConfig));
         public event RoutedEventHandler OnSaveApplyClick
@@ -88,6 +93,8 @@ namespace Vlix.HttpServerConfig
 
 
 
+
+
         public static readonly RoutedEvent OnRefreshClickEvent = EventManager.RegisterRoutedEvent("OnRefreshClick", RoutingStrategy.Direct, typeof(RoutedEventHandler), typeof(UCHttpServerConfig));
         public event RoutedEventHandler OnRefreshClick
         {
@@ -103,12 +110,8 @@ namespace Vlix.HttpServerConfig
             }
         }
 
-        public void AddLogs(List<LogStruct> Logs)
-        {
-            ucLogConsole.AddLogs(Logs);
-        }
 
+
+        public void AddLogs(List<LogStruct> Logs) { ucLogConsole.AddLogs(Logs); }
     }
-
-
 }

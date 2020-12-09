@@ -1,7 +1,7 @@
 ﻿using System;
 using Vlix.HttpServer;
 
-namespace Vlix.HttpServerConfig
+namespace Vlix.HttpServer
 {
     public struct LogStruct
     {

@@ -9,9 +9,42 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using System.Text;
 using System.Security.Cryptography.X509Certificates;
+using System.Net.Http;
+using System.Web;
+using System.Collections.Specialized;
 
 namespace  Vlix.HttpServer
 {
+    public class WebAPIAction
+    {
+        public WebAPIAction(string path, Action<WebAPIActionInput> action, string httpMethod = "Get")
+        {
+            this.HttpMethod = httpMethod;
+            this.Path = path;
+            this.Action = action;
+        }
+        public string HttpMethod { get; set; } = "Get";
+        public string Path { get; set; } = null;
+        public Action<WebAPIActionInput> Action { get; set; }        
+    }
+
+    public class WebAPIActionInput
+    {
+        public WebAPIActionInput() { }
+        public WebAPIActionInput(string httpMethod, NameValueCollection inputNVC, string requestBody, WebAPIAction webAPIAction)
+        {
+            this.WebAPIAction = webAPIAction;
+            this.HttpMethod = httpMethod;            
+            foreach (var inputNV in inputNVC.AllKeys) this.Input.Add(inputNV, inputNVC[inputNV]);
+            this.RequestBody = requestBody;
+        }
+        public WebAPIAction WebAPIAction { get; set; } = null;
+        public string HttpMethod { get; set; } = "Get";
+        public Dictionary<string,string> Input { get; set; } = new Dictionary<string, string>();
+        public string RequestBody { get; set; }
+        public string ResponseBody { get; set; }
+        public HttpStatusCode HttpStatusCode { get; set; } = HttpStatusCode.OK;
+    }
     public class HttpServer: StaticFileProcessor
     {
         public new HttpServerConfig Config { get; set; } = null;
@@ -99,7 +132,7 @@ namespace  Vlix.HttpServer
         public Action<string> OnWarningLog { get; set; }
         public Action<string> OnInfoLog { get; set; }
 
-
+        public List<WebAPIAction> WebAPIs { get; set; } = null;
 
         public HttpServer(string wWWDirectory, int httpPort, int httpsPort = 443, string certSubjectName = null, StoreName certStoreName = StoreName.My, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, int maximumCacheSizeInMB = 500,
             bool allowLocalhostConnectionsOnlyForHttp = false) : base(new StaticFileProcessorConfig() { WWWDirectory = wWWDirectory, EnableCache = enableCache, MaximumCacheSizeInMB = maximumCacheSizeInMB, OnlyCacheItemsLessThenMB = onlyCacheItemsLessThenMB })
@@ -163,7 +196,7 @@ namespace  Vlix.HttpServer
             this.OnInfoLog?.Invoke("Starting Vlix Web Server...");
             if (this.Config.EnableHTTPS)
             {
-                if (!await SSLCertificateServices.TryBindSSLCertToPort(443, this.Config.SSLCertificateSubjectName, this.Config.SSLCertificateStoreName, (log) => this.OnInfoLog?.Invoke(log), (log) => this.OnErrorLog?.Invoke(log)))
+                if (!await SSLCertificateServices.TryBindSSLCertToPort(443, this.Config.SSLCertificateSubjectName, this.Config.SSLCertificateStoreName, (log) => this.OnInfoLog?.Invoke(log), (log) => this.OnErrorLog?.Invoke(log)).ConfigureAwait(false))
                 {
                     this.OnErrorLog?.Invoke("Failed to Start Web Server (Unable to bind SSL Cert to Port)!");
                     throw new Exception("Failed to Start Web Server (Unable to bind SSL Cert to Port)!");
@@ -195,6 +228,9 @@ namespace  Vlix.HttpServer
 
             try
             {
+
+                
+                string httpMethod = context.Request.HttpMethod;
                 string callerIP = context.Request.RemoteEndPoint.Address.ToString();
                 string schemeStr = context.Request.Url.Scheme;
                 Scheme scheme; if (string.Equals(schemeStr, "https", StringComparison.OrdinalIgnoreCase)) scheme = Scheme.https; else scheme = Scheme.http;
@@ -225,7 +261,7 @@ namespace  Vlix.HttpServer
                             switch (processRuleResult.ActionType)
                             {
                                 case ActionType.AlternativeWWWDirectory:
-                                    if (processRuleResult.IsSuccess) await this.SendToOutputAsync(processRuleResult.HttpStreamResult, context);
+                                    if (processRuleResult.IsSuccess) await this.SendToOutputAsync(processRuleResult.HttpStreamResult, context).ConfigureAwait(false);
                                     break;
                                 case ActionType.Redirect:
                                     context.Response.Redirect(processRuleResult.RedirectURL);
@@ -235,7 +271,7 @@ namespace  Vlix.HttpServer
                                     //context.Response?.Close();
                                     break;
                                 case ActionType.ReverseProxy:
-                                    if (processRuleResult.IsSuccess) await this.SendToOutputAsync(processRuleResult.HttpStreamResult, context);
+                                    if (processRuleResult.IsSuccess) await this.SendToOutputAsync(processRuleResult.HttpStreamResult, context).ConfigureAwait(false);
                                     break;
                             }
                             
@@ -244,17 +280,36 @@ namespace  Vlix.HttpServer
                             if (processRuleResult.LogLevel == LogLevel.Info) this.OnInfoLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > " + ruleName + " > " + msg);                                    
                             else if (processRuleResult.LogLevel == LogLevel.Warning) this.OnWarningLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > " + ruleName + " > " + msg);
                             else if (processRuleResult.LogLevel == LogLevel.Error) this.OnErrorLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > " + ruleName + " > " + msg);
-                            if (!processRuleResult.IsSuccess) { await this.SendErrorResponsePage(context, processRuleResult.Message, processRuleResult.SendErrorResponsePage_HttpStatusCode); return; }
+                            if (!processRuleResult.IsSuccess) { await this.SendErrorResponsePage(context, processRuleResult.Message, processRuleResult.SendErrorResponsePage_HttpStatusCode).ConfigureAwait(false); return; }
                             if (!processRuleResult.ContinueNextRule) { context.Response?.Close(); return; }
                         }
                     }
                 }
 
-                //Process Request Normally (Static Http Server)
+                //Process Embedded Web API Paths                
+                if (this.WebAPIs != null)
+                {
+                    string body = null;
+                    using (var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding)) body = await reader.ReadToEndAsync().ConfigureAwait(false);
+                    string query = HttpUtility.UrlDecode(context.Request.Url.Query);
+                    foreach (WebAPIAction action in this.WebAPIs)
+                    {
+                        if ((httpMethod==null || string.Equals(action.HttpMethod, httpMethod, StringComparison.InvariantCultureIgnoreCase)) && string.Equals(action.Path,absolutePath,StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            var inputNVC = HttpUtility.ParseQueryString(context.Request.Url.Query);
+                            WebAPIActionInput webAPIActionInput = new WebAPIActionInput(httpMethod, inputNVC, body, action);
+                            action.Action?.Invoke(webAPIActionInput);
+                            
+                        }
+                    }
+                }
+
+
+                //Process Static Files
                 HTTPStreamResult httpStreamResult = await this.ProcessRequestAsync(callerIP, absolutePath, this.Config.WWWDirectory).ConfigureAwait(false);
                 if (httpStreamResult.HttpStatusCode == HttpStatusCode.OK)
                 {
-                    await this.SendToOutputAsync(httpStreamResult, context);
+                    await this.SendToOutputAsync(httpStreamResult, context).ConfigureAwait(false);
                     this.OnInfoLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > Served '" + httpStreamResult.FileToRead + "'");
                 }
                 else
@@ -263,12 +318,12 @@ namespace  Vlix.HttpServer
                         this.OnWarningLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > '" + httpStreamResult.FileToRead + "' does not exist. Returning NOT FOUND");
                     if (httpStreamResult.HttpStatusCode == HttpStatusCode.InternalServerError) 
                         this.OnErrorLog?.Invoke(httpStreamResult.ErrorMsg);
-                    await SendErrorResponsePage(context, httpStreamResult.ErrorMsg, httpStreamResult.HttpStatusCode);
+                    await SendErrorResponsePage(context, httpStreamResult.ErrorMsg, httpStreamResult.HttpStatusCode).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
             {
-                await SendErrorResponsePage(context, ex.ToString(), HttpStatusCode.InternalServerError);
+                await SendErrorResponsePage(context, ex.ToString(), HttpStatusCode.InternalServerError).ConfigureAwait(false);
                 this.OnErrorLog?.Invoke(ex.ToString());
             }
         }
@@ -277,11 +332,10 @@ namespace  Vlix.HttpServer
         {
             context.Response.ContentLength64 = httpStreamResult.Stream.Length;
             context.Response.ContentType = httpStreamResult.ContentType;
-            //context.Response.ContentType = _mimeTypeMappings.TryGetValue(System.IO.Path.GetExtension(httpStreamResult.FileToRead), out string mime) ? mime : "application/octet-stream";            
             context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
             if (!String.IsNullOrEmpty(httpStreamResult?.FileToRead)) context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(httpStreamResult.FileToRead).ToString("r"));
             context.Response.StatusCode = (int)HttpStatusCode.OK;
-            await httpStreamResult.Stream.CopyToAsync(context.Response.OutputStream);
+            await httpStreamResult.Stream.CopyToAsync(context.Response.OutputStream).ConfigureAwait(false);
         }
 
         internal async Task SendErrorResponsePage(HttpListenerContext context, string errorMsg, HttpStatusCode httpStatusCode)
@@ -293,7 +347,7 @@ namespace  Vlix.HttpServer
                 context.Response.ContentType = "text/html";
                 context.Response.ContentEncoding = Encoding.UTF8;
                 context.Response.ContentLength64 = data.LongLength;
-                await context.Response.OutputStream.WriteAsync(data, 0, data.Length);
+                await context.Response.OutputStream.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
             }
             finally
             {

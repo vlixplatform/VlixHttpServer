@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30406.217
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpServerLib", "HttpServerLib\HttpServerLib.csproj", "{403741EA-55A2-4EE6-8F81-C49D139C0F5E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "1) HttpServerLib", "HttpServerLib\1) HttpServerLib.csproj", "{403741EA-55A2-4EE6-8F81-C49D139C0F5E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServerService", "HttpServerService\HttpServerService.csproj", "{B55A6AFD-3620-4026-99E6-50B0BBF81EF5}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "HttpServerX64-setup", "HttpServerInstaller\HttpServer-Setup.vdproj", "{543DBAFE-DCEF-4C38-AABC-DB64CE67A361}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServer.Tests", "HttpServer.Tests\HttpServer.Tests.csproj", "{3062F5A1-64E7-40A4-BABF-F6D20D00BEBE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "5) HttpServer.Tests", "HttpServer.Tests\5) HttpServer.Tests.csproj", "{3062F5A1-64E7-40A4-BABF-F6D20D00BEBE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Console (For Testing)", "Console (For Testing)", "{3B88F723-44E2-45BF-99DB-AAD5DED420A3}"
 EndProject
@@ -25,11 +25,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Windows Installer", "Windows Installer", "{9454950D-C946-438A-9016-E96DD1E8D8B9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerConfigUI", "HttpServerConfig\ServerConfigUI.csproj", "{72DE2F58-FA8E-4FE3-A385-6BA88357F4AF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3) ServerConfigUI", "ServerConfigUI\3) ServerConfigUI.csproj", "{72DE2F58-FA8E-4FE3-A385-6BA88357F4AF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpServerLib.WPF", "HttpServerLib.WPF\HttpServerLib.WPF.csproj", "{9B941B0F-A852-4541-BE44-6C3278569297}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "4) ServerConfig", "ServerConfig\4) ServerConfig.csproj", "{A0500C02-9CA0-4E9C-BF01-F4F265FA8D1D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerConfig", "ServerConfig\ServerConfig.csproj", "{A0500C02-9CA0-4E9C-BF01-F4F265FA8D1D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "2) WebServer", "WebServer\2) WebServer.csproj", "{0BB74C62-49CE-40DA-B643-55770D4281EA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,14 +65,14 @@ Global
 		{72DE2F58-FA8E-4FE3-A385-6BA88357F4AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72DE2F58-FA8E-4FE3-A385-6BA88357F4AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72DE2F58-FA8E-4FE3-A385-6BA88357F4AF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9B941B0F-A852-4541-BE44-6C3278569297}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B941B0F-A852-4541-BE44-6C3278569297}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9B941B0F-A852-4541-BE44-6C3278569297}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9B941B0F-A852-4541-BE44-6C3278569297}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A0500C02-9CA0-4E9C-BF01-F4F265FA8D1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A0500C02-9CA0-4E9C-BF01-F4F265FA8D1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0500C02-9CA0-4E9C-BF01-F4F265FA8D1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0500C02-9CA0-4E9C-BF01-F4F265FA8D1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BB74C62-49CE-40DA-B643-55770D4281EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BB74C62-49CE-40DA-B643-55770D4281EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BB74C62-49CE-40DA-B643-55770D4281EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BB74C62-49CE-40DA-B643-55770D4281EA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

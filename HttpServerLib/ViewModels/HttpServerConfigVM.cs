@@ -32,17 +32,15 @@ namespace Vlix.HttpServer
             return true;
         }
         #endregion
-        HttpServerConfig configBeforeChange;
         public HttpServerConfigVM()
         {
-            this.Rules.Add(new RuleVM(new SimpleReverseProxyRule("somehost", "wildard", 5000), this));
-            this.Rules.Add(new RuleVM(new SimplePathDenyRule("NonAllowedPath"), this));
+            //this.Rules.Add(new RuleVM(new SimpleReverseProxyRule("somehost", "wildard", 5000), this));
+            //this.Rules.Add(new RuleVM(new SimplePathDenyRule("NonAllowedPath"), this));
             //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 2", Enable=false }, this));
             //this.Rules.Add(new RuleVM(new SimpleHostNameRedirectRule("cat","dog") { Name = "Rule 3" }, this));
             //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 4", Enable = true }, this));
             //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 5", Enable = false }, this));
             //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 5", Enable = false }, this));
-
         }
 
         public HttpServerConfig ToModel()
@@ -119,28 +117,6 @@ namespace Vlix.HttpServer
                 httpServerConfig.Rules.Add(r);
             }
             return httpServerConfig;
-        }
-        public async Task LoadVM()
-        {
-            this.IsLoading = true;
-            await Task.Delay(500);
-            HttpServerConfig configBeforeChange = await Services.LoadHttpServerConfig();
-            this.EnableHTTP = configBeforeChange.EnableHTTP;
-            this.HTTPPort = configBeforeChange.HTTPPort;
-            this.EnableHTTPS = configBeforeChange.EnableHTTPS;
-            this.HTTPSPort = configBeforeChange.HTTPSPort;
-            this.EnableCache = configBeforeChange.EnableCache;
-            this.OnlyCacheItemsLessThenMB = configBeforeChange.OnlyCacheItemsLessThenMB;
-            this.MaximumCacheSizeInMB = configBeforeChange.MaximumCacheSizeInMB;
-            this.SSLCertificateStoreName = configBeforeChange.SSLCertificateStoreName;
-            this.SSLCertificateSubjectName = configBeforeChange.SSLCertificateSubjectName;
-            this.WWWDirectory = configBeforeChange.WWWDirectory;
-            this.LogDirectory = configBeforeChange.LogDirectory;
-            this.AllowLocalhostConnectionsOnlyForHttp = configBeforeChange.AllowLocalhostConnectionsOnlyForHttp;
-            this.Rules.Clear();
-            foreach (var rule in configBeforeChange.Rules) this.Rules.Add(new RuleVM(rule, this));
-            await Task.Delay(500);
-            this.IsLoading = false;
         }
         bool _IsLoading = false; public bool IsLoading { get { return _IsLoading; } set { SetField(ref _IsLoading, value, "IsLoading"); } }
         bool _ClientIsLocal = true; public bool ClientIsLocal { get { return _ClientIsLocal; } set { SetField(ref _ClientIsLocal, value, "ClientIsLocal"); } }

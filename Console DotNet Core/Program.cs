@@ -2,16 +2,14 @@
 using Serilog;
 using Serilog.Events;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
-using Vlix.HttpServerConfig;
-
+using System.Web;
+using Vlix.WebServer;
 namespace Vlix.HttpServer
 {
     partial class Program
@@ -21,6 +19,19 @@ namespace Vlix.HttpServer
 
         static async Task Main(string[] args)
         {
+
+            //string pathTest = "http://clove/?id={Id}&name={Name}";
+            //Uri uri = new Uri(pathTest);
+            //var nvc = HttpUtility.ParseQueryString(HttpUtility.UrlDecode(uri.Query));
+            //foreach (var inputNV in nvc.AllKeys) 
+            //{
+            //    var dTypeStr = nvc[inputNV];
+            //    if (string.Equals(dTypeStr,"{string}",StringComparison.InvariantCultureIgnoreCase))
+            //    {
+
+            //    }
+            //}
+
             //HttpServerConfig config = new HttpServerConfig() { SSLCertificateSubjectName = "CN=azrin.vlix.me" };
             //config.Rules.Add(new HttpToHttpsRedirectRule("azrin.vlix.me"));
             //config.Rules.Add(new SimpleReverseProxyRule("azrin.vlix.me", "/rproxy/*", 5000));
@@ -43,32 +54,18 @@ namespace Vlix.HttpServer
             //internalServer.OnWarningLog = (log) => Log.Warning("internal > " + log);
             //await internalServer.StartAsync();
 
-
-            await (new WebServer()).Start();
+            WebServer.WebServer webServer = new WebServer.WebServer();
+            await webServer.Start();
+            webServer.HttpServer.WebAPIs = new List<WebAPIAction>();
+            webServer.HttpServer.WebAPIs.Add(new WebAPIAction("/save/", 
+                (webAPIAction) => {
+                    string eRT = webAPIAction.Input["id"];
+                    string eRT2 = webAPIAction.RequestBody;
+                }, 
+            "Get"));
+            
+            
             Console.ReadKey();
-        }
-    }
-
-    public class WebServer
-    { 
-        public HttpServerConfig HttpServerConfig { get; set; } = null;
-        public static ConcurrentQueue<LogStruct> LogsCache = new ConcurrentQueue<LogStruct>();
-        public async Task Start()
-        {
-            _= Task.Run(async () =>
-            {
-                while (true)
-                {
-                    if (LogsCache.Count > 100) for (int n = 0; n < LogsCache.Count - 100; n++) LogsCache.TryDequeue(out _);
-                    await Task.Delay(15000);
-                }
-            });
-            if (HttpServerConfig == null) { this.HttpServerConfig = new HttpServerConfig(); this.HttpServerConfig.LoadConfigFile(); }
-            HttpServer vlixHttpServer = new HttpServer((new CancellationTokenSource()).Token, this.HttpServerConfig);
-            vlixHttpServer.OnErrorLog = (log) => { Log.Error(log); LogsCache.Enqueue(new LogStruct(log, LogLevel.Error)); };
-            vlixHttpServer.OnInfoLog = (log) => { Log.Information(log); LogsCache.Enqueue(new LogStruct(log, LogLevel.Info)); };
-            vlixHttpServer.OnWarningLog = (log) => { Log.Warning(log); LogsCache.Enqueue(new LogStruct(log, LogLevel.Warning)); };
-            await vlixHttpServer.StartAsync();                
         }
     }
 

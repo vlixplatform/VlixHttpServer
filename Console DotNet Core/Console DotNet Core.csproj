@@ -46,7 +46,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HttpServerLib\HttpServerLib.csproj" />
+    <ProjectReference Include="..\HttpServerLib\1) HttpServerLib.csproj" />
   </ItemGroup>
 
 </Project>

@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:ServerConfig"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <ResourceDictionary Source="pack://application:,,,/ServerConfigUI;component/Styles/vlix.xaml" />
+        <ResourceDictionary Source="Styles/vlix.xaml" />
     </Application.Resources>
 </Application>

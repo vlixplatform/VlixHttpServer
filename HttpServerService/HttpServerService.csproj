@@ -69,9 +69,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\HttpServerLib\HttpServerLib.csproj">
+    <ProjectReference Include="..\HttpServerLib\1%29 HttpServerLib.csproj">
       <Project>{403741ea-55a2-4ee6-8f81-c49d139c0f5e}</Project>
-      <Name>HttpServerLib</Name>
+      <Name>1%29 HttpServerLib</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <AssemblyName>WebServer</AssemblyName>
-    <RootNamespace>Vlix.WebServer</RootNamespace>
+    <RootNamespace>Vlix</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

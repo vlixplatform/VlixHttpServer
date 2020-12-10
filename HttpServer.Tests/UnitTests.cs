@@ -8,10 +8,12 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Vlix.HttpServer;
+using Vlix;
 using Xunit;
 using Xunit.Abstractions;
+using Newtonsoft.Json.Linq;
 
-namespace HttpServer.Tests
+namespace Vlix.HttpServer.Tests
 {
     public class UnitTests
     {
@@ -27,7 +29,7 @@ namespace HttpServer.Tests
 
         //[Theory(Skip ="No Need")]        
         [Theory]
-        [InlineData("/questions/9122708/unit-sharp.html", "C:\\www\\questions\\9122708\\unit-sharp.html", "C:\\www\\questions\\9122708",true)]                
+        [InlineData("/questions/9122708/unit-sharp.html", "C:\\www\\questions\\9122708\\unit-sharp.html", "C:\\www\\questions\\9122708", true)]
         [InlineData("/questions/aaa/test.html", "C:\\www\\questions\\aaa\\test.html", "C:\\www\\questions\\aaa", true)]
         [InlineData("/questions/aaa/unit", "", "C:\\www\\questions\\aaa\\unit", true)]
         [InlineData("/questions/aaa/", "", "C:\\www\\questions\\aaa", true)]
@@ -36,8 +38,8 @@ namespace HttpServer.Tests
         [InlineData("/questions/aaa.html/rt.htm", "C:\\www\\questions\\aaa.html\\rt.htm", "C:\\www\\questions\\aaa.html", true)]
         [InlineData("", "", "C:\\www", true)]
         [InlineData("  ", "", "C:\\www", true)]
-        [InlineData("  /my folder /", "","C:\\www\\my folder", true)]
-        [InlineData("  /my folder /test.htm", "C:\\www\\my folder\\test.htm", "C:\\www\\my folder",true)]
+        [InlineData("  /my folder /", "", "C:\\www\\my folder", true)]
+        [InlineData("  /my folder /test.htm", "C:\\www\\my folder\\test.htm", "C:\\www\\my folder", true)]
         [InlineData("/", "", "C:\\www", true)]
         [InlineData("/  ", "", "C:\\www", true)]
         [InlineData("/ss", "", "C:\\www\\ss", true)]
@@ -62,10 +64,10 @@ namespace HttpServer.Tests
         [InlineData("/my folder", "", "C:\\www\\my folder", true)]
         [InlineData("/my folder/test page.html", "C:\\www\\my folder\\test page.html", "C:\\www\\my folder", true)]
         [InlineData("/ss.avi", "C:\\www\\ss.avi", "C:\\www", true)]
-        [InlineData("/ss/../secret.txt", null, null, false )]      
+        [InlineData("/ss/../secret.txt", null, null, false)]
         public void ParseAbsolutePath(string absolutePath, string xFileToRead, string xFileToReadDir, bool ErrorMsgIsNull)
         {
-            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer("C:\\www",80);
+            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer("C:\\www", 80);
             output.WriteLine("absolutePath  = " + absolutePath);
             vlixHttpServer.TryParseAbsolutePath(vlixHttpServer.Config.WWWDirectory, absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg);
             output.WriteLine("fileToRead    = " + fileToRead);
@@ -73,7 +75,7 @@ namespace HttpServer.Tests
             output.WriteLine("errorMsg      = " + errorMsg);
             Assert.Equal(xFileToRead, fileToRead);
             Assert.Equal(xFileToReadDir, fileToReadDir);
-            Assert.Equal(ErrorMsgIsNull, errorMsg==null);
+            Assert.Equal(ErrorMsgIsNull, errorMsg == null);
         }
 
 
@@ -96,31 +98,31 @@ namespace HttpServer.Tests
             Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer(tempWWWPath, 80, 443, "ThisSSLCERTDoesNotExist", StoreName.My, true, 10, 10, true);
             bool errorThrown = false;
             try { await vlixHttpServer.StartAsync(); } catch { errorThrown = true; }
-            Assert.True(errorThrown);         
+            Assert.True(errorThrown);
         }
 
         [Fact]
         public async void RulesTest()
         {
-            Vlix.HttpServer.HttpServer vlixHttpServer  = new Vlix.HttpServer.HttpServer(tempWWWPath, 80, 443, "CN=azrin.vlix.me", StoreName.My, true, 10, 10, true);                        
+            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer(tempWWWPath, 80, 443, "CN=azrin.vlix.me", StoreName.My, true, 10, 10, true);
             await vlixHttpServer.StartAsync();
             Vlix.HttpServer.HttpServer reverseProxiedServer = new Vlix.HttpServer.HttpServer(altTempWWWPath, 5072);
             await reverseProxiedServer.StartAsync();
 
-            CreateWWWDirectory("General",tempWWWPath);
+            CreateWWWDirectory("General", tempWWWPath);
             CreateWWWDirectory("Alternative", altTempWWWPath);
 
             using (var httpClient = new HttpClient())
             {
                 //Test Redirect
-                vlixHttpServer.Config.Rules.Add(new SimplePathRedirectRule("/Page1.html", "/Page2.html"));                
+                vlixHttpServer.Config.Rules.Add(new SimplePathRedirectRule("/Page1.html", "/Page2.html"));
                 var resp = await httpClient.GetAsync("http://localhost/Page1.html"); //This should redirect to page2
                 var redirectResult1 = await resp.Content.ReadAsStringAsync();
                 Assert.Equal("<h1>Hello World From General/Page2!/h1>", redirectResult1);
 
                 //Test Redirect Failure
                 vlixHttpServer.Config.Rules.Add(new SimplePathRedirectRule("/Page3.html", "/SomePageThatDoesNotExist.html"));
-                resp = await httpClient.GetAsync("http://localhost/Page3.html"); 
+                resp = await httpClient.GetAsync("http://localhost/Page3.html");
                 Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
 
                 //Test Alternative WWW Directory
@@ -143,7 +145,7 @@ namespace HttpServer.Tests
                 var altWWWResultFailure = await resp.Content.ReadAsStringAsync();
                 Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
                 Assert.Equal(@"File 'C:\SomeDirectoryThatDoesNotExist\Page6.html' does not exist!", altWWWResultFailure);
-                
+
 
                 //Test Deny Action
                 vlixHttpServer.Config.Rules.Add(new SimplePathDenyRule("/Page7.html*"));
@@ -151,7 +153,7 @@ namespace HttpServer.Tests
                 Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
 
                 //Test Revese Proxy Action
-                vlixHttpServer.Config.Rules.Add(new SimpleReverseProxyRule("localhost","/Page8.html",5072));
+                vlixHttpServer.Config.Rules.Add(new SimpleReverseProxyRule("localhost", "/Page8.html", 5072));
                 resp = await httpClient.GetAsync("http://localhost/Page8.html");
                 var revProxyResult = await resp.Content.ReadAsStringAsync();
                 Assert.Equal("<h1>Hello World From Alternative/Page8!/h1>", revProxyResult);
@@ -159,19 +161,19 @@ namespace HttpServer.Tests
             vlixHttpServer.Stop();
         }
 
-        
+
         [Fact]
         public async void CacheTest()
         {
             //C:\Users\azrin\AppData\Local\Temp\VlixWebServer\CacheTest\www
-            string tempCacheTestPath = Path.Combine(Path.GetTempPath(),"VlixWebServer", "CacheTest", "www");
-            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer(tempCacheTestPath, 80,443, null, StoreName.My,true,10,10,true);
+            string tempCacheTestPath = Path.Combine(Path.GetTempPath(), "VlixWebServer", "CacheTest", "www");
+            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer(tempCacheTestPath, 80, 443, null, StoreName.My, true, 10, 10, true);
             string LongText = "";
             for (int n2 = 0; n2 < 10000; n2++) LongText += Guid.NewGuid().ToString() + "<br />";
-            for (int n =0;n<30;n++)
+            for (int n = 0; n < 30; n++)
             {
                 string tempFile = Path.Combine(tempCacheTestPath, "test" + n + ".html");
-                
+
                 Directory.CreateDirectory(tempCacheTestPath);
                 if (!File.Exists(tempFile)) File.WriteAllText(tempFile, "<h1>TEST" + n + "</h1>" + LongText);
             }
@@ -182,7 +184,7 @@ namespace HttpServer.Tests
                 for (int n = 0; n < 30; n++)
                 {
                     await httpClient.GetAsync("http://localhost/test" + n + ".html");
-                    await httpClient.GetAsync("http://localhost/test" + n + ".html");                    
+                    await httpClient.GetAsync("http://localhost/test" + n + ".html");
                     if (vlixHttpServer.CacheFiles.TotalCacheInKB < vlixHttpServer.Config.MaximumCacheSizeInMB * 1024)
                     {
                         Assert.True(vlixHttpServer.CacheFiles.TotalCacheInKB > prevTotalCacheInKB);
@@ -191,12 +193,38 @@ namespace HttpServer.Tests
                     else
                     {
                         await Task.Delay(6000); //Wait for Cache to Clean
-                        Assert.True(vlixHttpServer.CacheFiles.TotalCacheInKB < vlixHttpServer.Config.MaximumCacheSizeInMB *1024); //The Cache Cleaned must be lower than Max Cache
+                        Assert.True(vlixHttpServer.CacheFiles.TotalCacheInKB < vlixHttpServer.Config.MaximumCacheSizeInMB * 1024); //The Cache Cleaned must be lower than Max Cache
                     }
                 }
             }
 
         }
 
+
+
+        [Fact]
+        public async void TestWebAPI()
+        {
+            CreateWWWDirectory("General", tempWWWPath);
+            HttpServer httpServer = new HttpServer(tempWWWPath,5022);
+            
+            httpServer.WebAPIs = new List<WebAPIAction>();
+            httpServer.WebAPIs.Add(new WebAPIAction("/testAPI/",
+                async (webAPIActionInput) => {
+                    dynamic TestAPIResult = new { Id = webAPIActionInput.Input["id"].ToInt(), Name = webAPIActionInput.Input["name"] };
+                    await webAPIActionInput.RespondWithJson(TestAPIResult).ConfigureAwait(false);
+                },
+            "Get"));
+            bool ResStart = await httpServer.StartAsync();
+            Assert.True(ResStart);
+            using (var httpClient = new HttpClient())
+            {
+                var res = await httpClient.GetAsync("http://localhost:5022/testAPI/?id=234&name=%27my%20api%27");
+                string bodyStr = await res.Content.ReadAsStringAsync();
+                dynamic resObj = JObject.Parse(bodyStr);
+                Assert.True(resObj.Id == 234);
+                Assert.True(resObj.Name == "'my api'");
+            }
+        }
     }
 }

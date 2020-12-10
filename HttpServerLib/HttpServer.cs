@@ -13,49 +13,12 @@ using System.Net.Http;
 using System.Web;
 using System.Collections.Specialized;
 
-namespace  Vlix.HttpServer
+namespace Vlix.HttpServer
 {
-    public class WebAPIAction
-    {
-        public WebAPIAction(string path, Action<WebAPIActionInput> action, string httpMethod = "Get")
-        {
-            this.HttpMethod = httpMethod;
-            this.Path = path;
-            this.Action = action;
-        }
-        public string HttpMethod { get; set; } = "Get";
-        public string Path { get; set; } = null;
-        public Action<WebAPIActionInput> Action { get; set; }        
-    }
-
-    public class WebAPIActionInput
-    {
-        public WebAPIActionInput() { }
-        public WebAPIActionInput(string httpMethod, NameValueCollection inputNVC, string requestBody, WebAPIAction webAPIAction)
-        {
-            this.WebAPIAction = webAPIAction;
-            this.HttpMethod = httpMethod;            
-            foreach (var inputNV in inputNVC.AllKeys) this.Input.Add(inputNV, inputNVC[inputNV]);
-            this.RequestBody = requestBody;
-        }
-        public WebAPIAction WebAPIAction { get; set; } = null;
-        public string HttpMethod { get; set; } = "Get";
-        public Dictionary<string,string> Input { get; set; } = new Dictionary<string, string>();
-        public string RequestBody { get; set; }
-        public string ResponseBody { get; set; }
-        public HttpStatusCode HttpStatusCode { get; set; } = HttpStatusCode.OK;
-    }
     public class HttpServer: StaticFileProcessor
     {
         public new HttpServerConfig Config { get; set; } = null;
-        //public bool EnableHTTP { get; internal set; }
-        //public int HTTPPort { get; internal set; }
-        //public bool EnableHTTPS { get; internal set; }
-        //public int HTTPSPort { get; internal set; }
-        //public bool AllowLocalhostConnectionsOnlyForHttp { get; set; } = false;
         public CancellationToken CancellationToken { get; internal set; }
-        //public List<Rule> Rules { get; set; } = null;
-
         #region MimeTypings
         private static IDictionary<string, string> _mimeTypeMappings = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
         {
@@ -126,14 +89,11 @@ namespace  Vlix.HttpServer
             {".zip", "application/zip"},
         };
     #endregion
-
         private HttpListener _listener = null;
         public Action<string> OnErrorLog { get; set; }
         public Action<string> OnWarningLog { get; set; }
         public Action<string> OnInfoLog { get; set; }
-
         public List<WebAPIAction> WebAPIs { get; set; } = null;
-
         public HttpServer(string wWWDirectory, int httpPort, int httpsPort = 443, string certSubjectName = null, StoreName certStoreName = StoreName.My, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, int maximumCacheSizeInMB = 500,
             bool allowLocalhostConnectionsOnlyForHttp = false) : base(new StaticFileProcessorConfig() { WWWDirectory = wWWDirectory, EnableCache = enableCache, MaximumCacheSizeInMB = maximumCacheSizeInMB, OnlyCacheItemsLessThenMB = onlyCacheItemsLessThenMB })
         {
@@ -171,8 +131,8 @@ namespace  Vlix.HttpServer
                 SSLCertificateStoreName = StoreName.My
             });            
         }
-        public HttpServer(CancellationToken cancellationToken, HttpServerConfig httpServerConfig) : 
-            base(httpServerConfig)
+
+        public HttpServer(CancellationToken cancellationToken, HttpServerConfig httpServerConfig) : base(httpServerConfig)
         {
             CommonConstructor(cancellationToken, httpServerConfig);
         }
@@ -190,8 +150,7 @@ namespace  Vlix.HttpServer
             this.Config = httpServerConfig;
         }
      
-     
-        public async Task StartAsync()
+        public async Task<bool> StartAsync()
         {
             this.OnInfoLog?.Invoke("Starting Vlix Web Server...");
             if (this.Config.EnableHTTPS)
@@ -202,7 +161,6 @@ namespace  Vlix.HttpServer
                     throw new Exception("Failed to Start Web Server (Unable to bind SSL Cert to Port)!");
                 };
             }
-
             _listener = new HttpListener();
             
             if (this.Config.EnableHTTP) _listener.Prefixes.Add("http://*:" + this.Config.HTTPPort.ToString() + "/");
@@ -210,7 +168,7 @@ namespace  Vlix.HttpServer
             if (!this.Config.EnableHTTP && !this.Config.EnableHTTPS)
             {
                 this.OnInfoLog?.Invoke("Unable to start as both HTTP (Port " + this.Config.HTTPPort + ") and HTTPS (Port " + this.Config.HTTPSPort + ") is disabled");
-                return;
+                return false;
             }
             if (this.Config.EnableHTTP && !this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPPort + "(HTTP), Directory = '" + this.Config.WWWDirectory + "'");
             if (!this.Config.EnableHTTP && this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPSPort + "(HTTPS), Directory = '" + this.Config.WWWDirectory + "'");
@@ -218,6 +176,7 @@ namespace  Vlix.HttpServer
             _listener.Start();
             _listener.BeginGetContext(OnContext, null); //The thread stops here waiting for content to come
             this.OnInfoLog?.Invoke("Vlix HTTP Server Started!");
+            return true;
         }
 
         private async void OnContext(IAsyncResult result)
@@ -228,8 +187,6 @@ namespace  Vlix.HttpServer
 
             try
             {
-
-                
                 string httpMethod = context.Request.HttpMethod;
                 string callerIP = context.Request.RemoteEndPoint.Address.ToString();
                 string schemeStr = context.Request.Url.Scheme;
@@ -288,18 +245,17 @@ namespace  Vlix.HttpServer
 
                 //Process Embedded Web API Paths                
                 if (this.WebAPIs != null)
-                {
-                    string body = null;
-                    using (var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding)) body = await reader.ReadToEndAsync().ConfigureAwait(false);
-                    string query = HttpUtility.UrlDecode(context.Request.Url.Query);
+                {                                 
                     foreach (WebAPIAction action in this.WebAPIs)
                     {
                         if ((httpMethod==null || string.Equals(action.HttpMethod, httpMethod, StringComparison.InvariantCultureIgnoreCase)) && string.Equals(action.Path,absolutePath,StringComparison.InvariantCultureIgnoreCase))
                         {
-                            var inputNVC = HttpUtility.ParseQueryString(context.Request.Url.Query);
-                            WebAPIActionInput webAPIActionInput = new WebAPIActionInput(httpMethod, inputNVC, body, action);
+                            string body = null;
+                            using (var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding)) body = await reader.ReadToEndAsync().ConfigureAwait(false);
+                            string query = WebUtility.UrlDecode(context.Request.Url.Query);
+                            WebAPIActionInput webAPIActionInput = new WebAPIActionInput(httpMethod, query, body, action, context, this.OnErrorLog);
                             action.Action?.Invoke(webAPIActionInput);
-                            
+                            return;
                         }
                     }
                 }
@@ -332,8 +288,10 @@ namespace  Vlix.HttpServer
         {
             context.Response.ContentLength64 = httpStreamResult.Stream.Length;
             context.Response.ContentType = httpStreamResult.ContentType;
-            context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
-            if (!String.IsNullOrEmpty(httpStreamResult?.FileToRead)) context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(httpStreamResult.FileToRead).ToString("r"));
+            context.Response.ContentEncoding = Encoding.UTF8;
+            //context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
+            //if (!String.IsNullOrEmpty(httpStreamResult?.FileToRead)) context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(httpStreamResult.FileToRead).ToString("r"));
+
             context.Response.StatusCode = (int)HttpStatusCode.OK;
             await httpStreamResult.Stream.CopyToAsync(context.Response.OutputStream).ConfigureAwait(false);
         }

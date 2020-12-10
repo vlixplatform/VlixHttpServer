@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Vlix.WebServer
+namespace Vlix
 {
     class Program
     {

@@ -29,7 +29,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3) ServerConfigUI", "Server
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "4) ServerConfig", "ServerConfig\4) ServerConfig.csproj", "{A0500C02-9CA0-4E9C-BF01-F4F265FA8D1D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "2) WebServer", "WebServer\2) WebServer.csproj", "{0BB74C62-49CE-40DA-B643-55770D4281EA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "2) WebServer", "WebServer\2) WebServer.csproj", "{0BB74C62-49CE-40DA-B643-55770D4281EA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

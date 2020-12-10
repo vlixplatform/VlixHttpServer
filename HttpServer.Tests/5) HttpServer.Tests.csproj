@@ -7,7 +7,7 @@
     <ProjectGuid>{3062F5A1-64E7-40A4-BABF-F6D20D00BEBE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>HttpServer.Tests</RootNamespace>
+    <RootNamespace>Vlix.HttpServer.Tests</RootNamespace>
     <AssemblyName>HttpServer.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -67,6 +67,10 @@
     <ProjectReference Include="..\HttpServerLib\1%29 HttpServerLib.csproj">
       <Project>{403741ea-55a2-4ee6-8f81-c49d139c0f5e}</Project>
       <Name>1%29 HttpServerLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WebServer\2%29 WebServer.csproj">
+      <Project>{0bb74c62-49ce-40da-b643-55770d4281ea}</Project>
+      <Name>2%29 WebServer</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

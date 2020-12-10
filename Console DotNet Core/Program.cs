@@ -9,14 +9,13 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Web;
-using Vlix.WebServer;
+using Vlix;
+
+
 namespace Vlix.HttpServer
 {
     partial class Program
     {
-
-
-
         static async Task Main(string[] args)
         {
 
@@ -54,13 +53,14 @@ namespace Vlix.HttpServer
             //internalServer.OnWarningLog = (log) => Log.Warning("internal > " + log);
             //await internalServer.StartAsync();
 
-            WebServer.WebServer webServer = new WebServer.WebServer();
+            WebServer webServer = new WebServer();
             await webServer.Start();
             webServer.HttpServer.WebAPIs = new List<WebAPIAction>();
             webServer.HttpServer.WebAPIs.Add(new WebAPIAction("/save/", 
-                (webAPIAction) => {
-                    string eRT = webAPIAction.Input["id"];
-                    string eRT2 = webAPIAction.RequestBody;
+                async (webAPIActionInput) => {
+                    string eRT = webAPIActionInput.Input["id"];
+                    string eRT2 = webAPIActionInput.RequestBody;
+                    await webAPIActionInput.RespondWithJson(webAPIActionInput).ConfigureAwait(false);
                 }, 
             "Get"));
             

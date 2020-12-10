@@ -357,7 +357,7 @@
                                                                              Opacity="{Binding ResponseAction.SetReverseProxyPath, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}" />-->
                                                             <Grid DockPanel.Dock="Left">
                                                                 <StackPanel Visibility="{Binding ResponseAction.SetReverseProxyPath, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}">
-                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.ReverseProxyPath, UpdateSourceTrigger=PropertyChanged}"  />
+                                                                    <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"  Text="{Binding ResponseAction.ReverseProxyPathAndQuery, UpdateSourceTrigger=PropertyChanged}"  />
                                                                     <CheckBox HorizontalAlignment="Right" IsChecked="{Binding ResponseAction.ReverseProxyUsePathVariable}">Use %PATH% Variable</CheckBox>
                                                                 </StackPanel>
                                                                 <StackPanel>

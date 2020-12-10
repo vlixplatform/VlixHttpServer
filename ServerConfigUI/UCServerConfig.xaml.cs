@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Vlix.HttpServer;
 
 namespace Vlix.ServerConfigUI
 {
@@ -24,12 +25,10 @@ namespace Vlix.ServerConfigUI
         {
             InitializeComponent();
         }
-
         private void opbRefresh_Click(object sender, RoutedEventArgs e)
         {
             //uCHttpServerConfig.OnRefreshClick
         }
-
         private async Task UserControl_Loaded(object sender, RoutedEventArgs e)
         {
             await uCHttpServerConfig.Initialize(
@@ -39,6 +38,30 @@ namespace Vlix.ServerConfigUI
                 null
             );
         }
+        private void miExit_Click(object sender, RoutedEventArgs e)
+        {
+            Environment.Exit(0);
+        }
+        private void opbRemote_Click(object sender, RoutedEventArgs e)
+        {
 
+        }
+        private void opfRemoteSettingsWindow_Close(object sender, RoutedEventArgs e)
+        {
+            ((ServerConfigVM)this.DataContext).ShowRemoteSettingsWindow = false;
+        }
+        private void opbRemoteAccept_Click(object sender, RoutedEventArgs e)
+        {
+            var configVM = ((ServerConfigVM)this.DataContext);
+            configVM.ConfigRemoteUsername = tbConfigRemoteUsername.Text;
+            configVM.ConfigRemotePassword = pbConfigRemotePassword.Password;
+            configVM.ConfigRemoteEnable = cbConfigRemoteEnable.IsChecked ?? false;
+        }
+
+        public Action<HttpServerConfigVM> OnSaveAndApply;
+        private void opbSaveApply_Click(object sender, RoutedEventArgs e)
+        {
+            this.OnSaveAndApply?.Invoke(((HttpServerConfigVM)this.DataContext));
+        }
     }
 }

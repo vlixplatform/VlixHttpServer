@@ -2,14 +2,13 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:hslib="clr-namespace:Vlix.HttpServer;assembly=HttpServerLib"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"              
              xmlns:hs="clr-namespace:Vlix.HttpServer;assembly=HttpServerLib"
-             xmlns:local="clr-namespace:Vlix.ServerConfigUI"
+             xmlns:local="clr-namespace:Vlix.ServerConfigUI" d:DataContext="{d:DesignInstance {x:Type local:ServerConfigVMSample}, IsDesignTimeCreatable=True}" 
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="800">
     <UserControl.DataContext>
-        <hs:HttpServerConfigVM  />
+        <hs:ServerConfigVM  />
     </UserControl.DataContext>
     <UserControl.Resources>
         <local:InvertBoolConverter x:Key="InvertBoolConverter" />
@@ -24,13 +23,15 @@
         <local:ActionTypeToFriendlyNameConverter x:Key="ActionTypeToFriendlyNameConverter" />
         <local:ActionTypeToVisibilityConverter x:Key="ActionTypeToVisibilityConverter" />
     </UserControl.Resources>
+
     <Grid>
-        <Grid IsEnabled="{Binding IsLoading, Converter={StaticResource InvertBoolConverter}}" Background="White" Opacity="{Binding IsLoading, Converter={StaticResource BoolTrueToOpacity03Else1Converter}}"
-              HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid Background="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <DockPanel>
-                <Grid DockPanel.Dock="Top" Margin="0,0,0,-22" Panel.ZIndex="100">
-                    <local:OPButton HorizontalAlignment="Right" Width="120" IconLocation="Left" Click="opbRefresh_Click" Height="25" Grid.Column="1" Icon="ic_refresh">Refresh</local:OPButton>
-                </Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Top" Margin="0,0,0,-21" Panel.ZIndex="100">
+                    <local:OPButton Width="70" Margin="0,0,2,0" InnerMargin="-3,0,0,0" IconSize="13" IconLocation="Left" Click="opbRemote_Click" Command="{Binding }" Icon="ic_settings_remote">Remote</local:OPButton>
+                    <local:OPButton Width="70" Margin="0,0,2,0" InnerMargin="-3,0,0,0" IconLocation="Left" Click="opbRefresh_Click" Icon="ic_refresh">Refresh</local:OPButton>
+                    <local:OPButton Width="120" Click="opbSaveApply_Click" Icon="ic_save" InnerMargin="-2,0,0,0">Save and Apply</local:OPButton>
+                </StackPanel>
                 <TabControl>
                     <TabItem Header="  Web Server  ">
                         <local:UCHttpServerConfig x:Name="uCHttpServerConfig" />
@@ -41,6 +42,54 @@
                     </TabItem>
                 </TabControl>
             </DockPanel>
+            <!--Login-->
+            <Grid Background="#aa000000" Visibility="{Binding ShowLoginWindow, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+            <local:OPBorder Visibility="{Binding ShowLoginWindow, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" Height="300" Width="350" Margin="0,2,0,0" Background="White">
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5,0,0" >
+                    <StackPanel Orientation="Vertical">
+                        <Image Source="vlixlogo-whitebg.png" Margin="0,0,0,0" Width="220"></Image>
+                        <StackPanel Margin="0,5,0,10" Orientation="Horizontal">
+                            <TextBlock FontWeight="SemiBold" Margin="0,0,2,0">Host:</TextBlock>
+                            <TextBox Width="230" x:Name="tbAddress">https://azrin.vlixplatform.com.au</TextBox>
+                        </StackPanel>
+                        <local:OPBorder>
+                            <StackPanel HorizontalAlignment="Center" Margin="10" Orientation="Vertical">
+                                <StackPanel Margin="0,15,0,0" Orientation="Horizontal">
+                                    <TextBlock Width="60">Username:</TextBlock>
+                                    <TextBox Width="120" x:Name="tbUsername" />
+                                </StackPanel>
+                                <StackPanel Margin="0,3,0,15" Orientation="Horizontal">
+                                    <TextBlock Width="60">Password:</TextBlock>
+                                    <PasswordBox Width="120" x:Name="pbPassword"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </local:OPBorder>
+                        <local:OPButton Margin="0,2,0,20" Click="opbRemoteAccept_Click">Login</local:OPButton>
+                    </StackPanel>
+                </Grid>
+            </local:OPBorder>
+
+            <!-- {Binding ShowRemoteSettingsWindow} -->
+            <Grid Background="#aa000000" Visibility="{Binding ShowRemoteSettingsWindow, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+            <local:OPFrame Shown="{Binding ShowRemoteSettingsWindow}" BorderThickness="0" InnerMargin="10"  CornerRadius="5"  TopLeftContent="Remote Configuration" TopLeftIcon="ic_settings_remote"
+                                    Visibility="Collapsed"  Width="450" Height="200" OnClose="opfRemoteSettingsWindow_Close">
+                <local:OPBorder Margin="0,2,0,0">
+                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5,0,0" >
+                        <StackPanel Orientation="Vertical">
+                            <CheckBox x:Name="cbConfigRemoteEnable">Enable remote configuration</CheckBox>
+                            <StackPanel Margin="0,5,0,0" Orientation="Horizontal">
+                                <TextBlock Width="60">Username:</TextBlock>
+                                <TextBox Width="120" x:Name="tbConfigRemoteUsername" />
+                            </StackPanel>
+                            <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
+                                <TextBlock Width="60">Password:</TextBlock>
+                                <PasswordBox Width="120" x:Name="pbConfigRemotePassword"/>
+                            </StackPanel>
+                            <local:OPButton Margin="0,5,0,0" Click="opbRemoteAccept_Click">OK</local:OPButton>
+                        </StackPanel>
+                    </Grid>
+                </local:OPBorder>
+            </local:OPFrame>
         </Grid>
         <local:CentreMessage ShowDesignTimeMessageProcess="False" State="{Binding IsLoading, Converter={StaticResource BoolTrueToCentreMessageStateProcessElseNoMessageConverter}}" MessageProcess="Loading.."></local:CentreMessage>
     </Grid>

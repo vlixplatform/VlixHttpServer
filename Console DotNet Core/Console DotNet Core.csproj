@@ -15,6 +15,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="WebServer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Sample\forbidden.html" />
     <None Remove="Sample\index.html" />
     <None Remove="Sample\internal.html" />

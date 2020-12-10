@@ -30,7 +30,8 @@ namespace Vlix.HttpServer
         {
             HttpServerConfig config = new HttpServerConfig();
             string appDirectory = ConfigurationManager.AppSettings.Get("AppDirectory");
-            appDirectory = appDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
+            if (appDirectory == null) appDirectory = Environment.CurrentDirectory;
+            else appDirectory = appDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
             Directory.CreateDirectory(appDirectory);
             string configFilePath = Path.Combine(appDirectory, "httpserver.json");
             if (File.Exists(configFilePath))
@@ -78,7 +79,10 @@ namespace Vlix.HttpServer
         public StoreName SSLCertificateStoreName { get; set; } = StoreName.My;
         [JsonProperty(Order = 11)]
         public bool AllowLocalhostConnectionsOnlyForHttp { get; set; } = false;
-        
-      
-    }
+
+        [JsonProperty(Order = 30)]
+        public string ConfigUsername { get; set; } = "Administrator";
+        [JsonProperty(Order = 31)]
+        public string ConfigPasswordHash { get; set; } = null;
+    } 
 }

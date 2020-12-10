@@ -42,7 +42,6 @@ namespace Vlix.HttpServer
             //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 5", Enable = false }, this));
             //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 5", Enable = false }, this));
         }
-
         public HttpServerConfig ToModel()
         {
             HttpServerConfig httpServerConfig = new HttpServerConfig()
@@ -110,7 +109,7 @@ namespace Vlix.HttpServer
                             Port = ruleVM.ResponseAction.ReverseProxyPort,
                             UsePathVariable = ruleVM.ResponseAction.ReverseProxyUsePathVariable,
                             SetPath = ruleVM.ResponseAction.SetReverseProxyPath,
-                            Path = ruleVM.ResponseAction.ReverseProxyPath
+                            PathAndQuery = ruleVM.ResponseAction.ReverseProxyPathAndQuery
                         };
                         break;
                 }
@@ -140,7 +139,6 @@ namespace Vlix.HttpServer
         //public ICommand RefreshClickCommand { get { return new DelegateCommand<object>(async (p) => await LoadVM(), (p) => true);}}
         public ICommand SelectSSLCertClickCommand { get { return new DelegateCommand<object>((p) => this.ShowSelectSSLCertWindow = true, (p) => true);}}
         public ICommand ShowAdvanceSettingsClickCommand { get { return new DelegateCommand<object>((p) => this.ShowAdvanceSettingsWindow = true, (p) => true);}}  
-        //public ICommand SaveAndApplyClickCommand { get { return new DelegateCommand<object>((c) => { Services.SaveServerConfig(this.ToModel()); }, (c) => true); } } 
         public ICommand NewRuleClickCommand { get { return new DelegateCommand<object>((p) =>
         {
             this.Rules.Add(new RuleVM(this));

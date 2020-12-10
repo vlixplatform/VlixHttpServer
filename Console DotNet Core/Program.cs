@@ -54,17 +54,18 @@ namespace Vlix.HttpServer
             //await internalServer.StartAsync();
 
             WebServer webServer = new WebServer();
-            await webServer.Start();
-            webServer.HttpServer.WebAPIs = new List<WebAPIAction>();
-            webServer.HttpServer.WebAPIs.Add(new WebAPIAction("/save/", 
-                async (webAPIActionInput) => {
-                    string eRT = webAPIActionInput.Input["id"];
-                    string eRT2 = webAPIActionInput.RequestBody;
-                    await webAPIActionInput.RespondWithJson(webAPIActionInput).ConfigureAwait(false);
-                }, 
-            "Get"));
-            
-            
+            await webServer.StartAsync();
+            _ = Task.Run(async () =>
+            {
+                int n = 0;
+                while (true)
+                {
+                    n++;
+                    webServer.HttpServer.AddLog("This is Log " + n);
+                    await Task.Delay(100);
+                }
+            });
+
             Console.ReadKey();
         }
     }

@@ -19,4 +19,12 @@ namespace Vlix.ServerConfigUI
             this.ShowAdvanceSettingsWindow = false;
         }
     }
+    public class ServerConfigVMSample : ServerConfigVM
+    {
+        public ServerConfigVMSample()
+        {
+            this.ShowRemoteSettingsWindow = true;
+            this.ShowLoginWindow = false;
+        }
+    }
 }

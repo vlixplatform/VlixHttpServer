@@ -17,6 +17,7 @@ namespace Vlix.HttpServer
 {
     public class HttpServer: StaticFileProcessor
     {
+        public HttpClient HttpClient = new HttpClient();
         public new HttpServerConfig Config { get; set; } = null;
         public CancellationToken CancellationToken { get; internal set; }
         #region MimeTypings
@@ -93,7 +94,7 @@ namespace Vlix.HttpServer
         public Action<string> OnErrorLog { get; set; }
         public Action<string> OnWarningLog { get; set; }
         public Action<string> OnInfoLog { get; set; }
-        public List<WebAPIAction> WebAPIs { get; set; } = null;
+        public List<WebAPIAction> WebAPIs { get; set; } = new List<WebAPIAction>();
         public HttpServer(string wWWDirectory, int httpPort, int httpsPort = 443, string certSubjectName = null, StoreName certStoreName = StoreName.My, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, int maximumCacheSizeInMB = 500,
             bool allowLocalhostConnectionsOnlyForHttp = false) : base(new StaticFileProcessorConfig() { WWWDirectory = wWWDirectory, EnableCache = enableCache, MaximumCacheSizeInMB = maximumCacheSizeInMB, OnlyCacheItemsLessThenMB = onlyCacheItemsLessThenMB })
         {
@@ -112,7 +113,6 @@ namespace Vlix.HttpServer
                 SSLCertificateStoreName = StoreName.My,
             });
         }
-
         public HttpServer(CancellationToken cancellationToken, string wWWDirectory, int httpPort = 80, int httpsPort = 443, string certSubjectName = null, StoreName certStoreName = StoreName.My, bool enableCache = true, int onlyCacheItemsLessThenMB = 10, 
             int maximumCacheSizeInMB = 500, bool allowLocalhostConnectionsOnlyForHttp = false) : base(new StaticFileProcessorConfig() { WWWDirectory = wWWDirectory, EnableCache = enableCache, OnlyCacheItemsLessThenMB = onlyCacheItemsLessThenMB, MaximumCacheSizeInMB = maximumCacheSizeInMB })
         {
@@ -131,17 +131,14 @@ namespace Vlix.HttpServer
                 SSLCertificateStoreName = StoreName.My
             });            
         }
-
         public HttpServer(CancellationToken cancellationToken, HttpServerConfig httpServerConfig) : base(httpServerConfig)
         {
             CommonConstructor(cancellationToken, httpServerConfig);
         }
-
         public HttpServer(HttpServerConfig httpServerConfig) : base(httpServerConfig)
         {
             CommonConstructor((new CancellationTokenSource()).Token, httpServerConfig);
         }
-
         private void CommonConstructor(CancellationToken cancellationToken, HttpServerConfig httpServerConfig)
         {
             if (httpServerConfig.WWWDirectory.Length < 1) throw new Exception("path cannot be empty!");
@@ -149,7 +146,6 @@ namespace Vlix.HttpServer
             this.CancellationToken = cancellationToken;
             this.Config = httpServerConfig;
         }
-     
         public async Task<bool> StartAsync()
         {
             this.OnInfoLog?.Invoke("Starting Vlix Web Server...");
@@ -178,7 +174,6 @@ namespace Vlix.HttpServer
             this.OnInfoLog?.Invoke("Vlix HTTP Server Started!");
             return true;
         }
-
         private async void OnContext(IAsyncResult result)
         {
             if (!_listener.IsListening) return;
@@ -193,6 +188,7 @@ namespace Vlix.HttpServer
                 Scheme scheme; if (string.Equals(schemeStr, "https", StringComparison.OrdinalIgnoreCase)) scheme = Scheme.https; else scheme = Scheme.http;
                 string host = context.Request.Url.Host;
                 int port = context.Request.Url.Port;
+                string pathAndQuery = context.Request.Url.PathAndQuery;
                 string absolutePath = context.Request.Url.AbsolutePath;
                 string absoluteURL = context.Request.Url.AbsoluteUri;
                 if (string.IsNullOrWhiteSpace(absolutePath)) absolutePath = "/";
@@ -214,7 +210,7 @@ namespace Vlix.HttpServer
                     {                        
                         if (rule.IsMatch(scheme, host, port, absolutePath))
                         {                            
-                            ProcessRuleResult processRuleResult = await rule.ResponseAction.ProcessAsync(callerIP,scheme,host, port,absolutePath, context.Request.Headers, this).ConfigureAwait(false);
+                            ProcessRuleResult processRuleResult = await rule.ResponseAction.ProcessAsync(callerIP,scheme,host, port,absolutePath, pathAndQuery, context.Request.QueryString, context.Request.Headers, this).ConfigureAwait(false);
                             switch (processRuleResult.ActionType)
                             {
                                 case ActionType.AlternativeWWWDirectory:
@@ -254,7 +250,8 @@ namespace Vlix.HttpServer
                             using (var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding)) body = await reader.ReadToEndAsync().ConfigureAwait(false);
                             string query = WebUtility.UrlDecode(context.Request.Url.Query);
                             WebAPIActionInput webAPIActionInput = new WebAPIActionInput(httpMethod, query, body, action, context, this.OnErrorLog);
-                            action.Action?.Invoke(webAPIActionInput);
+                            var actionResult = action.Action?.Invoke(webAPIActionInput);
+                            if (actionResult.Exception != null) throw actionResult.Exception;
                             return;
                         }
                     }
@@ -279,8 +276,9 @@ namespace Vlix.HttpServer
             }
             catch (Exception ex)
             {
-                await SendErrorResponsePage(context, ex.ToString(), HttpStatusCode.InternalServerError).ConfigureAwait(false);
-                this.OnErrorLog?.Invoke(ex.ToString());
+                var exStr = ex.ToString();
+                await SendErrorResponsePage(context, exStr, HttpStatusCode.InternalServerError).ConfigureAwait(false);                
+                this.OnErrorLog?.Invoke(exStr);
             }
         }
 
@@ -312,10 +310,23 @@ namespace Vlix.HttpServer
                 context.Response?.Close();
             }
         }
-
-       
-        public void Stop() { this.OnInfoLog?.Invoke("Stopping Vlix HTTP Server...");  this.Shutdown(); _listener?.Stop(); this.OnInfoLog?.Invoke("Vlix HTTP Server Stopped!"); }
-
+        public void Stop() { this.OnInfoLog?.Invoke("Stopping Vlix HTTP Server...");  this.Shutdown(); this.HttpClient.Dispose(); _listener?.Stop(); this.OnInfoLog?.Invoke("Vlix HTTP Server Stopped!"); }
+        public void AddLog(string log, LogLevel logLevel = LogLevel.Info)
+        {
+            switch (logLevel)
+            {
+                case LogLevel.Info:
+                    this.OnInfoLog(log);
+                    break;
+                case LogLevel.Warning:
+                    this.OnWarningLog(log);
+                    break;
+                case LogLevel.Error:
+                    this.OnErrorLog(log);
+                    break;
+            }
+            
+        }
     }
 
 

@@ -45,7 +45,7 @@ namespace Vlix.HttpServer
                 }
             });
         }
-        public void Shutdown() { cancellationTokenSource.Cancel(); }
+        public void Shutdown() { cancellationTokenSource.Cancel();  }
 
         public CacheFiles CacheFiles = new CacheFiles();
 

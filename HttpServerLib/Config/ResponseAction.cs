@@ -19,7 +19,7 @@ namespace Vlix.HttpServer
     public interface IReponseAction
     {
         string ShortName { get; }
-        Task<ProcessRuleResult> ProcessAsync(string callerIP,Scheme scheme, string host, int port, string path, NameValueCollection headers, StaticFileProcessor parent);
+        Task<ProcessRuleResult> ProcessAsync(string callerIP,Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers, StaticFileProcessor parent);
     }
 
 
@@ -32,7 +32,7 @@ namespace Vlix.HttpServer
     public class DenyAction : IReponseAction
     {
         public string ShortName { get { return "Deny"; } }
-        public Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, NameValueCollection headers,StaticFileProcessor parent) 
+        public Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers,StaticFileProcessor parent) 
         { 
             return Task.FromResult(new ProcessRuleResult() { IsSuccess = true, ActionType = ActionType.Deny,Message = "Request denied!" });
         }
@@ -52,7 +52,7 @@ namespace Vlix.HttpServer
         public bool SetPath { get; set; } = false;
         public string Path { get; set; } = null;
 
-        public Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, NameValueCollection headers,StaticFileProcessor parent)
+        public Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers,StaticFileProcessor parent)
         {
             string rScheme; if (this.SetScheme) rScheme = (this.Scheme ?? Scheme).ToString(); else rScheme = scheme.ToString();
             string rHost; if (this.SetHostName) rHost = (this.HostName ?? host).ToString(); else rHost = host;
@@ -75,8 +75,8 @@ namespace Vlix.HttpServer
         public int? Port { get; set; } = null;
         public bool SetPath { get; set; } = false;
         public bool UsePathVariable { get; set; } = false;
-        public string Path { get; set; } = null;
-        public async Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, NameValueCollection headers,StaticFileProcessor parent)
+        public string PathAndQuery { get; set; } = null;
+        public async Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers,StaticFileProcessor parent)
         {
             string portStr = port.ToString();
             string pScheme; if (this.SetScheme) pScheme = (this.Scheme ?? Scheme).ToString(); else pScheme = scheme.ToString();
@@ -87,13 +87,14 @@ namespace Vlix.HttpServer
                 if (this.UsePathVariable)
                 {
                     // {$Path|^.sdsdd$}
-                    string newPath = this.Path.Replace("%PATH%", path);
+                    string newPath = this.PathAndQuery.Replace("%PATH%", this.PathAndQuery);
                     Regex regex = new Regex(@"\%[^\%]*\%", RegexOptions.IgnoreCase);
-                    MatchCollection matches = regex.Matches(this.Path);
+                    MatchCollection matches = regex.Matches(this.PathAndQuery);
                     foreach (Match match in matches)
                     {
                         string innerRegex = match.Value.Trim('%');
-                        string innerRegexResult = regex.Match(this.Path).Value;
+                        var regex2 = new Regex(innerRegex, RegexOptions.IgnoreCase);
+                        string innerRegexResult = regex2.Match(pathAndQuery).Value;
                         newPath = newPath.Replace(match.Value, innerRegexResult);
                     }
                     pPath = newPath;
@@ -103,55 +104,53 @@ namespace Vlix.HttpServer
             else pPath = path;
             string pPort; if (this.SetPort) pPort = (this.Port ?? port).ToString(); else pPort = portStr;
             string rProxyURL = pScheme + "://" + pHost + ":" + pPort + pPath;
-            using (var httpClient = new HttpClient())
+
+
+            //AddOriginal Headers
+            HttpClient httpClient = ((HttpServer)parent).HttpClient;
+            var items = headers.AllKeys.SelectMany(headers.GetValues, (k, v) => new { key = k, value = v });
+            string originalHost = null; 
+            bool AddXFFor = true; bool AddXFProto = true; bool AddXFHost = true; bool AddXFPort = true;
+            foreach (var item in items)
             {
-                //AddOriginal Headers
-                var items = headers.AllKeys.SelectMany(headers.GetValues, (k, v) => new { key = k, value = v });
-                string originalHost = null; 
-                bool AddXFFor = true; bool AddXFProto = true; bool AddXFHost = true; bool AddXFPort = true;
-                foreach (var item in items)
-                {
-                    if (string.Equals(item.key, "Host")) { originalHost = item.value; continue; }// AddHost = false;
-                    if (string.Equals(item.key, "X-Forwarded-For")) AddXFFor = false;
-                    if (string.Equals(item.key, "X-Forwarded-Proto")) AddXFProto = false;
-                    if (string.Equals(item.key, "X-Forwarded-Host")) AddXFHost = false;
-                    if (string.Equals(item.key, "X-Forwarded-Port")) AddXFPort = false;
-                    httpClient.DefaultRequestHeaders.Add(item.key, item.value);
-                }
-                if (originalHost == null) originalHost = host;
+                if (string.Equals(item.key, "Host")) { originalHost = item.value; continue; }// AddHost = false;
+                if (string.Equals(item.key, "X-Forwarded-For")) AddXFFor = false;
+                if (string.Equals(item.key, "X-Forwarded-Proto")) AddXFProto = false;
+                if (string.Equals(item.key, "X-Forwarded-Host")) AddXFHost = false;
+                if (string.Equals(item.key, "X-Forwarded-Port")) AddXFPort = false;
+                httpClient.DefaultRequestHeaders.Add(item.key, item.value);
+            }
+            if (originalHost == null) originalHost = host;
 
-                //Add Proxy Headers
-                //if (AddHost) httpClient.DefaultRequestHeaders.Add("Host", host + ":" + portStr);
-                if (AddXFFor) httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", callerIP);
-                if (AddXFProto) httpClient.DefaultRequestHeaders.Add("X-Forwarded-Proto", pScheme);
-                if (AddXFHost) httpClient.DefaultRequestHeaders.Add("X-Forwarded-Host", originalHost);
-                if (AddXFPort) httpClient.DefaultRequestHeaders.Add("X-Forwarded-Port", portStr);
+            //Add Proxy Headers
+            if (AddXFFor) httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", callerIP);
+            if (AddXFProto) httpClient.DefaultRequestHeaders.Add("X-Forwarded-Proto", pScheme);
+            if (AddXFHost) httpClient.DefaultRequestHeaders.Add("X-Forwarded-Host", originalHost);
+            if (AddXFPort) httpClient.DefaultRequestHeaders.Add("X-Forwarded-Port", portStr);
 
 
-                HttpResponseMessage resp = await httpClient.GetAsync(rProxyURL); 
-                Stream rProxyResult = await resp.Content.ReadAsStreamAsync();
-                string contentType = null;
-                if (resp.IsSuccessStatusCode)
-                    if (resp.Content.Headers.Contains("Content-Type")) contentType = resp.Content.Headers.GetValues("Content-Type").FirstOrDefault();
-                if (resp.IsSuccessStatusCode)
+            HttpResponseMessage resp = await httpClient.GetAsync(rProxyURL); 
+            Stream rProxyResult = await resp.Content.ReadAsStreamAsync();
+            string contentType = null;
+            if (resp.IsSuccessStatusCode)
+                if (resp.Content.Headers.Contains("Content-Type")) contentType = resp.Content.Headers.GetValues("Content-Type").FirstOrDefault();
+            if (resp.IsSuccessStatusCode)
+            {
+                return new ProcessRuleResult()
                 {
-                    return new ProcessRuleResult()
-                    {
-                        IsSuccess = true,
-                        ActionType = ActionType.ReverseProxy,
-                        HttpStreamResult = new HTTPStreamResult(false, null, resp.StatusCode, contentType, rProxyResult, null, false),
-                        Message = rProxyURL
-                    };
-                }
-                else
+                    IsSuccess = true,
+                    ActionType = ActionType.ReverseProxy,
+                    HttpStreamResult = new HTTPStreamResult(false, null, resp.StatusCode, contentType, rProxyResult, null, false),
+                    Message = rProxyURL
+                };
+            }
+            else
+            {
+                return new ProcessRuleResult() 
                 {
-                    return new ProcessRuleResult() 
-                    {
-                        IsSuccess = false, ActionType = ActionType.ReverseProxy, SendErrorResponsePage_HttpStatusCode = resp.StatusCode, 
-                        LogLevel = LogLevel.Warning, Message = rProxyURL + " > " + resp.ReasonPhrase 
-                    };
-                }
-                //return new ProcessRuleResult() { ActionType = ActionType.ReverseProxy,  HttpStreamResult = new HTTPStreamResult(false, null, resp.StatusCode,null,proxyResult,null,false) };
+                    IsSuccess = false, ActionType = ActionType.ReverseProxy, SendErrorResponsePage_HttpStatusCode = resp.StatusCode, 
+                    LogLevel = LogLevel.Warning, Message = rProxyURL + " > " + resp.ReasonPhrase 
+                };
             }
         }
     }    
@@ -159,7 +158,7 @@ namespace Vlix.HttpServer
     {
         public string ShortName { get { return "AltWWWDir"; } }
         public string AlternativeWWWDirectory { get; set; } = null;
-        public async Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, NameValueCollection headers,StaticFileProcessor parent)
+        public async Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers,StaticFileProcessor parent)
         {
             HTTPStreamResult httpStreamResult = await parent.ProcessRequestAsync(callerIP, path, this.AlternativeWWWDirectory).ConfigureAwait(false);
             if ((int)httpStreamResult.HttpStatusCode >= 200 && (int)httpStreamResult.HttpStatusCode < 300)
@@ -191,7 +190,6 @@ namespace Vlix.HttpServer
         public ActionType ActionType { get; set; } = ActionType.AlternativeWWWDirectory;
         public HTTPStreamResult HttpStreamResult { get; set; } = null;
         public string RedirectURL { get; set; } = null;
-
     }
 
     public enum LogLevel { Info, Warning, Error}

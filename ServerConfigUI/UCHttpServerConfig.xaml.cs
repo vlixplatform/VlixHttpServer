@@ -100,11 +100,12 @@ namespace Vlix.ServerConfigUI
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok) ruleVM.ResponseAction.AlternativeWWWDirectory = dialog.FileName; else ruleVM.ResponseAction.AlternativeWWWDirectory = null;
             }
         }
+
         public Action<HttpServerConfigVM> OnSaveAndApply;
         public Func<HttpServerConfig> OnRefresh;
         private void opbSaveApply_Click(object sender, RoutedEventArgs e)
         {
-            this.OnSaveAndApply.Invoke(((HttpServerConfigVM)this.DataContext));
+            this.OnSaveAndApply?.Invoke(((HttpServerConfigVM)this.DataContext));
         }
 
     }

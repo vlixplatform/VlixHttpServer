@@ -12,6 +12,7 @@ using Vlix;
 using Xunit;
 using Xunit.Abstractions;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace Vlix.HttpServer.Tests
 {
@@ -67,7 +68,7 @@ namespace Vlix.HttpServer.Tests
         [InlineData("/ss/../secret.txt", null, null, false)]
         public void ParseAbsolutePath(string absolutePath, string xFileToRead, string xFileToReadDir, bool ErrorMsgIsNull)
         {
-            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer("C:\\www", 80);
+            HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer("C:\\www", 80);
             output.WriteLine("absolutePath  = " + absolutePath);
             vlixHttpServer.TryParseAbsolutePath(vlixHttpServer.Config.WWWDirectory, absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg);
             output.WriteLine("fileToRead    = " + fileToRead);
@@ -95,19 +96,80 @@ namespace Vlix.HttpServer.Tests
         [Fact]
         public async void SSLCertTest()
         {
-            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer(tempWWWPath, 80, 443, "ThisSSLCERTDoesNotExist", StoreName.My, true, 10, 10, true);
+            HttpServer vlixHttpServer = new HttpServer(tempWWWPath, 80, 443, "ThisSSLCERTDoesNotExist", StoreName.My, true, 10, 10, true);
             bool errorThrown = false;
             try { await vlixHttpServer.StartAsync(); } catch { errorThrown = true; }
             Assert.True(errorThrown);
         }
 
+
+
         [Fact]
-        public async void RulesTest()
+        public async void ReverseProxyRuleTest()
         {
-            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer(tempWWWPath, 80, 443, "CN=azrin.vlix.me", StoreName.My, true, 10, 10, true);
+            HttpServer vlixHttpServer = new HttpServer(tempWWWPath, 80, 443, "CN=azrin.vlix.me", StoreName.My, true, 10, 10, true);
             await vlixHttpServer.StartAsync();
-            Vlix.HttpServer.HttpServer reverseProxiedServer = new Vlix.HttpServer.HttpServer(altTempWWWPath, 5072);
+            HttpServer reverseProxiedServer = new HttpServer(altTempWWWPath, 5072);
+            reverseProxiedServer.WebAPIs.Add(new WebAPIAction("/api/users/search", async (req) =>
+            {
+                if (req.Query.TryGetValue("country", out string country) && req.Query.TryGetValue("name", out string name))
+                {
+                    await req.RespondWithText("Search Results for Name='" + name + "', Country='" + country + "'......");
+                }
+                else await req.RespondEmpty(HttpStatusCode.NotFound);
+            }));
             await reverseProxiedServer.StartAsync();
+
+            CreateWWWDirectory("General", tempWWWPath);
+            CreateWWWDirectory("Alternative", altTempWWWPath);
+
+            using (var httpClient = new HttpClient())
+            {
+                //If reqeust on localhost/Page8.html => it will reverse proxy to localhost:5072/Page8.html
+                vlixHttpServer.Config.Rules.Clear();
+                vlixHttpServer.Config.Rules.Add(new SimpleReverseProxyRule("localhost", "/Page8.html", 5072));
+                var resp = await httpClient.GetAsync("http://localhost/Page8.html");
+                var revProxyResult = await resp.Content.ReadAsStringAsync();
+                Assert.Equal("<h1>Hello World From Alternative/Page8!/h1>", revProxyResult);
+
+
+
+                //This should reverse proxy to http://localhost:5072/api/user/search?country=Malaysia&name=Azrin
+                vlixHttpServer.Config.Rules.Add(new Rule()
+                {
+                    RequestMatch = new RequestMatch()
+                    {
+                        CheckPath = true,
+                        PathMatch = "^/[^/]*/[^/]*",
+                        PathMatchType = MatchType.Regex
+                    },
+                    ResponseAction = new ReverseProxyAction()
+                    {
+                        SetScheme = true,                        
+                        Scheme = Scheme.http,
+                        SetPort = true,
+                        Port = 5072,
+                        SetPath = true,
+                        UsePathVariable = true,
+                        PathAndQuery = "/api/users/search?country=%(?<=^/)[^/]*(?=/)%&name=%(?<=^/[^/]*/)[^/]*(?=/?)%"
+                    }
+                });
+                var resp2 = await httpClient.GetAsync("http://localhost/Malaysia/Azrin"); //This should reverse proxy to http://localhost:5072/api/user/search?country=Malaysia&name=Azrin
+                var revProxyResult2 = await resp2.Content.ReadAsStringAsync();
+
+                Assert.Equal("Search Results for Name='Azrin', Country='Malaysia'......", revProxyResult2);
+
+               
+
+            }
+            vlixHttpServer.Stop();
+        }
+
+        [Fact]
+        public async void OtherRulesTest()
+        {
+            HttpServer vlixHttpServer = new HttpServer(tempWWWPath, 80, 443, "CN=azrin.vlix.me", StoreName.My, true, 10, 10, true);
+            await vlixHttpServer.StartAsync();
 
             CreateWWWDirectory("General", tempWWWPath);
             CreateWWWDirectory("Alternative", altTempWWWPath);
@@ -151,12 +213,6 @@ namespace Vlix.HttpServer.Tests
                 vlixHttpServer.Config.Rules.Add(new SimplePathDenyRule("/Page7.html*"));
                 resp = await httpClient.GetAsync("http://localhost/Page7.html");
                 Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
-
-                //Test Revese Proxy Action
-                vlixHttpServer.Config.Rules.Add(new SimpleReverseProxyRule("localhost", "/Page8.html", 5072));
-                resp = await httpClient.GetAsync("http://localhost/Page8.html");
-                var revProxyResult = await resp.Content.ReadAsStringAsync();
-                Assert.Equal("<h1>Hello World From Alternative/Page8!/h1>", revProxyResult);
             }
             vlixHttpServer.Stop();
         }
@@ -167,7 +223,7 @@ namespace Vlix.HttpServer.Tests
         {
             //C:\Users\azrin\AppData\Local\Temp\VlixWebServer\CacheTest\www
             string tempCacheTestPath = Path.Combine(Path.GetTempPath(), "VlixWebServer", "CacheTest", "www");
-            Vlix.HttpServer.HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer(tempCacheTestPath, 80, 443, null, StoreName.My, true, 10, 10, true);
+            HttpServer vlixHttpServer = new HttpServer(tempCacheTestPath, 80, 443, null, StoreName.My, true, 10, 10, true);
             string LongText = "";
             for (int n2 = 0; n2 < 10000; n2++) LongText += Guid.NewGuid().ToString() + "<br />";
             for (int n = 0; n < 30; n++)
@@ -209,14 +265,21 @@ namespace Vlix.HttpServer.Tests
             HttpServer httpServer = new HttpServer(tempWWWPath,5022);
             
             httpServer.WebAPIs = new List<WebAPIAction>();
-            httpServer.WebAPIs.Add(new WebAPIAction("/testAPI/",
+            httpServer.WebAPIs.Add(new WebAPIAction(
+                "/testAPI/",
                 async (webAPIActionInput) => {
-                    dynamic TestAPIResult = new { Id = webAPIActionInput.Input["id"].ToInt(), Name = webAPIActionInput.Input["name"] };
+                    dynamic TestAPIResult = new { Id = webAPIActionInput.Query["id"].ToInt(), Name = webAPIActionInput.Query["name"] };
                     await webAPIActionInput.RespondWithJson(TestAPIResult).ConfigureAwait(false);
                 },
             "Get"));
-            bool ResStart = await httpServer.StartAsync();
-            Assert.True(ResStart);
+            httpServer.WebAPIs.Add(new WebAPIAction(
+                "/testAPI2/",
+                async (webAPIActionInput) => {
+                    await webAPIActionInput.RespondWithJson(webAPIActionInput).ConfigureAwait(false); //This should cause a serialization error
+                },
+            "Get"));
+            bool resStart = await httpServer.StartAsync();
+            Assert.True(resStart);
             using (var httpClient = new HttpClient())
             {
                 var res = await httpClient.GetAsync("http://localhost:5022/testAPI/?id=234&name=%27my%20api%27");
@@ -224,6 +287,42 @@ namespace Vlix.HttpServer.Tests
                 dynamic resObj = JObject.Parse(bodyStr);
                 Assert.True(resObj.Id == 234);
                 Assert.True(resObj.Name == "'my api'");
+
+
+                var res2 = await httpClient.GetAsync("http://localhost:5022/testAPI2/");//This should cause a serialization error
+                Assert.Equal(HttpStatusCode.InternalServerError, res2.StatusCode);
+                string bodyStr2 = await res2.Content.ReadAsStringAsync();
+            }
+        }
+
+        [Fact]
+        public async void TestWebServerComms()
+        {
+            WebServer webServer = new WebServer();
+            var resStart = await webServer.StartAsync();
+            Assert.True(resStart);
+            using (var httpClient = new HttpClient())
+            {
+                HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://localhost:5023/config/load");
+                requestMessage.Headers.Add("Authorization", "Basic " + "Administrator:Admin".ToBase64());
+                var res = await httpClient.SendAsync(requestMessage);
+                string bodyStr = await res.Content.ReadAsStringAsync();
+                HttpServerConfig config = JsonConvert.DeserializeObject<HttpServerConfig>(bodyStr);
+                Assert.NotNull(config);
+
+
+                HttpRequestMessage requestMessage2 = new HttpRequestMessage(HttpMethod.Put, "http://localhost:5023/config/save");
+                requestMessage2.Headers.Add("Authorization", "Basic " + "Administrator:Admin".ToBase64());
+                requestMessage2.Content = new StringContent(JsonConvert.SerializeObject(config), Encoding.UTF8, "application/json");
+                var res2 = await httpClient.SendAsync(requestMessage2);
+                Assert.Equal(HttpStatusCode.OK, res2.StatusCode);
+
+
+                HttpRequestMessage requestMessage3 = new HttpRequestMessage(HttpMethod.Put, "http://localhost:5023/config/save");
+                requestMessage3.Headers.Add("Authorization", "Basic " + "Administrator:Admin".ToBase64());
+                requestMessage3.Content = new StringContent("Some Random Data which is not a proper Json", Encoding.UTF8, "application/json");
+                var res3 = await httpClient.SendAsync(requestMessage3);
+                Assert.Equal(HttpStatusCode.InternalServerError, res3.StatusCode);
             }
         }
     }

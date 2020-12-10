@@ -78,7 +78,7 @@
       <DependentUpon>UCLogConsole.xaml</DependentUpon>
     </Compile>
     <Compile Include="Logger\UCLogConsoleVM.cs" />
-    <Compile Include="HttpServerConfigVMSample.cs" />
+    <Compile Include="VMSample.cs" />
     <Compile Include="Logger\UCLogConsoleVMSample.cs" />
     <Compile Include="SelectSSLCertVM.cs" />
     <Compile Include="UCSelectSSLCert.xaml.cs">
@@ -180,6 +180,9 @@
     <PackageReference Include="WindowsAPICodePack-Shell">
       <Version>1.1.1</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="vlixlogo-whitebg.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

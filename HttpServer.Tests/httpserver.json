@@ -1,0 +1,92 @@
+{
+  "EnableHTTP": true,
+  "HTTPPort": 5023,
+  "EnableHTTPS": true,
+  "HTTPSPort": 443,
+  "SSLCertificateSubjectName": "CN=azrin.vlix.me",
+  "WWWDirectory": "[ProgramDataDirectory]\\Vlix\\HTTPServer\\www",
+  "SSLCertificateStoreName": "My",
+  "AllowLocalhostConnectionsOnlyForHttp": false,
+  "EnableCache": true,
+  "OnlyCacheItemsLessThenMB": 10,
+  "MaximumCacheSizeInMB": 250,
+  "LogDirectory": "[ProgramDataDirectory]\\Vlix\\HTTPServer\\Logs",
+  "ConfigUsername": "Administrator",
+  "ConfigPasswordHash": null,
+  "Rules": [
+    {
+      "$type": "Vlix.HttpServer.HttpToHttpsRedirectRule, HttpServerLib",
+      "Enable": true,
+      "Name": "New Rule",
+      "RequestMatch": {
+        "CheckHostName": true,
+        "HostNameMatchType": "Exact",
+        "HostNameMatch": "azrin.vlix.me",
+        "CheckPort": true,
+        "Port": 80,
+        "CheckPath": false,
+        "PathMatchType": "Wildcard",
+        "PathMatch": null
+      },
+      "ResponseAction": {
+        "$type": "Vlix.HttpServer.RedirectAction, HttpServerLib",
+        "ShortName": "Redirect",
+        "SetScheme": true,
+        "Scheme": "https",
+        "SetHostName": false,
+        "HostName": null,
+        "SetPort": true,
+        "Port": 443,
+        "SetPath": false,
+        "Path": null
+      }
+    },
+    {
+      "$type": "Vlix.HttpServer.SimpleReverseProxyRule, HttpServerLib",
+      "Enable": true,
+      "Name": "New Rule",
+      "RequestMatch": {
+        "CheckHostName": true,
+        "HostNameMatchType": "Exact",
+        "HostNameMatch": "azrin.vlix.me",
+        "CheckPort": false,
+        "Port": null,
+        "CheckPath": true,
+        "PathMatchType": "Wildcard",
+        "PathMatch": "/rproxy/*"
+      },
+      "ResponseAction": {
+        "$type": "Vlix.HttpServer.ReverseProxyAction, HttpServerLib",
+        "ShortName": "RProxy",
+        "SetScheme": true,
+        "Scheme": "http",
+        "SetHostName": true,
+        "HostName": "localhost",
+        "SetPort": true,
+        "Port": 5000,
+        "SetPath": false,
+        "UsePathVariable": false,
+        "Path": null
+      }
+    },
+    {
+      "$type": "Vlix.HttpServer.SimplePathDenyRule, HttpServerLib",
+      "Enable": true,
+      "Name": "New Rule",
+      "RequestMatch": {
+        "CheckHostName": false,
+        "HostNameMatchType": "Exact",
+        "HostNameMatch": null,
+        "CheckPort": false,
+        "Port": null,
+        "CheckPath": true,
+        "PathMatchType": "Wildcard",
+        "PathMatch": "/forbidden.html"
+      },
+      "ResponseAction": {
+        "$type": "Vlix.HttpServer.DenyAction, HttpServerLib",
+        "ShortName": "Deny"
+      }
+    }
+  ]
+}

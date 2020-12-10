@@ -71,7 +71,7 @@ namespace Vlix.HttpServer
                 this.ResponseAction.ReverseProxyPort = reverseProxyAction.Port;
                 this.ResponseAction.ReverseProxyUsePathVariable = reverseProxyAction.UsePathVariable;
                 this.ResponseAction.SetReverseProxyPath = reverseProxyAction.SetPath;
-                this.ResponseAction.ReverseProxyPath = reverseProxyAction.Path;
+                this.ResponseAction.ReverseProxyPathAndQuery = reverseProxyAction.PathAndQuery;
             }
             this.ParentVM = parentVM;
         }
@@ -178,7 +178,7 @@ namespace Vlix.HttpServer
         int? _ReverseProxyPort = null; public int? ReverseProxyPort { get { return _ReverseProxyPort; } set { SetField(ref _ReverseProxyPort, value, "ReverseProxyPort"); } }
         bool _SetReverseProxyPath = false; public bool SetReverseProxyPath { get { return _SetReverseProxyPath; } set { SetField(ref _SetReverseProxyPath, value, "SetReverseProxyPath"); } }
         bool _ReverseProxyUsePathVariable = false; public bool ReverseProxyUsePathVariable { get { return _ReverseProxyUsePathVariable; } set { SetField(ref _ReverseProxyUsePathVariable, value, "ReverseProxyUsePathVariable"); } }
-        string _ReverseProxyPath = null; public string ReverseProxyPath { get { return _ReverseProxyPath; } set { SetField(ref _ReverseProxyPath, value, "ReverseProxyPath"); } }
+        string _ReverseProxyPathAndQuery = null; public string ReverseProxyPathAndQuery { get { return _ReverseProxyPathAndQuery; } set { SetField(ref _ReverseProxyPathAndQuery, value, "ReverseProxyPathAndQuery"); } }
 
 
 

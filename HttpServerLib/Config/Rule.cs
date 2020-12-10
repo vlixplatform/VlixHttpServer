@@ -14,11 +14,7 @@ namespace Vlix.HttpServer
         public bool Enable { get; set; } = true;
         public string Name { get; set; } = "New Rule";
         public RequestMatch RequestMatch { get; set; } = new RequestMatch();
-
-        
         public IReponseAction ResponseAction { get; set; } = new RedirectAction();
-
-        
         public bool IsMatch(Scheme scheme, string host, int port, string path)
         {            
             if (this.Enable)

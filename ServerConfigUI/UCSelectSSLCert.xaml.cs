@@ -29,16 +29,15 @@ namespace Vlix.ServerConfigUI
             InitializeComponent();
         }
 
-        private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
             selectSSLCertVM = (SelectSSLCertVM)this.DataContext;
-            await selectSSLCertVM.LoadVM();
         }
 
         private async void sslStore_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             selectSSLCertVM = (SelectSSLCertVM)this.DataContext;
-            await selectSSLCertVM.LoadVM();
+            await selectSSLCertVM.Refresh();
         }
 
 

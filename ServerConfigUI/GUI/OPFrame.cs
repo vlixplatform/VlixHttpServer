@@ -183,9 +183,10 @@ namespace Vlix.ServerConfigUI
                     if (oPFrame.Shown)
                     {
                         if (oPFrame.IsShown) return; else oPFrame.IsShown = true;
-                        oPFrame.StoryboardShow?.Begin();
+
                         oPFrame.StoryboardShow.Completed -= oPFrame.StoryboardShow_Completed;
                         oPFrame.StoryboardShow.Completed += oPFrame.StoryboardShow_Completed;
+                        oPFrame.StoryboardShow?.Begin();
                     }
                     else
                     {

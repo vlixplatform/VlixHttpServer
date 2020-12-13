@@ -7,7 +7,7 @@
              xmlns:hs="clr-namespace:Vlix.HttpServer;assembly=HttpServerLib"
              xmlns:local="clr-namespace:Vlix.ServerConfigUI"
              xmlns:dd="urn:gong-wpf-dragdrop"
-             mc:Ignorable="d"  d:DataContext="{d:DesignInstance {x:Type local:HttpServerConfigVMSample}, IsDesignTimeCreatable=True}" 
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance {x:Type local:HttpServerConfigVMSample}, IsDesignTimeCreatable=True}" 
              xmlns:mi="clr-namespace:MaterialIcons;assembly=MaterialIcons"
              d:DesignHeight="600" d:DesignWidth="800">
     <UserControl.DataContext>
@@ -78,22 +78,22 @@
                                                 </TextBlock>
                                                 <TextBlock Visibility="{Binding SubjectAlternativeNames.Count, Converter={StaticResource ZeroOrNullToVisibilityVisibleElseCollapsedConverter}}"  Foreground="#2a4c68" FontWeight="SemiBold">- No domains</TextBlock>
                                                 <TextBlock Foreground="#2a4c68">
-                                                                    <ItemsControl ItemsSource="{Binding SubjectAlternativeNames}">
-                                                                        <ItemsControl.ItemTemplate>
-                                                                            <DataTemplate>
-                                                                                <TextBlock FontStyle="Normal" FontWeight="SemiBold">
-                                                                                    <Run Text="- https://" /><Run Text="{Binding Mode=OneWay}" /><Run>/</Run>
-                                                                                </TextBlock>
-                                                                            </DataTemplate>
-                                                                        </ItemsControl.ItemTemplate>
-                                                                    </ItemsControl>
+                                                    <ItemsControl ItemsSource="{Binding SubjectAlternativeNames}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <TextBlock FontStyle="Normal" FontWeight="SemiBold">
+                                                                    <Run Text="- https://" /><Run Text="{Binding Mode=OneWay}" /><Run>/</Run>
                                                                 </TextBlock>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </TextBlock>
                                                 <TextBlock>
-                                                                    <LineBreak />
-                                                                    <Run FontSize="13" FontWeight="Bold">Notes on Certificate renewal</Run><LineBreak />
-                                                                    <Run>Every 5 minutes, the web server checks for the latest certificate (in the Windows</Run><LineBreak />
-                                                                    certificate store '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateStoreName}"></Run>') with subject '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateSubjectName}" />'.<LineBreak />
-                                                                    <Run>If a new certificate exists, it will replace the current one</Run><LineBreak />
+                                                    <LineBreak />
+                                                    <Run FontSize="13" FontWeight="Bold">Notes on Certificate renewal</Run><LineBreak />
+                                                    <Run>Every 5 minutes, the web server checks for the latest certificate (in the Windows</Run><LineBreak />
+                                                    certificate store '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateStoreName}"></Run>') with subject '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateSubjectName}" />'.<LineBreak />
+                                                    <Run>If a new certificate exists, it will replace the current one</Run><LineBreak />
                                                 </TextBlock>
                                             </StackPanel>
                                         </TextBox.ToolTip>
@@ -101,10 +101,10 @@
                                     <local:OPButton Grid.Column="2" Content="Select" Margin="0,0,0,0" Command="{Binding SelectSSLCertClickCommand}" Width="70" IconLocation="Left" Height="21" Icon="ic_launch">
                                         <local:OPButton.ToolTip>
                                             <TextBlock>
-                                                                <Run>For Microsoft Windows, certificates are stored in the</Run><LineBreak />
-                                                                <Run FontWeight="Bold">Windows Certificate Store.</Run>
-                                                                <Run>Click here to to access this store.</Run>
-                                                                <Run></Run>
+                                                <Run>For Microsoft Windows, certificates are stored in the</Run><LineBreak />
+                                                <Run FontWeight="Bold">Windows Certificate Store.</Run>
+                                                <Run>Click here to to access this store.</Run>
+                                                <Run></Run>
                                             </TextBlock>
                                         </local:OPButton.ToolTip>
                                     </local:OPButton>
@@ -125,7 +125,7 @@
                             </Grid>
                         </StackPanel>
                     </Grid>
-                    <Border  BorderBrush="#ccc"  Margin="5,0,5,0" BorderThickness="1" Height="1"></Border>
+                    <Border BorderBrush="#ccc" Margin="5,0,5,0" BorderThickness="1" Height="1"></Border>
                     <Grid Margin="5,5,5,3">
                         <local:OPButton Command="{Binding ShowAdvanceSettingsClickCommand}" Margin="0,0,2,0" HorizontalAlignment="Left" Height="23" Width="100" Icon="ic_settings">Advance</local:OPButton>
                         <local:OPButton Click="opbSaveApply_Click" Icon="ic_save" Height="23" Width="140" HorizontalAlignment="Right" IconLocation="Left">Save and Apply</local:OPButton>
@@ -139,9 +139,9 @@
             </Grid>
         </DockPanel>
         <local:OPFrame Shown="{Binding ShowSelectSSLCertWindow}" BorderThickness="0" InnerMargin="10" CornerRadius="5"  TopLeftContent="Select SSL Certificate" TopLeftIcon="ic_lock_outline" InnerWindowMargin="15" 
-                                    Visibility="Collapsed" Background="#aa000000" OnClose="opfSelectSSLCert_OnClose">
+                                    Visibility="Collapsed" Background="#aa000000" OnShow="opfSelectSSLCert_OnShow" OnClose="opfSelectSSLCert_OnClose">
             <Grid Margin="0,5,0,0" >
-                <local:UCSelectSSLCert Margin="5" OnCertificateSelected="UCSelectSSLCert_OnCertificateSelected" />
+                <local:UCSelectSSLCert x:Name="uCSelectSSLCert" OnCertificateSelected="uCSelectSSLCert_OnCertificateSelected" Margin="5" />
             </Grid>
         </local:OPFrame>
         <local:OPFrame Shown="{Binding ShowAdvanceSettingsWindow}" BorderThickness="0" InnerMargin="10" CornerRadius="5"  TopLeftContent="Advance Settings" TopLeftIcon="ic_settings" InnerWindowMargin="15" 

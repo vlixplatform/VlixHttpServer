@@ -17,4 +17,10 @@
     <ProjectReference Include="..\HttpServerLib\1) HttpServerLib.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Configuration.ConfigurationManager">
+      <Version>5.0.0</Version>
+    </PackageReference>
+  </ItemGroup>
+
 </Project>

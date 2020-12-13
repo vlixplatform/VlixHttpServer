@@ -10,6 +10,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Runtime.InteropServices;
 using System.Reflection;
 using System.Diagnostics;
+using System.Configuration;
+using Newtonsoft.Json;
 //using Certes;
 //using Certes.Acme;
 
@@ -18,22 +20,53 @@ namespace  Vlix.HttpServer
     
     public class Services
     {
-
-
-        static HttpServerConfig config;
-        public static Task<HttpServerConfig> LoadHttpServerConfig()
+        public static object Config; //Place holder for Configuration Settings
+        public static void SaveConfigFile<T>(string configFileName, T configObject)
         {
-            config = new HttpServerConfig();
-            config.LoadConfigFile();
-            return Task.FromResult(config);
+            string appDirectory = ConfigurationManager.AppSettings.Get("AppDirectory");
+            if (appDirectory == null) appDirectory = Environment.CurrentDirectory;
+            else appDirectory = appDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
+            Directory.CreateDirectory(appDirectory);
+            string configFilePath = Path.Combine(appDirectory, configFileName);
+            string jsonString = JsonConvert.SerializeObject(configObject, Formatting.Indented, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Auto });
+            File.WriteAllText(configFilePath, jsonString);
         }
 
-   
-
-        public static void SaveServerConfig(HttpServerConfig httpServerConfig)
+        public static T LoadConfigFile<T>(string configFileName) where T: new()
         {
-            httpServerConfig.SaveConfigFile();
+            T config = new T();
+            string appDirectory = ConfigurationManager.AppSettings.Get("AppDirectory");
+            if (appDirectory == null) appDirectory = Environment.CurrentDirectory;
+            else appDirectory = appDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
+            Directory.CreateDirectory(appDirectory);
+            string configFilePath = Path.Combine(appDirectory, configFileName);
+            if (File.Exists(configFilePath))
+            {
+                string configJSONStr = File.ReadAllText(configFilePath);
+                config = JsonConvert.DeserializeObject<T>(configJSONStr, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Auto });
+            }
+            else
+            {
+                string jsonString = JsonConvert.SerializeObject(config, Formatting.Indented);
+                File.WriteAllText(configFilePath, jsonString);
+            }
+            return config;
         }
+
+        //static HttpServerConfig config;
+        //public static Task<HttpServerConfig> LoadHttpServerConfig()
+        //{
+        //    config = new HttpServerConfig();
+        //    config.LoadConfigFile();
+        //    return Task.FromResult(config);
+        //}
+
+
+
+        //public static void SaveServerConfig(HttpServerConfig httpServerConfig)
+        //{
+        //    httpServerConfig.SaveConfigFile();
+        //}
 
 
         //TODO

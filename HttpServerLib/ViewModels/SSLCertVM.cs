@@ -1,78 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
-using System.IO;
-using System.Threading;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
-using System.Text;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Windows.Input;
-using Prism.Commands;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
-
-namespace Vlix.ServerConfigUI
+using Vlix.HttpServer;
+namespace Vlix.HttpServer
 {
-    public class SelectSSLCertVM : INotifyPropertyChanged
-    {
-        #region BOILER PLATE
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-        protected bool SetField<T>(ref T field, T value, string propertyName)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-        #endregion
-        public SelectSSLCertVM()
-        {
-        }
-
-        public Task LoadVM()
-        {
-            this.IsLoading = true;
-            X509Store store = new X509Store(this.StoreName, StoreLocation.LocalMachine);
-            store.Open(OpenFlags.ReadOnly);
-            List<X509Certificate2> certs = new List<X509Certificate2>();
-            foreach (X509Certificate2 certificate in store.Certificates) certs.Add(certificate);            
-            this.SSLCerts.Clear();
-            foreach (var c in certs) if (c.HasPrivateKey) this.SSLCerts.Add(new SSLCertVM(c, this));
-            this.IsLoading = false;
-            return Task.CompletedTask;
-        }
-        bool _EnableCache = false; public bool EnableCache { get { return _EnableCache; } set { SetField(ref _EnableCache, value, "EnableCache"); } }
-        StoreName _StoreName = StoreName.My; public StoreName StoreName { get { return _StoreName; } set { SetField(ref _StoreName, value, "StoreName"); } }
-        bool _IsLoading = false; public bool IsLoading { get { return _IsLoading; } set { SetField(ref _IsLoading, value, "IsLoading"); } }
-        SSLCertVM _SelectedSSLCert = null; public SSLCertVM SelectedSSLCert { get { return _SelectedSSLCert; } set { SetField(ref _SelectedSSLCert, value, "SelectedSSLCert"); } }
-        public ObservableCollection<SSLCertVM> SSLCerts { get; set; } = new ObservableCollection<SSLCertVM>();
-
-
-        public ICommand StoreRefreshClickCommand
-        {
-            get
-            {
-                return new DelegateCommand<object>(async (c) => await Task.Run(()=> LoadVM()), (c) => true);
-            }
-        }
-
-        //TODO
-        //Import Nuget Package CERTES
-        // https://github.com/fszlin/certes
-        //public ICommand NewSSLCertClickCommand { get { return new DelegateCommand<object>(async (c) => 
-        //{
-        //    var k = await Services.GetLetsEncryptCertificate("azrinsani@gmail.com"," *.vlixplatform.com");
-        //}, (c) => true); } }
-    }
-
     public class SSLCertVM : INotifyPropertyChanged
     {
         #region BOILER PLATE
@@ -90,7 +24,11 @@ namespace Vlix.ServerConfigUI
         }
         #endregion
 
-        public SSLCertVM(X509Certificate2 x509Certificate, SelectSSLCertVM selectSSLCertVM)
+        public SSLCertVM()
+        {
+
+        }
+        public SSLCertVM(X509Certificate2 x509Certificate, StoreName store, SelectSSLCertVM selectSSLCertVM)
         {
             this.ParentVM = selectSSLCertVM;
             this.Expiry = x509Certificate.NotAfter;
@@ -99,7 +37,7 @@ namespace Vlix.ServerConfigUI
             this.IssuedTo = x509Certificate.Subject.ToFirstRegex("(?<=CN=)[^,]*");
             this.IssuedBy = x509Certificate.Issuer.ToFirstRegex("(?<=CN=)[^,]*");
             this.ThumbPrint = x509Certificate.Thumbprint;
-            this.StoreName = selectSSLCertVM.StoreName;
+            this.StoreName = store;
             this.SubjectAlternativeNames.Clear();
             foreach (X509Extension extension in x509Certificate.Extensions)
             {

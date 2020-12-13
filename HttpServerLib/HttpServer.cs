@@ -169,6 +169,7 @@ namespace Vlix.HttpServer
             if (this.Config.EnableHTTP && !this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPPort + "(HTTP), Directory = '" + this.Config.WWWDirectory + "'");
             if (!this.Config.EnableHTTP && this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPSPort + "(HTTPS), Directory = '" + this.Config.WWWDirectory + "'");
             if (this.Config.EnableHTTP && this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPPort + "(HTTP) and " + this.Config.HTTPSPort + "(HTTPS), Directory = '" + this.Config.WWWDirectory + "'");
+
             _listener.Start();
             _listener.BeginGetContext(OnContext, null); //The thread stops here waiting for content to come
             this.OnInfoLog?.Invoke("Vlix HTTP Server Started!");

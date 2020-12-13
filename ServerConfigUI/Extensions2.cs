@@ -24,12 +24,8 @@ using System.Net;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
-/*
-The following Assemblies need to be added
--   Sytem.ServiceModel
-*/
 
-namespace Vlix.ServerConfigUI
+namespace Vlix.HttpServer
 {
     public static partial class Extensions
     {
@@ -983,26 +979,6 @@ namespace Vlix.ServerConfigUI
             return Result;
         }
 
-        public static bool ToBool(this object value, bool ValueIfError = false, bool? ValueIfNotAString = null)
-        {
-            try
-            {
-                if (value is string S)
-                {
-                    if (S.IsNullOrWhiteSpace()) return ValueIfError;
-                    string SL = S.ToLower();
-                    if (S == "0" || SL == "false" || SL == "off" || SL == "close" || SL == "no") return false;
-                    if (S == "1" || SL == "true" || SL == "on" || SL == "open" || SL == "yes") return true;
-                    return ValueIfError;
-                }
-                else
-                {
-                    if (ValueIfNotAString == null) return Convert.ToBoolean(value);
-                    else return ValueIfNotAString ?? false;
-                }
-            }
-            catch { return ValueIfError; }
-        }
 
         public static Task<T> ToTask<T>(this T value)
         {
@@ -1268,47 +1244,6 @@ namespace Vlix.ServerConfigUI
             catch
             {
                 return "";
-            }
-        }
-
-        public static string ToFirstRegex(this string StrIn, string Pattern, RegexOptions regexOptions = RegexOptions.IgnoreCase)
-        {
-            try
-            {
-                MatchCollection MC = Regex.Matches(StrIn, Pattern, regexOptions);
-                if (MC.Count > 0) return MC[0].Value;
-                else return "";
-            }
-            catch
-            {
-                return "";
-            }
-        }
-        
-
-        public static bool RegexMatchExist(this string StrIn, string Pattern, RegexOptions regexOptions = RegexOptions.IgnoreCase)
-        {
-            try
-            {
-                MatchCollection MC = Regex.Matches(StrIn, Pattern, regexOptions);
-                if (MC.Count > 0) return true;
-                else return false;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-        public static bool IsRegexMatch(this string StrIn, string Pattern, RegexOptions regexOptions = RegexOptions.IgnoreCase)
-        {
-            try
-            {
-                if (Pattern == null) return true;
-                return Regex.IsMatch(StrIn, Pattern);                
-            }
-            catch
-            {
-                return false;
             }
         }
 

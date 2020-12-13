@@ -21,7 +21,7 @@
         </ObjectDataProvider>
     </UserControl.Resources>
     <UserControl.DataContext>
-        <local:SelectSSLCertVM />
+        <hslib:SelectSSLCertVM />
     </UserControl.DataContext>
     <Grid>
         <Grid>

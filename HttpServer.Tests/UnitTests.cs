@@ -301,28 +301,34 @@ namespace Vlix.HttpServer.Tests
             WebServer webServer = new WebServer();
             var resStart = await webServer.StartAsync();
             Assert.True(resStart);
-            using (var httpClient = new HttpClient())
+            using (var httpClient = new OPHttpClient())
             {
-                HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://localhost:5023/config/load");
-                requestMessage.Headers.Add("Authorization", "Basic " + "Administrator:Admin".ToBase64());
-                var res = await httpClient.SendAsync(requestMessage);
-                string bodyStr = await res.Content.ReadAsStringAsync();
-                HttpServerConfig config = JsonConvert.DeserializeObject<HttpServerConfig>(bodyStr);
+                StoreName storeName = StoreName.My; StoreLocation storeLocation = StoreLocation.LocalMachine;
+                List<X509Certificate2> certs = await httpClient.RequestJsonAsync<List<X509Certificate2>>(HttpMethod.Get, "http://localhost:5024/config/getsslcerts?storename="+storeName + "&storelocation=" + storeLocation, "Administrator", "Admin");
+                Assert.NotNull(certs);
+
+                WebServerConfig config = await httpClient.RequestJsonAsync<WebServerConfig>(HttpMethod.Get, "http://localhost:5024/config/load", "Administrator","Admin");
                 Assert.NotNull(config);
 
 
-                HttpRequestMessage requestMessage2 = new HttpRequestMessage(HttpMethod.Put, "http://localhost:5023/config/save");
-                requestMessage2.Headers.Add("Authorization", "Basic " + "Administrator:Admin".ToBase64());
-                requestMessage2.Content = new StringContent(JsonConvert.SerializeObject(config), Encoding.UTF8, "application/json");
-                var res2 = await httpClient.SendAsync(requestMessage2);
-                Assert.Equal(HttpStatusCode.OK, res2.StatusCode);
+                var req2 = await httpClient.RequestStatusOnlyAsync(HttpMethod.Put, "http://localhost:5024/config/save", "Administrator", "Admin", new StringContent(JsonConvert.SerializeObject(config), Encoding.UTF8, "application/json"));                
+                Assert.Equal(HttpStatusCode.OK, req2);
+
+                var req3 = await httpClient.RequestStatusOnlyAsync(HttpMethod.Put, "http://localhost:5024/config/save", "Administrator", "Admin", new StringContent("Some Random Data which is not a proper Json", Encoding.UTF8, "application/json"));
+               
+                Assert.Equal(HttpStatusCode.InternalServerError, req3);
 
 
-                HttpRequestMessage requestMessage3 = new HttpRequestMessage(HttpMethod.Put, "http://localhost:5023/config/save");
-                requestMessage3.Headers.Add("Authorization", "Basic " + "Administrator:Admin".ToBase64());
-                requestMessage3.Content = new StringContent("Some Random Data which is not a proper Json", Encoding.UTF8, "application/json");
-                var res3 = await httpClient.SendAsync(requestMessage3);
-                Assert.Equal(HttpStatusCode.InternalServerError, res3.StatusCode);
+                //HttpRequestMessage requestMessage3 = new HttpRequestMessage(HttpMethod.Put, "http://localhost:5024/config/save");
+                //requestMessage3.Headers.Add("Authorization", "Basic " + "Administrator:Admin".ToBase64());
+                //requestMessage3.Content = new StringContent("Some Random Data which is not a proper Json", Encoding.UTF8, "application/json");
+                //var res3 = await httpClient.SendAsync(requestMessage3);
+
+                //HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://localhost:5024/config/load");
+                //requestMessage.Headers.Add("Authorization", "Basic " + "Administrator:Admin".ToBase64());
+                //var res = await httpClient.SendAsync(requestMessage);
+                //string bodyStr = await res.Content.ReadAsStringAsync();
+                //HttpServerConfig config = JsonConvert.DeserializeObject<HttpServerConfig>(bodyStr);
             }
         }
     }

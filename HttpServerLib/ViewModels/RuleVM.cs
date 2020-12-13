@@ -179,10 +179,6 @@ namespace Vlix.HttpServer
         bool _SetReverseProxyPath = false; public bool SetReverseProxyPath { get { return _SetReverseProxyPath; } set { SetField(ref _SetReverseProxyPath, value, "SetReverseProxyPath"); } }
         bool _ReverseProxyUsePathVariable = false; public bool ReverseProxyUsePathVariable { get { return _ReverseProxyUsePathVariable; } set { SetField(ref _ReverseProxyUsePathVariable, value, "ReverseProxyUsePathVariable"); } }
         string _ReverseProxyPathAndQuery = null; public string ReverseProxyPathAndQuery { get { return _ReverseProxyPathAndQuery; } set { SetField(ref _ReverseProxyPathAndQuery, value, "ReverseProxyPathAndQuery"); } }
-
-
-
-
     }
 
 }

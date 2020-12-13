@@ -32,15 +32,43 @@ namespace Vlix.HttpServer
             return true;
         }
         #endregion
-        public HttpServerConfigVM()
+        
+        public HttpServerConfigVM() {}
+
+        //public HttpServerConfigVM(HttpServerConfig httpServerConfig)
+        //{
+        //    this.EnableHTTP = httpServerConfig.EnableHTTP;
+        //    this.HTTPPort = httpServerConfig.HTTPPort;
+        //    this.EnableHTTPS = httpServerConfig.EnableHTTPS;
+        //    this.HTTPSPort = httpServerConfig.HTTPSPort;
+        //    this.EnableCache = httpServerConfig.EnableCache;
+        //    this.OnlyCacheItemsLessThenMB = httpServerConfig.OnlyCacheItemsLessThenMB;
+        //    this.MaximumCacheSizeInMB = httpServerConfig.MaximumCacheSizeInMB;
+        //    this.SSLCertificateStoreName = httpServerConfig.SSLCertificateStoreName;
+        //    this.SSLCertificateSubjectName = httpServerConfig.SSLCertificateSubjectName;
+        //    this.WWWDirectory = httpServerConfig.WWWDirectory;
+        //    this.LogDirectory = httpServerConfig.LogDirectory;            
+        //    this.AllowLocalhostConnectionsOnlyForHttp = httpServerConfig.AllowLocalhostConnectionsOnlyForHttp;
+        //    this.Rules.Clear();
+        //    foreach (var rule in httpServerConfig.Rules) this.Rules.Add(new RuleVM(rule, this));
+        //}
+
+        public void Update(HttpServerConfig httpServerConfig)
         {
-            //this.Rules.Add(new RuleVM(new SimpleReverseProxyRule("somehost", "wildard", 5000), this));
-            //this.Rules.Add(new RuleVM(new SimplePathDenyRule("NonAllowedPath"), this));
-            //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 2", Enable=false }, this));
-            //this.Rules.Add(new RuleVM(new SimpleHostNameRedirectRule("cat","dog") { Name = "Rule 3" }, this));
-            //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 4", Enable = true }, this));
-            //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 5", Enable = false }, this));
-            //this.Rules.Add(new RuleVM(new HttpToHttpsRedirectRule("somehost") { Name = "Rule 5", Enable = false }, this));
+            this.EnableHTTP = httpServerConfig.EnableHTTP;
+            this.HTTPPort = httpServerConfig.HTTPPort;
+            this.EnableHTTPS = httpServerConfig.EnableHTTPS;
+            this.HTTPSPort = httpServerConfig.HTTPSPort;
+            this.EnableCache = httpServerConfig.EnableCache;
+            this.OnlyCacheItemsLessThenMB = httpServerConfig.OnlyCacheItemsLessThenMB;
+            this.MaximumCacheSizeInMB = httpServerConfig.MaximumCacheSizeInMB;
+            this.SSLCertificateStoreName = httpServerConfig.SSLCertificateStoreName;
+            this.SSLCertificateSubjectName = httpServerConfig.SSLCertificateSubjectName;
+            this.WWWDirectory = httpServerConfig.WWWDirectory;
+            this.LogDirectory = httpServerConfig.LogDirectory;
+            this.AllowLocalhostConnectionsOnlyForHttp = httpServerConfig.AllowLocalhostConnectionsOnlyForHttp;
+            this.Rules.Clear();
+            foreach (var rule in httpServerConfig.Rules) this.Rules.Add(new RuleVM(rule, this));
         }
         public HttpServerConfig ToModel()
         {
@@ -117,6 +145,7 @@ namespace Vlix.HttpServer
             }
             return httpServerConfig;
         }
+        public Func<StoreName, StoreLocation, Task<List<SSLCertVM>>> OnSSLCertRefresh;
         bool _IsLoading = false; public bool IsLoading { get { return _IsLoading; } set { SetField(ref _IsLoading, value, "IsLoading"); } }
         bool _ClientIsLocal = true; public bool ClientIsLocal { get { return _ClientIsLocal; } set { SetField(ref _ClientIsLocal, value, "ClientIsLocal"); } }
         string _SSLCertificateSubjectName = null; public string SSLCertificateSubjectName { get { return _SSLCertificateSubjectName; } set { SetField(ref _SSLCertificateSubjectName, value, "SSLCertificateSubjectName"); } }
@@ -136,7 +165,6 @@ namespace Vlix.HttpServer
         int _OnlyCacheItemsLessThenMB = 10; public int OnlyCacheItemsLessThenMB { get { return _OnlyCacheItemsLessThenMB; } set { SetField(ref _OnlyCacheItemsLessThenMB, value, "OnlyCacheItemsLessThenMB"); } }
         int _MaximumCacheSizeInMB = 250; public int MaximumCacheSizeInMB { get { return _MaximumCacheSizeInMB; } set { SetField(ref _MaximumCacheSizeInMB, value, "MaximumCacheSizeInMB"); } }
         public ObservableCollection<RuleVM> Rules { get; set; } = new ObservableCollection<RuleVM>();
-        //public ICommand RefreshClickCommand { get { return new DelegateCommand<object>(async (p) => await LoadVM(), (p) => true);}}
         public ICommand SelectSSLCertClickCommand { get { return new DelegateCommand<object>((p) => this.ShowSelectSSLCertWindow = true, (p) => true);}}
         public ICommand ShowAdvanceSettingsClickCommand { get { return new DelegateCommand<object>((p) => this.ShowAdvanceSettingsWindow = true, (p) => true);}}  
         public ICommand NewRuleClickCommand { get { return new DelegateCommand<object>((p) =>

@@ -13,6 +13,7 @@
   "LogDirectory": "[ProgramDataDirectory]\\Vlix\\HTTPServer\\Logs",
   "ConfigUsername": "Administrator",
   "ConfigPasswordHash": null,
+  "ConfigRemoteEnable": true,
   "Rules": [
     {
       "$type": "Vlix.HttpServer.HttpToHttpsRedirectRule, HttpServerLib",
@@ -88,5 +89,15 @@
         "ShortName": "Deny"
       }
     }
-  ]
+  ],
+  "ConfigUtility": {
+    "HTTPPort": 5024,
+    "EnableHTTPS": false,
+    "HTTPSPort": 5025,
+    "SSLCertificateSubjectName": null,
+    "SSLCertificateStoreName": "My",
+    "AllowLocalhostConnectionsOnlyForHttp": true,
+    "ConfigUsername": "Administrator",
+    "ConfigPasswordHash": null
+  }
 }

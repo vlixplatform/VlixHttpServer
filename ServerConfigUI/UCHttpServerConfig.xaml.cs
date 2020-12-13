@@ -14,6 +14,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Vlix.HttpServer;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.Http;
 
 namespace Vlix.ServerConfigUI
 {
@@ -25,39 +27,19 @@ namespace Vlix.ServerConfigUI
     /// </summary>
     public partial class UCHttpServerConfig : UserControl
     {
-        public async Task Initialize(Action<HttpServerConfigVM> onSaveAndApply, Func<HttpServerConfig> onRefresh)
-        {
-            this.OnSaveAndApply = onSaveAndApply;
-            this.OnRefresh = onRefresh;
-            await this.Refresh();
-        }
         public void AddLogs(List<LogStruct> Logs) { ucLogConsole.AddLogs(Logs); }
-        public async Task Refresh()
-        {
-            HttpServerConfigVM vM = (HttpServerConfigVM)this.DataContext;
-            vM.IsLoading = true;
-            await Task.Delay(500);
-            HttpServerConfig configBeforeChange = this.OnRefresh();
-            vM.EnableHTTP = configBeforeChange.EnableHTTP;
-            vM.HTTPPort = configBeforeChange.HTTPPort;
-            vM.EnableHTTPS = configBeforeChange.EnableHTTPS;
-            vM.HTTPSPort = configBeforeChange.HTTPSPort;
-            vM.EnableCache = configBeforeChange.EnableCache;
-            vM.OnlyCacheItemsLessThenMB = configBeforeChange.OnlyCacheItemsLessThenMB;
-            vM.MaximumCacheSizeInMB = configBeforeChange.MaximumCacheSizeInMB;
-            vM.SSLCertificateStoreName = configBeforeChange.SSLCertificateStoreName;
-            vM.SSLCertificateSubjectName = configBeforeChange.SSLCertificateSubjectName;
-            vM.WWWDirectory = configBeforeChange.WWWDirectory;
-            vM.LogDirectory = configBeforeChange.LogDirectory;
-            vM.AllowLocalhostConnectionsOnlyForHttp = configBeforeChange.AllowLocalhostConnectionsOnlyForHttp;
-            vM.Rules.Clear();
-            foreach (var rule in configBeforeChange.Rules) vM.Rules.Add(new RuleVM(rule, vM));
-            await Task.Delay(500);
-            vM.IsLoading = false;
-        }
+
         public UCHttpServerConfig()
         {
             InitializeComponent();
+            ((SelectSSLCertVM)this.uCSelectSSLCert.DataContext).OnRefresh = (storeName, storeLocation) =>
+             {
+                 return ((HttpServerConfigVM)this.DataContext).OnSSLCertRefresh?.Invoke(storeName, storeLocation);
+             };     
+        }
+        private async void opfSelectSSLCert_OnShow(object sender, RoutedEventArgs e)
+        {
+            await ((SelectSSLCertVM)uCSelectSSLCert.DataContext).Refresh();            
         }
         private void opfSelectSSLCert_OnClose(object sender, RoutedEventArgs e)
         {
@@ -71,16 +53,16 @@ namespace Vlix.ServerConfigUI
         {
             svRules.ScrollToBottom();
         }
-        private void UCSelectSSLCert_OnCertificateSelected(object sender, RoutedEventArgs e)
+        private void uCSelectSSLCert_OnCertificateSelected(object sender, RoutedEventArgs e)
         {
             if (e.OriginalSource is SSLCertVM sSLCertVM)
             {
-                HttpServerConfigVM httpServerConfigVM = ((HttpServerConfigVM)this.DataContext);
-                httpServerConfigVM.SSLCertificateSubjectName = sSLCertVM.Subject;
-                httpServerConfigVM.SSLCertificateStoreName = sSLCertVM.StoreName;
-                httpServerConfigVM.SubjectAlternativeNames.Clear();
-                foreach (var s in sSLCertVM.SubjectAlternativeNames) httpServerConfigVM.SubjectAlternativeNames.Add(s);
-                httpServerConfigVM.ShowSelectSSLCertWindow = false;
+                var serverConfigVM = ((HttpServerConfigVM)this.DataContext);
+                serverConfigVM.SSLCertificateSubjectName = sSLCertVM.Subject;
+                serverConfigVM.SSLCertificateStoreName = sSLCertVM.StoreName;
+                serverConfigVM.SubjectAlternativeNames.Clear();
+                foreach (var s in sSLCertVM.SubjectAlternativeNames) serverConfigVM.SubjectAlternativeNames.Add(s);
+                serverConfigVM.ShowSelectSSLCertWindow = false;
             }
         }
         private void opbSelectWWWDirectory_Click(object sender, RoutedEventArgs e)
@@ -101,12 +83,13 @@ namespace Vlix.ServerConfigUI
             }
         }
 
-        public Action<HttpServerConfigVM> OnSaveAndApply;
-        public Func<HttpServerConfig> OnRefresh;
+        public Func<HttpServerConfig,Task<bool>> OnSaveAndApply;
+        public Func<Task<HttpServerConfig>> OnRefresh;
         private void opbSaveApply_Click(object sender, RoutedEventArgs e)
         {
-            this.OnSaveAndApply?.Invoke(((HttpServerConfigVM)this.DataContext));
+            this.OnSaveAndApply?.Invoke(((HttpServerConfigVM)this.DataContext).ToModel());
         }
+
 
     }
 }

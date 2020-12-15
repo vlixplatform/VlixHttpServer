@@ -43,19 +43,7 @@ namespace Vlix
             this.HttpServer.StartAsync().ConfigureAwait(false);
 
 
-
-            HttpServerConfig configServerConfig = new HttpServerConfig() //Default Value if file does not exist
-            {
-                EnableHTTP = true, //Http must alays be enables
-                HTTPPort = WebServerConfig.ConfigUtility.HTTPPort,
-                AllowLocalhostConnectionsOnlyForHttp = WebServerConfig.ConfigUtility.AllowLocalhostConnectionsOnlyForHttp,
-                EnableHTTPS = WebServerConfig.ConfigUtility.EnableHTTPS,
-                HTTPSPort = WebServerConfig.ConfigUtility.HTTPSPort,
-                SSLCertificateStoreName = WebServerConfig.ConfigUtility.SSLCertificateStoreName,
-                SSLCertificateSubjectName = WebServerConfig.ConfigUtility.SSLCertificateSubjectName,
-                EnableCache=false
-            };
-            this.ConfigServer = new HttpServer.HttpServer((new CancellationTokenSource()).Token, configServerConfig);
+            this.ConfigServer = new HttpServer.HttpServer((new CancellationTokenSource()).Token, new HttpServerConfig(WebServerConfig.UtilityConfig));
             this.ConfigServer.WebAPIs = new List<WebAPIAction>();
             this.ConfigServer.WebAPIs.Add(new WebAPIAction(
                 "/config/getsslcerts", async (req) =>
@@ -88,12 +76,30 @@ namespace Vlix
                 "/config/save", async (req) => 
                 {
                     if (!CheckAuthentication(req)) { await req.RespondWithText("You are unauthorized to access this page!", HttpStatusCode.Unauthorized); return; }
-                    this.WebServerConfig = JsonConvert.DeserializeObject<WebServerConfig>(req.RequestBody);
+                    WebServerConfig newWebServerConfig = JsonConvert.DeserializeObject<WebServerConfig>(req.RequestBody);
+                    bool restartServer = (this.WebServerConfig.EnableHTTP != newWebServerConfig.EnableHTTP) || (this.WebServerConfig.EnableHTTPS != newWebServerConfig.EnableHTTPS) || (this.WebServerConfig.HTTPPort != newWebServerConfig.HTTPPort) 
+                    || (this.WebServerConfig.HTTPSPort != newWebServerConfig.HTTPSPort) || (this.WebServerConfig.LogDirectory != newWebServerConfig.LogDirectory) || (this.WebServerConfig.SSLCertificateStoreName != newWebServerConfig.SSLCertificateStoreName)
+                    || (this.WebServerConfig.SSLCertificateSubjectName != newWebServerConfig.SSLCertificateSubjectName) || (this.WebServerConfig.WWWDirectory != newWebServerConfig.WWWDirectory);                    
+                    this.HttpServer.Config = newWebServerConfig;
+                    if (restartServer)
+                    {
+                        this.HttpServer.Stop();
+                        await this.HttpServer.StartAsync().ConfigureAwait(false);
+                    }
+                    this.WebServerConfig = newWebServerConfig;
                     this.WebServerConfig.SaveConfigFile("webserver.json");
                     await req.RespondEmpty().ConfigureAwait(false);
                 },"PUT"));
             this.ConfigServer.WebAPIs.Add(new WebAPIAction(
-                "/config/getlogs/", async (req) =>
+                "/config/saveutilitysettings", async (req) =>
+                {
+                    if (!CheckAuthentication(req)) { await req.RespondWithText("You are unauthorized to access this page!", HttpStatusCode.Unauthorized); return; }
+                    this.WebServerConfig.UtilityConfig = JsonConvert.DeserializeObject<UtilityConfig>(req.RequestBody);
+                    this.WebServerConfig.SaveConfigFile("webserver.json");
+                    await req.RespondEmpty().ConfigureAwait(false);
+                }, "PUT"));
+            this.ConfigServer.WebAPIs.Add(new WebAPIAction(
+                "/config/getlogs", async (req) =>
                 {
                     if (!CheckAuthentication(req)) { await req.RespondWithText("You are unauthorized to access this page!", HttpStatusCode.Unauthorized); return; }
                     long lastlogreadtickutc = 0;
@@ -129,8 +135,8 @@ namespace Vlix
                     if (bA3.Length != 2) return false;
                     string UN = bA3[0];
                     string PW = bA3[1];
-                    if (string.Equals(UN,this.WebServerConfig.ConfigUtility.ConfigUsername,StringComparison.InvariantCultureIgnoreCase) 
-                        && (this.WebServerConfig.ConfigUtility.ConfigPasswordHash==null || PW.ToSha256()== this.WebServerConfig.ConfigUtility.ConfigPasswordHash)) return true;
+                    if (string.Equals(UN,this.WebServerConfig.UtilityConfig.ConfigUsername,StringComparison.InvariantCultureIgnoreCase) 
+                        && (this.WebServerConfig.UtilityConfig.ConfigPasswordHash==null || PW.ToSha256()== this.WebServerConfig.UtilityConfig.ConfigPasswordHash)) return true;
                 }
             }
             return false;

@@ -67,14 +67,14 @@
                                         <TextBox.ToolTip>
                                             <StackPanel>
                                                 <TextBlock Visibility="{Binding SSLCertificateSubjectName, Converter={StaticResource EmptyStringOrNullToVisibilityVisibleElseCollapsedConverter}}" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"  >
-                                                                        <Run Text="Select a Certificate"></Run>
+                                                    <Run Text="Select a Certificate"></Run>
                                                 </TextBlock>
                                                 <TextBlock Visibility="{Binding SSLCertificateSubjectName, Converter={StaticResource EmptyStringOrNullToVisibilityCollapsedConverter}}" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"  >
-                                                                        <Run Text="Certificate '"/><Run Text="{Binding SSLCertificateSubjectName}"></Run><Run Text="'"/>
+                                                    <Run Text="Certificate '"/><Run Text="{Binding SSLCertificateSubjectName}"></Run><Run Text="'"/>
                                                 </TextBlock>
                                                 <TextBlock>
-                                                                        <Run>The (SSL/TLS) Cerificate is a document used to secure/encrypt communication.</Run><LineBreak />
-                                                                        <Run>This certificate secures:</Run>
+                                                    <Run>The (SSL/TLS) Cerificate is a document used to secure/encrypt communication.</Run><LineBreak />
+                                                    <Run>This certificate secures:</Run>
                                                 </TextBlock>
                                                 <TextBlock Visibility="{Binding SubjectAlternativeNames.Count, Converter={StaticResource ZeroOrNullToVisibilityVisibleElseCollapsedConverter}}"  Foreground="#2a4c68" FontWeight="SemiBold">- No domains</TextBlock>
                                                 <TextBlock Foreground="#2a4c68">
@@ -130,12 +130,10 @@
                         <local:OPButton Command="{Binding ShowAdvanceSettingsClickCommand}" Margin="0,0,2,0" HorizontalAlignment="Left" Height="23" Width="100" Icon="ic_settings">Advance</local:OPButton>
                         <local:OPButton Click="opbSaveApply_Click" Icon="ic_save" Height="23" Width="140" HorizontalAlignment="Right" IconLocation="Left">Save and Apply</local:OPButton>
                     </Grid>
-
-
                 </StackPanel>
             </local:OPBorder>
             <Grid DockPanel.Dock="Top" Margin="0,5,0,0">
-                <local:UCLogConsole x:Name="ucLogConsole" />
+                <local:UCLogConsole x:Name="ucLogConsole" x:FieldModifier="public" Loaded="ucLogConsole_Loaded" />
             </Grid>
         </DockPanel>
         <local:OPFrame Shown="{Binding ShowSelectSSLCertWindow}" BorderThickness="0" InnerMargin="10" CornerRadius="5"  TopLeftContent="Select SSL Certificate" TopLeftIcon="ic_lock_outline" InnerWindowMargin="15" 
@@ -207,7 +205,7 @@
                                                             <DockPanel Opacity="{Binding RequestMatch.CheckHostName, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
                                                                                Visibility="{Binding RequestMatch.CheckHostName, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}">
                                                                 <ComboBox DockPanel.Dock="Right" SelectedItem="{Binding RequestMatch.HostNameMatchType}" Width="75" Margin="0,0,0,0" ItemsSource="{Binding RequestMatch.ComboBoxMatchTypes, Mode=OneTime}"  HorizontalAlignment="Right" />
-                                                                <local:OPTextBox PlaceHolder="www.mydomain.com" Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" Text="{Binding HostNameMatch}" />
+                                                                <local:OPTextBox PlaceHolder="www.mydomain.com" Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" Text="{Binding RequestMatch.HostNameMatch}" />
                                                             </DockPanel>
                                                             <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
                                                                                  Visibility="{Binding RequestMatch.CheckHostName, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
@@ -228,7 +226,7 @@
                                                             <DockPanel Opacity="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
                                                                                Visibility="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}">
                                                                 <ComboBox DockPanel.Dock="Right" SelectedItem="{Binding RequestMatch.PathMatchType}" Width="75" Margin="0,0,0,0" ItemsSource="{Binding RequestMatch.ComboBoxMatchTypes, Mode=OneTime}"  HorizontalAlignment="Right" />
-                                                                <local:OPTextBox PlaceHolder="/SomePath/*" Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" Text="{Binding HostNameMatch}" />
+                                                                <local:OPTextBox PlaceHolder="/SomePath/*" Height="22" MinWidth="150" Margin="0,0,1,0" Background="#FFFEFEEB" Text="{Binding RequestMatch.PathMatch}" />
                                                             </DockPanel>
                                                             <TextBox Height="22" MinWidth="150" Background="#FFFEFEEB"
                                                                                  Visibility="{Binding RequestMatch.CheckPath, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
@@ -241,7 +239,7 @@
                                                         <TextBlock Width="30">Port:</TextBlock>
 
                                                         <Grid>
-                                                            <local:OPTextBox Height="22" PlaceHolder="80" Width="85" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding Port}" Opacity="{Binding RequestMatch.CheckPort, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
+                                                            <local:OPTextBox Height="22" PlaceHolder="80" Width="85" Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding RequestMatch.Port}" Opacity="{Binding RequestMatch.CheckPort, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}"
                                                                              Visibility="{Binding RequestMatch.CheckPort, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
                                                             <TextBox Height="22" MinWidth="85" Background="#FFFEFEEB"
                                                                                  Visibility="{Binding RequestMatch.CheckPort, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}"
@@ -428,6 +426,6 @@
                 </local:OPBorder>
             </Grid>
         </local:OPFrame>
-        <local:CentreMessage ShowDesignTimeMessageProcess="False" State="{Binding IsLoading, Converter={StaticResource BoolTrueToCentreMessageStateProcessElseNoMessageConverter}}" MessageProcess="Loading.."></local:CentreMessage>
+        <local:CentreMessage x:Name="cmHttpServerConfig" ShowDesignTimeMessageProcess="False"  MessageProcess="Loading.."></local:CentreMessage>
     </Grid>
 </UserControl>

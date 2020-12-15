@@ -25,13 +25,16 @@
     </UserControl.Resources>
 
     <Grid>
-        <Grid Background="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid IsEnabled="{Binding IsLoading, Converter={StaticResource InvertBoolConverter}}" Background="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <DockPanel>
                 <Menu DockPanel.Dock="Top" Background="#2a4c68">
                     <MenuItem Header="_File" Foreground="White">
                         <MenuItem Header="_Refresh" Foreground="Black" Click="miRefresh_Click"  />
-                        <MenuItem Header="_Change Password" Foreground="Black" Command="{Binding ChangePassswordClick}" />
-                        <MenuItem Header="_Exit" Foreground="Black" Click="miExit_Click" />
+                        <MenuItem Header="_Disconnect" IsEnabled="{Binding LoggedIn}" Foreground="Black" Command="{Binding DisconnectClick}"  />
+                        <MenuItem Header="_Exit" Foreground="Black" Command="{Binding ExitClick}" />
+                    </MenuItem>
+                    <MenuItem Header="_Settings" Foreground="White">
+                        <MenuItem Header="_Settings" Foreground="Black" Command="{Binding SettingsLaunchClick}"  />
                     </MenuItem>
                 </Menu>
                 <local:UCHttpServerConfig Margin="3" x:Name="uCHttpServerConfig" />
@@ -43,7 +46,7 @@
                 <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5,0,0" >
                     <StackPanel Orientation="Vertical" Width="220">
                         <Image Source="vlixlogo-whitebg.png" Margin="0,0,0,0"></Image>
-                        <TextBlock HorizontalAlignment="Center" Margin="0,-8,0,10"  FontWeight="Bold" FontSize="14" Foreground="#999" >Webserver Configuration Utility</TextBlock>
+                        <TextBlock HorizontalAlignment="Center" Margin="0,-5,0,10"  FontWeight="Bold" FontSize="14" Foreground="#999" >Webserver Configuration Utility</TextBlock>
                         <!--<Border Height="1" BorderBrush="#ccc" Margin="0,0,0,10" BorderThickness="1" ></Border>-->
                         <DockPanel Margin="0,5,0,5" IsEnabled="{Binding IsLoggingIn,Converter={StaticResource InvertBoolConverter}}">
                             <TextBlock FontWeight="SemiBold" Width="30" Margin="0,0,2,0">Host:</TextBlock>
@@ -69,14 +72,14 @@
 
             <!-- {Binding ShowRemoteSettingsWindow} -->
             <Grid Background="#aa000000" Visibility="{Binding ShowPasswordSettingsWindow, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-            <local:OPFrame Shown="{Binding ShowPasswordSettingsWindow}" BorderThickness="0" InnerMargin="10"  CornerRadius="5"  TopLeftContent="Change User/Pass" TopLeftIcon="ic_security"
-                                    Visibility="Collapsed"  Width="450" Height="450" OnClose="opfPasswordSettingsWindow_Close">
+            <local:OPFrame Shown="{Binding ShowPasswordSettingsWindow}" BorderThickness="0" InnerMargin="10"  CornerRadius="5"  TopLeftContent="Configuration Utilitity Settings" TopLeftIcon="ic_settings"
+                                    Visibility="Collapsed"  Width="500" Height="450" OnShow="opfSettingsWindow_OnShow" OnClose="opfSettingsWindow_Close">
                 <local:OPBorder Margin="0,2,0,0">
                     <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-20,0,0" >
                         <StackPanel Orientation="Vertical">
                             <StackPanel Margin="0,5,0,0" Orientation="Horizontal">
                                 <TextBlock FontWeight="Bold" Width="65">Username:</TextBlock>
-                                <TextBox Width="120" Text="{Binding ConfigUsername}" />
+                                <TextBox Width="120" Text="{Binding NewConfigUsername}" />
                             </StackPanel>
                             <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
                                 <TextBlock FontWeight="Bold" Width="65">Password:</TextBlock>
@@ -88,45 +91,45 @@
                             </StackPanel>
                             <local:OPBorder>
                                 <StackPanel Orientation="Vertical" Margin="10">
-                                    <TextBlock FontWeight="Bold" FontSize="18" Foreground="#777">Configuration Utility</TextBlock>
+                                    <TextBlock FontWeight="Bold" FontSize="18" Foreground="#777">Connection</TextBlock>
                                     <TextBlock Foreground="#333" FontStyle="Italic" TextWrapping="Wrap">The Web Server Configuration Utility connects to the Web server on the following port:</TextBlock>
                                     <Border Height="1" HorizontalAlignment="Stretch" BorderBrush="#ccc" BorderThickness="1" Margin="0,5,0,10" />
                                     <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
                                         <TextBlock Width="65">HTTP Port:</TextBlock>
-                                        <TextBox Width="70" Text="{Binding ConfigHTTPSPort}" />
-                                        <CheckBox VerticalAlignment="Center" Margin="5,0,0,0" IsChecked="{Binding ConfigLocalhostOnly}">Localhost Only</CheckBox>
+                                        <TextBox Width="70" Text="{Binding NewConfigHTTPSPort}" />
+                                        <CheckBox VerticalAlignment="Center" Margin="5,0,0,0" IsChecked="{Binding NewConfigLocalhostOnly}">Localhost Only</CheckBox>
                                     </StackPanel>
                                     <Border Height="1" HorizontalAlignment="Stretch" BorderBrush="#ccc" BorderThickness="1" Margin="0,2,0,10" />
                                     <StackPanel Margin="0,0,0,3" Orientation="Horizontal">
-                                        <CheckBox IsChecked="{Binding ConfigEnableHTTPS}">Enable HTTPS</CheckBox>
+                                        <CheckBox IsChecked="{Binding NewConfigEnableHTTPS}">Enable HTTPS</CheckBox>
                                     </StackPanel>
-                                    <StackPanel Margin="21,2,0,0" Orientation="Horizontal">
+                                    <StackPanel Margin="21,2,0,0" IsEnabled="{Binding NewConfigEnableHTTPS}" Orientation="Horizontal">
                                         <TextBlock Width="65">HTTPS Port:</TextBlock>
-                                        <TextBox Width="70" Text="{Binding ConfigHTTPSPort}" />
+                                        <TextBox Width="70" Text="{Binding NewConfigHTTPSPort}" />
                                     </StackPanel>
-                                    <Grid Margin="21,2,0,20" HorizontalAlignment="Stretch" DockPanel.Dock="Top">
+                                    <Grid Margin="21,2,0,20" IsEnabled="{Binding NewConfigEnableHTTPS}" HorizontalAlignment="Stretch" DockPanel.Dock="Top">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="auto" />
                                             <ColumnDefinition Width="auto"  />
                                             <ColumnDefinition Width="auto" />
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Margin="0,2,0,0" FontWeight="Normal" Width="65" VerticalAlignment="Top">Certificate:</TextBlock>
-                                        <TextBox Grid.Column="1" Width="200" IsReadOnly="True" Background="#ccc" Text="{Binding ConfigSSLCertificateSubjectName, Mode=OneWay}" Height="20">
+                                        <TextBox Grid.Column="1" Width="200" IsReadOnly="True" Background="#ccc" Text="{Binding NewConfigSSLCertificateSubjectName, Mode=OneWay}" Height="20">
                                             <TextBox.ToolTip>
                                                 <StackPanel>
-                                                    <TextBlock Visibility="{Binding ConfigSSLCertificateSubjectName, Converter={StaticResource EmptyStringOrNullToVisibilityVisibleElseCollapsedConverter}}" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"  >
+                                                    <TextBlock Visibility="{Binding NewConfigSSLCertificateSubjectName, Converter={StaticResource EmptyStringOrNullToVisibilityVisibleElseCollapsedConverter}}" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"  >
                                                         <Run Text="Select a Certificate"></Run>
                                                     </TextBlock>
-                                                    <TextBlock Visibility="{Binding ConfigSSLCertificateSubjectName, Converter={StaticResource EmptyStringOrNullToVisibilityCollapsedConverter}}" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"  >
-                                                        <Run Text="Certificate '"/><Run Text="{Binding ConfigSSLCertificateSubjectName}"></Run><Run Text="'"/>
+                                                    <TextBlock Visibility="{Binding NewConfigSSLCertificateSubjectName, Converter={StaticResource EmptyStringOrNullToVisibilityCollapsedConverter}}" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"  >
+                                                        <Run Text="Certificate '"/><Run Text="{Binding NewConfigSSLCertificateSubjectName}"></Run><Run Text="'"/>
                                                     </TextBlock>
                                                     <TextBlock>
                                                         <Run>The (SSL/TLS) Cerificate is a document used to secure/encrypt communication.</Run><LineBreak />
                                                         <Run>This certificate secures:</Run>
                                                     </TextBlock>
-                                                    <TextBlock Visibility="{Binding ConfigSubjectAlternativeNames.Count, Converter={StaticResource ZeroOrNullToVisibilityVisibleElseCollapsedConverter}}"  Foreground="#2a4c68" FontWeight="SemiBold">- No domains</TextBlock>
+                                                    <TextBlock Visibility="{Binding NewConfigSubjectAlternativeNames.Count, Converter={StaticResource ZeroOrNullToVisibilityVisibleElseCollapsedConverter}}"  Foreground="#2a4c68" FontWeight="SemiBold">- No domains</TextBlock>
                                                     <TextBlock Foreground="#2a4c68">
-                                                <ItemsControl ItemsSource="{Binding ConfigSubjectAlternativeNames}">
+                                                <ItemsControl ItemsSource="{Binding NewConfigSubjectAlternativeNames}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
                                                             <TextBlock FontStyle="Normal" FontWeight="SemiBold">
@@ -140,7 +143,7 @@
                                                         <LineBreak />
                                                         <Run FontSize="13" FontWeight="Bold">Notes on Certificate renewal</Run><LineBreak />
                                                         <Run>Every 5 minutes, the web server checks for the latest certificate (in the Windows</Run><LineBreak />
-                                                        certificate store '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding ConfigSSLCertificateStoreName}"></Run>') with subject '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateSubjectName}" />'.<LineBreak />
+                                                        certificate store '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding NewConfigSSLCertificateStoreName}"></Run>') with subject '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding NewSSLCertificateSubjectName}" />'.<LineBreak />
                                                         <Run>If a new certificate exists, it will replace the current one</Run><LineBreak />
                                                     </TextBlock>
                                                 </StackPanel>
@@ -159,7 +162,7 @@
                                     </Grid>
                                 </StackPanel>
                             </local:OPBorder>
-                            <local:OPButton Margin="0,5,0,0" Click="opbRemoteAccept_Click">OK</local:OPButton>
+                            <local:OPButton Margin="0,5,0,0" Click="opbNewConfigSave_Click">Save</local:OPButton>
                             <local:CentreMessage x:Name="cmConfig" ShowDesignTimeMessageProcess="True" MessageFontSize="14"></local:CentreMessage>
                         </StackPanel>
                     </Grid>
@@ -169,11 +172,11 @@
         
         <!--{Binding ShowConfigSelectSSLCertWindow}-->
         <local:OPFrame Shown="{Binding ShowConfigSelectSSLCertWindow}" BorderThickness="0" InnerMargin="10" CornerRadius="5"  TopLeftContent="Select SSL Certificate" TopLeftIcon="ic_lock_outline" InnerWindowMargin="15" 
-                                    Visibility="Collapsed" Background="Transparent" OnClose="opfConfigSelectSSLCert_OnClose">
+                                    Visibility="Collapsed" Background="Transparent" OnShow="opfConfigSelectSSLCert_OnShow" OnClose="opfConfigSelectSSLCert_OnClose">
             <Grid Margin="0,5,0,0" >
-                <local:UCSelectSSLCert Margin="5" OnCertificateSelected="UCConfigSelectSSLCert_OnCertificateSelected" />
+                <local:UCSelectSSLCert x:Name="uCConfigSelectSSLCert" Margin="5" OnCertificateSelected="UCConfigSelectSSLCert_OnCertificateSelected" />
             </Grid>
         </local:OPFrame>
-        <local:CentreMessage ShowDesignTimeMessageProcess="False" State="{Binding IsLoading, Converter={StaticResource BoolTrueToCentreMessageStateProcessElseNoMessageConverter}}" MessageProcess="Loading.."></local:CentreMessage>
+        <local:CentreMessage x:Name="cmServerConfig" ShowDesignTimeMessageProcess="False" MessageProcess="Loading.."></local:CentreMessage>
     </Grid>
 </UserControl>

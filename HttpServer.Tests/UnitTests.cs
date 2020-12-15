@@ -70,7 +70,7 @@ namespace Vlix.HttpServer.Tests
         {
             HttpServer vlixHttpServer = new Vlix.HttpServer.HttpServer("C:\\www", 80);
             output.WriteLine("absolutePath  = " + absolutePath);
-            vlixHttpServer.TryParseAbsolutePath(vlixHttpServer.Config.WWWDirectory, absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg);
+            vlixHttpServer.TryParseAbsolutePath(vlixHttpServer.Config.WWWDirectoryParsed(), absolutePath, out string fileToRead, out string fileToReadDir, out string errorMsg);
             output.WriteLine("fileToRead    = " + fileToRead);
             output.WriteLine("fileToReadDir = " + fileToReadDir);
             output.WriteLine("errorMsg      = " + errorMsg);

@@ -28,20 +28,10 @@ namespace Vlix.HttpServer
             await webServer.StartAsync();
 
             string[] wWWFiles = Directory.GetFiles(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Sample"));
-            foreach (var wWWFile in wWWFiles) File.Copy(wWWFile, Path.Combine(webServer.WebServerConfig.WWWDirectory, Path.GetFileName(wWWFile)), true);
-            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console().WriteTo.File(Path.Combine(webServer.WebServerConfig.LogDirectory, "HTTPServer.log"), rollingInterval: RollingInterval.Day).CreateLogger();
+            foreach (var wWWFile in wWWFiles) File.Copy(wWWFile, Path.Combine(webServer.WebServerConfig.WWWDirectoryParsed(), Path.GetFileName(wWWFile)), true);
+            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console().WriteTo.File(Path.Combine(webServer.WebServerConfig.LogDirectoryParsed(), "HTTPServer.log"), rollingInterval: RollingInterval.Day).CreateLogger();
 
 
-
-
-
-            //HttpServer internalServer = new HttpServer(config.WWWDirectory, 5000);
-            //internalServer.OnErrorLog = (log) => Log.Error("internal > " + log);
-            //internalServer.OnInfoLog = (log) => Log.Information("internal > " + log);
-            //internalServer.OnWarningLog = (log) => Log.Warning("internal > " + log);
-            //await internalServer.StartAsync();
-
-            
             _ = Task.Run(async () =>
             {
                 int n = 0;

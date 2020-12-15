@@ -56,6 +56,12 @@ namespace Vlix.ServerConfigUI
                 RaiseEvent(newEventArgs);
             }
         }
+
+        private void opbClear_Click(object sender, RoutedEventArgs e)
+        {
+            RoutedEventArgs newEventArgs = new RoutedEventArgs(UCSelectSSLCert.OnCertificateSelectedEvent, new SSLCertVM() { Subject = null});
+            RaiseEvent(newEventArgs);
+        }
     }
 
 

@@ -9,8 +9,19 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Vlix.HttpServer
 {
-    public class ConfigUtiltyConfig
+    public class UtilityConfig
     {
+        public void Update(UtilityConfig utility)
+        {
+            this.HTTPPort = utility.HTTPPort;
+            this.EnableHTTPS = utility.EnableHTTPS;
+            this.HTTPSPort = utility.HTTPSPort;
+            this.SSLCertificateSubjectName = utility.SSLCertificateSubjectName;
+            this.SSLCertificateStoreName = utility.SSLCertificateStoreName;
+            this.AllowLocalhostConnectionsOnlyForHttp = utility.AllowLocalhostConnectionsOnlyForHttp;
+            this.ConfigUsername = utility.ConfigUsername;
+            this.ConfigPasswordHash = utility.ConfigPasswordHash;
+        }
         [JsonProperty(Order = 51)]
         public int HTTPPort { get; set; } = 33171;
         [JsonProperty(Order = 52)]
@@ -34,8 +45,15 @@ namespace Vlix.HttpServer
 
     public class WebServerConfig : HttpServerConfig
     {
+        public WebServerConfig() { }
+        public WebServerConfig(HttpServerConfig httpServerConfig, UtilityConfig utilityConfig)
+        {
+            this.Update(httpServerConfig);
+            this.UtilityConfig = utilityConfig;
+        }
+
         [JsonProperty(Order = 40)]
-        public ConfigUtiltyConfig ConfigUtility { get; set; } = new ConfigUtiltyConfig();
+        public UtilityConfig UtilityConfig { get; set; } = new UtilityConfig();
         public void SaveConfigFile(string configFileName)
         {
             string appDirectory = ConfigurationManager.AppSettings.Get("AppDirectory");
@@ -65,8 +83,8 @@ namespace Vlix.HttpServer
                 string jsonString = JsonConvert.SerializeObject(config, Formatting.Indented);
                 File.WriteAllText(configFilePath, jsonString);
             }
-            config.LogDirectory = config.LogDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
-            config.WWWDirectory = config.WWWDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
+            //config.LogDirectory = config.LogDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
+            //config.WWWDirectory = config.WWWDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
             this.EnableHTTP = config.EnableHTTP;
             this.HTTPPort = config.HTTPPort;
             this.EnableHTTPS = config.EnableHTTPS;
@@ -79,14 +97,14 @@ namespace Vlix.HttpServer
             this.WWWDirectory = config.WWWDirectory;
             this.AllowLocalhostConnectionsOnlyForHttp = config.AllowLocalhostConnectionsOnlyForHttp;
             this.EnableCache = config.EnableCache;
-            this.ConfigUtility.AllowLocalhostConnectionsOnlyForHttp = config.ConfigUtility.AllowLocalhostConnectionsOnlyForHttp;
-            this.ConfigUtility.ConfigUsername = config.ConfigUtility.ConfigUsername;
-            this.ConfigUtility.ConfigPasswordHash = config.ConfigUtility.ConfigPasswordHash;
-            this.ConfigUtility.EnableHTTPS = config.ConfigUtility.EnableHTTPS;
-            this.ConfigUtility.HTTPPort = config.ConfigUtility.HTTPPort;
-            this.ConfigUtility.HTTPSPort = config.ConfigUtility.HTTPSPort;
-            this.ConfigUtility.SSLCertificateStoreName = config.ConfigUtility.SSLCertificateStoreName;
-            this.ConfigUtility.SSLCertificateSubjectName = config.ConfigUtility.SSLCertificateSubjectName;            
+            this.UtilityConfig.AllowLocalhostConnectionsOnlyForHttp = config.UtilityConfig.AllowLocalhostConnectionsOnlyForHttp;
+            this.UtilityConfig.ConfigUsername = config.UtilityConfig.ConfigUsername;
+            this.UtilityConfig.ConfigPasswordHash = config.UtilityConfig.ConfigPasswordHash;
+            this.UtilityConfig.EnableHTTPS = config.UtilityConfig.EnableHTTPS;
+            this.UtilityConfig.HTTPPort = config.UtilityConfig.HTTPPort;
+            this.UtilityConfig.HTTPSPort = config.UtilityConfig.HTTPSPort;
+            this.UtilityConfig.SSLCertificateStoreName = config.UtilityConfig.SSLCertificateStoreName;
+            this.UtilityConfig.SSLCertificateSubjectName = config.UtilityConfig.SSLCertificateSubjectName;                    
             this.Rules.Clear();
             foreach (var r in config.Rules) this.Rules.Add(r);
         }

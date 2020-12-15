@@ -113,6 +113,7 @@ namespace Vlix.ServerConfigUI
         //}
         public void AddLogs(List<LogStruct> Logs)
         {
+            if (Logs == null) return;
             List<ConsoleLogVM> ConsoleLogVMs = new List<ConsoleLogVM>();
             foreach (var log in Logs) ConsoleLogVMs.Add(new ConsoleLogVM(log));
             this.AddLogs(ConsoleLogVMs);

@@ -146,6 +146,11 @@ namespace Vlix.HttpServer
             return httpServerConfig;
         }
         public Func<StoreName, StoreLocation, Task<List<SSLCertVM>>> OnSSLCertRefresh;
+
+        public Func<HttpServerConfig, Task<bool>> OnSaveAndApply;
+        public Func<Task<HttpServerConfig>> OnRefresh;
+        public Func<DateTime,Task<List<LogStruct>>> OnLogRefresh;
+        public Func<Task<bool>> CheckConnectionOK;
         bool _IsLoading = false; public bool IsLoading { get { return _IsLoading; } set { SetField(ref _IsLoading, value, "IsLoading"); } }
         bool _ClientIsLocal = true; public bool ClientIsLocal { get { return _ClientIsLocal; } set { SetField(ref _ClientIsLocal, value, "ClientIsLocal"); } }
         string _SSLCertificateSubjectName = null; public string SSLCertificateSubjectName { get { return _SSLCertificateSubjectName; } set { SetField(ref _SSLCertificateSubjectName, value, "SSLCertificateSubjectName"); } }
@@ -171,6 +176,7 @@ namespace Vlix.HttpServer
         {
             this.Rules.Add(new RuleVM(this));
         }, (p) => true); } }
+
     }
 
 }

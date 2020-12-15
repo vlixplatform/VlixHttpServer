@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sc="clr-namespace:Vlix.ServerConfigUI;assembly=ServerConfigUI"
-        mc:Ignorable="d" Icon="vlix.ico" Loaded="Window_Loaded"
+        mc:Ignorable="d" Icon="vlix.ico"
         Title="Vlix Web Server" Height="600" Width="800">
     <Grid>
         <sc:UCServerConfig x:Name="uCServerConfig" Margin="3,1,3,3" />

@@ -27,6 +27,14 @@ namespace Vlix.HttpServer
             var res = await this.SendAsync(requestMessage);            
             return res.StatusCode;
         }
+        public async Task<HttpStatusCode> RequestStatusOnlyAsync(HttpMethod httpMethod, string uRL, string username, string password, object jsonObject)
+        {
+            HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, uRL);
+            requestMessage.Headers.Add("Authorization", "Basic " + (username + ":" + password).ToBase64());
+            requestMessage.Content = new StringContent(JsonConvert.SerializeObject(jsonObject), Encoding.UTF8, "application/json");
+            var res = await this.SendAsync(requestMessage);
+            return res.StatusCode;
+        }
         public async Task<string> RequestStringAsync(HttpMethod httpMethod, string uRL, string username, string password, StringContent body = null)
         {
             HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, uRL);

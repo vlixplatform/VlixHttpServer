@@ -73,6 +73,10 @@
       <Project>{403741ea-55a2-4ee6-8f81-c49d139c0f5e}</Project>
       <Name>1%29 HttpServerLib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\WebServer\2%29 WebServer.csproj">
+      <Project>{0bb74c62-49ce-40da-b643-55770d4281ea}</Project>
+      <Name>2%29 WebServer</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Sample\index.html">

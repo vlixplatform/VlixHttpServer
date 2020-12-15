@@ -68,14 +68,7 @@ namespace Vlix.HttpServer
         public ObservableCollection<SSLCertVM> SSLCerts { get; set; } = new ObservableCollection<SSLCertVM>();
 
 
-        public ICommand StoreRefreshClickCommand
-        {
-            get
-            {
-                return new DelegateCommand<object>(async (c) => await Refresh(), (c) => true);
-            }
-        }
-
+        public ICommand StoreRefreshClickCommand { get { return new DelegateCommand<object>(async (c) => await Refresh(), (c) => true); }}
         //TODO
         //Import Nuget Package CERTES
         // https://github.com/fszlin/certes

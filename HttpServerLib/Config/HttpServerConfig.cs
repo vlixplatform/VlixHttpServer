@@ -11,8 +11,38 @@ namespace Vlix.HttpServer
 {
     public class HttpServerConfig: HttpServerConfigBase
     {
+        public HttpServerConfig() { }
+        public HttpServerConfig(UtilityConfig utilityConfig)
+        {
+            this.EnableHTTP = true; //Http must alays be enables
+            this.HTTPPort = utilityConfig.HTTPPort;
+            this.AllowLocalhostConnectionsOnlyForHttp = utilityConfig.AllowLocalhostConnectionsOnlyForHttp;
+            this.EnableHTTPS = utilityConfig.EnableHTTPS;
+            this.HTTPSPort = utilityConfig.HTTPSPort;
+            this.SSLCertificateStoreName = utilityConfig.SSLCertificateStoreName;
+            this.SSLCertificateSubjectName = utilityConfig.SSLCertificateSubjectName;
+            this.EnableCache = false;
+            this.Rules = null;
+        }
+        public void Update(HttpServerConfig httpServerConfig)
+        {
+            this.LogDirectory = httpServerConfig.LogDirectory;
+            this.Rules.Clear();
+            foreach (var r in httpServerConfig.Rules) this.Rules.Add(r);
+            this.EnableHTTP = httpServerConfig.EnableHTTP;
+            this.HTTPPort = httpServerConfig.HTTPPort;
+            this.EnableHTTPS = httpServerConfig.EnableHTTPS;
+            this.HTTPSPort = httpServerConfig.HTTPSPort;
+            this.SSLCertificateSubjectName = httpServerConfig.SSLCertificateSubjectName;
+            this.SSLCertificateStoreName = httpServerConfig.SSLCertificateStoreName;
+            this.AllowLocalhostConnectionsOnlyForHttp = httpServerConfig.AllowLocalhostConnectionsOnlyForHttp;
+        }
+
+        private string _LogDirectoryParsed = null;
+        public string LogDirectoryParsed() { if (_LogDirectoryParsed == null) _LogDirectoryParsed = this.LogDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)); ; return _LogDirectoryParsed; }
+        private string _LogDirectory = Path.Combine("[ProgramDataDirectory]", "Vlix", "HTTPServer", "Logs");
         [JsonProperty(Order = 20)]
-        public string LogDirectory { get; set; } = Path.Combine("[ProgramDataDirectory]", "Vlix", "HTTPServer", "Logs");
+        public string LogDirectory { get { return _LogDirectory; } set { _LogDirectory = value; _LogDirectoryParsed = null; } }
         [JsonProperty(Order = 30)]
         public List<Rule> Rules { get; set; } = new List<Rule>();
 

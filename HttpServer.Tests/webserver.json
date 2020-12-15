@@ -90,7 +90,7 @@
       }
     }
   ],
-  "ConfigUtility": {
+  "UtilityConfig": {
     "HTTPPort": 5024,
     "EnableHTTPS": false,
     "HTTPSPort": 5025,

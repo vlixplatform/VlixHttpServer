@@ -20,6 +20,7 @@ namespace  Vlix.HttpServer
     
     public class Services
     {
+        public static OPHttpClient OPHttpClient = new OPHttpClient();
         public static object Config; //Place holder for Configuration Settings
         public static void SaveConfigFile<T>(string configFileName, T configObject)
         {

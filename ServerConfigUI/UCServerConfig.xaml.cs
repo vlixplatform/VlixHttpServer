@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -29,24 +30,65 @@ namespace Vlix.ServerConfigUI
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
+            httpServerConfigVM = (HttpServerConfigVM)uCHttpServerConfig.DataContext;
             Settings settings = Services.LoadConfigFile<Settings>("settings.json");
             configVM = ((ServerConfigVM)this.DataContext);
             configVM.Host = settings.LastHost;
             configVM.Username = settings.LastUsername;
             Services.Config = settings;
 
-            uCHttpServerConfig.OnRefresh = async () =>
+            httpServerConfigVM.OnRefresh = async () =>
             {
-                HttpServerConfig newServerConfig = await this.OnRefresh?.Invoke(configVM.Host, configVM.Username, configVM.Password);
-                return newServerConfig;
+                try
+                {
+                    WebServerConfig config = await Services.OPHttpClient.RequestJsonAsync<WebServerConfig>(HttpMethod.Get, configVM.Host + "/config/load", configVM.Username, configVM.Password);
+                    return config;
+                }
+                catch (Exception ex)
+                {
+                    return null;
+                }
             };
 
-            uCHttpServerConfig.OnSaveAndApply = async (httpServerConfig) =>
+            httpServerConfigVM.OnLogRefresh = async (lastLogReadUTC) =>
             {
-                configVM.HttpServerConfigVM.Update(httpServerConfig);
-                return await this.OnSaveAndApply?.Invoke(configVM);
+                try
+                {
+                    List<LogStruct> logs = await Services.OPHttpClient.RequestJsonAsync<List<LogStruct>>(HttpMethod.Get, configVM.Host + "/config/getlogs?lastread="+ lastLogReadUTC.Ticks, configVM.Username, configVM.Password);
+                    return logs;
+                }
+                catch (Exception ex)
+                {
+                    return null;
+                }
             };
-            httpServerConfigVM = (HttpServerConfigVM)uCHttpServerConfig.DataContext;
+            httpServerConfigVM.CheckConnectionOK = () => { return  Task.FromResult(configVM.LoggedIn); };
+
+            httpServerConfigVM.OnSaveAndApply = async (httpServerConfig) =>
+            {
+                try
+                {
+                    UtilityConfig utilityConfig = new UtilityConfig()
+                    {
+                        AllowLocalhostConnectionsOnlyForHttp = configVM.ConfigLocalhostOnly,
+                        SSLCertificateStoreName = configVM.ConfigSSLCertificateStoreName,
+                        SSLCertificateSubjectName = configVM.ConfigSSLCertificateSubjectName,
+                        EnableHTTPS = configVM.ConfigEnableHTTPS,
+                        ConfigUsername = configVM.ConfigUsername,
+                        HTTPPort = configVM.ConfigHTTPPort,
+                        HTTPSPort = configVM.ConfigHTTPSPort,
+                        ConfigPasswordHash = configVM.ConfigPasswordHash
+                    };
+                    WebServerConfig webServerConfig = new WebServerConfig(httpServerConfig, utilityConfig);
+                    var res = await Services.OPHttpClient.RequestStatusOnlyAsync(HttpMethod.Put, configVM.Host + "/config/save", configVM.Username, configVM.Password, webServerConfig);
+                    if (res == HttpStatusCode.OK) return true;
+                }
+                catch
+                {
+                    return false;
+                }
+                return false;
+            };
 
             httpServerConfigVM.OnSSLCertRefresh = async (storeName, storeLocation) =>
             {
@@ -56,7 +98,10 @@ namespace Vlix.ServerConfigUI
                     return Res;
                 }
             };
-            
+            ((SelectSSLCertVM)uCConfigSelectSSLCert.DataContext).OnRefresh = (storeName, storeLocation) =>
+            {
+                return httpServerConfigVM.OnSSLCertRefresh?.Invoke(storeName, storeLocation);
+            };
         }
         //public void Initialize(Func<HttpServerConfigVM, Task> onSaveAndApply, Func<string, string, string, Task<HttpServerConfigVM>> onRefresh)
         //{
@@ -65,64 +110,118 @@ namespace Vlix.ServerConfigUI
         //}
         private async void miRefresh_Click(object sender, RoutedEventArgs e)
         {
-            WebServerConfig newWebServerConfig = await this.OnRefresh?.Invoke(configVM.Host, configVM.ConfigUsername, configVM.Password);
-            if (newWebServerConfig != null)
+            configVM.IsLoading = true;
+            cmServerConfig.ShowMessageProcess("Refreshing...");
+            try
             {
-                configVM.ConfigSSLCertificateStoreName = newWebServerConfig.ConfigUtility.SSLCertificateStoreName;
-                configVM.ConfigSSLCertificateSubjectName = newWebServerConfig.ConfigUtility.SSLCertificateSubjectName;
-                configVM.ConfigHTTPPort = newWebServerConfig.ConfigUtility.HTTPPort;
-                configVM.ConfigEnableHTTPS = newWebServerConfig.ConfigUtility.EnableHTTPS;
-                configVM.ConfigLocalhostOnly = newWebServerConfig.ConfigUtility.AllowLocalhostConnectionsOnlyForHttp;
-                configVM.HttpServerConfigVM.Update(newWebServerConfig);                
+                WebServerConfig newWebServerConfig = await Services.OPHttpClient.RequestJsonAsync<WebServerConfig>(HttpMethod.Get, configVM.Host + "/config/load", configVM.ConfigUsername, configVM.Password);
+                if (newWebServerConfig != null)
+                {
+                    configVM.Update(newWebServerConfig);
+                    ((HttpServerConfigVM)uCHttpServerConfig.DataContext).Update(newWebServerConfig);
+                    await Task.Delay(500);
+                    cmServerConfig.StopMessage();
+                }
             }
+            catch
+            {
+                cmServerConfig.ShowMessageError("Refresh Failed!");
+            }
+            configVM.IsLoading = false;
         }
     
-        private void miExit_Click(object sender, RoutedEventArgs e)
+        private void opfSettingsWindow_OnShow(object sender, RoutedEventArgs e)
         {
-            Environment.Exit(0);
+            configVM.NewConfigEnableHTTPS = configVM.ConfigEnableHTTPS;
+            configVM.NewConfigHTTPPort = configVM.ConfigHTTPPort;
+            configVM.NewConfigLocalhostOnly = configVM.ConfigLocalhostOnly;
+            configVM.NewConfigUsername = configVM.ConfigUsername;
+            configVM.NewConfigSSLCertificateSubjectName = configVM.ConfigSSLCertificateSubjectName;
+            configVM.NewConfigSSLCertificateStoreName = configVM.ConfigSSLCertificateStoreName;
+            configVM.NewConfigHTTPSPort = configVM.ConfigHTTPSPort;
         }
-        private void opfPasswordSettingsWindow_Close(object sender, RoutedEventArgs e)
+        private void opfSettingsWindow_Close(object sender, RoutedEventArgs e)
         {
             ((ServerConfigVM)this.DataContext).ShowPasswordSettingsWindow = false;
         }
-        private void opbRemoteAccept_Click(object sender, RoutedEventArgs e)
+        private async void opbNewConfigSave_Click(object sender, RoutedEventArgs e)
         {
-            cmConfig.ShowMessageProcess("Saving...");
-            if (pbConfigPassword.Password == pbConfigPasswordRetype.Password)
+            try
             {
-                configVM.ConfigPasswordHash = pbConfigPassword.Password.ToSha256();
+                cmConfig.ShowMessageProcess("Saving...");
+                if (pbConfigPassword.Password == pbConfigPasswordRetype.Password)
+                {
+
+                    string newPasswordHash = null;
+                    if (!pbConfigPassword.Password.IsNullOrEmpty()) newPasswordHash = pbConfigPassword.Password.ToSha256();
+                    var Res = await Services.OPHttpClient.RequestStatusOnlyAsync(HttpMethod.Put, configVM.Host + "/config/saveutilitysettings", configVM.Username, configVM.Password, configVM.ToUtilityConfig(newPasswordHash));
+                    if (Res == HttpStatusCode.OK)
+                    {
+                        configVM.ConfigUsername = configVM.NewConfigUsername;
+                        configVM.ConfigPasswordHash = newPasswordHash;
+                        configVM.ConfigHTTPPort = configVM.NewConfigHTTPPort;
+                        configVM.ConfigLocalhostOnly = configVM.NewConfigLocalhostOnly;
+                        configVM.ConfigEnableHTTPS = configVM.NewConfigEnableHTTPS;
+                        configVM.ConfigHTTPSPort = configVM.NewConfigHTTPSPort;
+                        configVM.ConfigSSLCertificateSubjectName = configVM.NewConfigSSLCertificateSubjectName;
+                        configVM.ConfigSSLCertificateStoreName = configVM.NewConfigSSLCertificateStoreName;
+                        cmConfig.ShowMessageSuccess("Save Successful!");
+                    }
+                    else cmConfig.ShowMessageError("Save Failed!");
+                }
+                else cmConfig.ShowMessageError("'Password Retype' does not match 'Password'");
             }
-            else cmConfig.ShowMessageError("'Password Retype' does not match 'Password'");
+            catch (Exception ex)
+            {
+                cmConfig.ShowMessageError("Save Failed!");
+                MessageBox.Show(ex.ToString(), "Save Failed!", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        public Func<ServerConfigVM,Task<bool>> OnSaveAndApply;
-        public Func<string, string, string, Task<WebServerConfig>> OnRefresh;
+        //public Func<ServerConfigVM,Task<bool>> OnSaveAndApply;
+        //public Func<string, string, string, Task<WebServerConfig>> OnRefresh;
         private async void opbLogin_Click(object sender, RoutedEventArgs e)
         {
             cmLogin.ShowMessageProcess("Logging in...");
             configVM.Host = optbHost.Text;
             configVM.IsLoggingIn = true;
-            WebServerConfig newHttpServerConfig = await this.OnRefresh?.Invoke(configVM.Host, configVM.Username, pbConfigPassword.Password);
-            if (newHttpServerConfig != null)
+            configVM.LoggedIn = false;
+            uCHttpServerConfig.ucLogConsole.ClearLogs();
+            try
             {
-                ((HttpServerConfigVM)uCHttpServerConfig.DataContext).Update(newHttpServerConfig);
+                //WebServerConfig newWebServerConfig = await this.OnRefresh?.Invoke(configVM.Host, configVM.Username, pbConfigPassword.Password);
+                WebServerConfig newWebServerConfig = await Services.OPHttpClient.RequestJsonAsync<WebServerConfig>(HttpMethod.Get, configVM.Host + "/config/load", configVM.ConfigUsername, configVM.Password);
 
-                //configVM.HttpServerConfigVM.Update(newHttpServerConfig);
-                //configVM.HttpServerConfigVM = new HttpServerConfigVM(newHttpServerConfig);
-                //uCHttpServerConfig.DataContext = null;
-                //uCHttpServerConfig.DataContext = configVM.HttpServerConfigVM;
+                if (newWebServerConfig != null)
+                {
+                    configVM.Update(newWebServerConfig);
+                    ((HttpServerConfigVM)uCHttpServerConfig.DataContext).Update(newWebServerConfig);
 
-                Settings settings = ((Settings)Services.Config);
-                settings.LastHost = configVM.Host;
-                settings.LastUsername = configVM.Username;
-                Services.SaveConfigFile("settings.json", settings);
+                    //configVM.HttpServerConfigVM.Update(newHttpServerConfig);
+                    //configVM.HttpServerConfigVM = new HttpServerConfigVM(newHttpServerConfig);
+                    //uCHttpServerConfig.DataContext = null;
+                    //uCHttpServerConfig.DataContext = configVM.HttpServerConfigVM;
 
-                cmLogin.ShowMessageSuccess("Login Success!");
-                configVM.ShowLoginWindow = false;
+                    Settings settings = ((Settings)Services.Config);
+                    settings.LastHost = configVM.Host;
+                    settings.LastUsername = configVM.Username;
+                    Services.SaveConfigFile("settings.json", settings);
+
+                    httpServerConfigVM.ClientIsLocal = configVM.Host.Contains("localhost") || configVM.Host.Contains("127.0.0.1");
+                    cmLogin.ShowMessageSuccess("Login Success!");
+                    configVM.ShowLoginWindow = false;
+                    configVM.LoggedIn = true;
+                }
+                else
+                {
+                    cmLogin.ShowMessageError("Login Failed!");
+                    configVM.LoggedIn = false;
+                }
             }
-            else
+            catch
             {
                 cmLogin.ShowMessageError("Login Failed!");
+                configVM.LoggedIn = false;
             }
             configVM.IsLoggingIn = false;
         }
@@ -140,6 +239,11 @@ namespace Vlix.ServerConfigUI
         {
             configVM.Host = optbHost.PlaceHolder;
         }
+        private async void opfConfigSelectSSLCert_OnShow(object sender, RoutedEventArgs e)
+        {
+            await ((SelectSSLCertVM)uCConfigSelectSSLCert.DataContext).Refresh();
+        }
+
 
         private void opfConfigSelectSSLCert_OnClose(object sender, RoutedEventArgs e)
         {
@@ -150,10 +254,10 @@ namespace Vlix.ServerConfigUI
         {
             if (e.OriginalSource is SSLCertVM sSLCertVM)
             {
-                configVM.ConfigSSLCertificateSubjectName = sSLCertVM.Subject;
-                configVM.ConfigSSLCertificateStoreName = sSLCertVM.StoreName;
-                configVM.ConfigSubjectAlternativeNames.Clear();
-                foreach (var s in sSLCertVM.SubjectAlternativeNames) configVM.ConfigSubjectAlternativeNames.Add(s);
+                configVM.NewConfigSSLCertificateSubjectName = sSLCertVM.Subject;
+                configVM.NewConfigSSLCertificateStoreName = sSLCertVM.StoreName;
+                configVM.NewConfigSubjectAlternativeNames.Clear();
+                foreach (var s in sSLCertVM.SubjectAlternativeNames) configVM.NewConfigSubjectAlternativeNames.Add(s);
                 configVM.ShowConfigSelectSSLCertWindow = false;
             }
         }

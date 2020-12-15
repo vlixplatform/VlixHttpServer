@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,24 +16,26 @@ namespace  Vlix.HttpServer
     {
         static async Task Main(string[] args)
         {
-            HttpServerConfig config = new HttpServerConfig();
-            config.LoadConfigFile();
+            WebServer webServer = new WebServer();
+            await webServer.StartAsync();
 
-            string[] myFiles = Directory.GetFiles(config.WWWDirectory);
-            if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "index.html") == null) File.Copy(Path.Combine("Sample", "index.html"), Path.Combine(config.WWWDirectory, "index.html"));
-            if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "test.html") == null) File.Copy(Path.Combine("Sample", "test.html"), Path.Combine(config.WWWDirectory, "test.html"));
+            string[] wWWFiles = Directory.GetFiles(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Sample"));
+            foreach (var wWWFile in wWWFiles) File.Copy(wWWFile, Path.Combine(webServer.WebServerConfig.WWWDirectoryParsed(), Path.GetFileName(wWWFile)), true);
+            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console().WriteTo.File(Path.Combine(webServer.WebServerConfig.LogDirectoryParsed(), "HTTPServer.log"), rollingInterval: RollingInterval.Day).CreateLogger();
 
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.Console()
-                .WriteTo.File(Path.Combine(config.LogDirectory, "HTTPServer.log"), rollingInterval: RollingInterval.Day)
-                .CreateLogger();
 
-            HttpServer vlixHttpServer = new HttpServer((new CancellationTokenSource()).Token, config);
-            vlixHttpServer.OnErrorLog = (log) => Log.Error(log);
-            vlixHttpServer.OnInfoLog = (log) => Log.Information(log);
-            vlixHttpServer.OnWarningLog = (log) => Log.Warning(log);
-            await vlixHttpServer.StartAsync();
+            _ = Task.Run(async () =>
+            {
+                int n = 0;
+                while (true)
+                {
+                    n++;
+                    webServer.HttpServer.AddLog("This is Log " + n);
+                    await Task.Delay(1000);
+                }
+            });
+
+            Console.ReadKey();
         }
     }
 }

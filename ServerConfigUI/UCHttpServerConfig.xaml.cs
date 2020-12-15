@@ -21,9 +21,9 @@ namespace Vlix.ServerConfigUI
 {
     /// <summary>
     /// The Following required to use this User Control
-    /// <see cref="UCHttpServerConfig.Initialize(Action{HttpServerConfigVM}, Func{HttpServerConfig})"/> This must be to Initialize the HttpServerConfigUI. This provides a mean to decouple the UI from different Implementations 
+    /// <see cref="HttpServerConfigVM.Initialize(Action{HttpServerConfigVM}, Func{HttpServerConfig})"/> This must be to Initialize the HttpServerConfigUI. This provides a mean to decouple the UI from different Implementations 
     /// <see cref="UCHttpServerConfig.AddLogs(List{LogStruct})"/>
-    /// <see cref="UCHttpServerConfig.Refresh"/>
+    /// <see cref="HttpServerConfigVM.Refresh"/>
     /// </summary>
     public partial class UCHttpServerConfig : UserControl
     {
@@ -83,13 +83,38 @@ namespace Vlix.ServerConfigUI
             }
         }
 
-        public Func<HttpServerConfig,Task<bool>> OnSaveAndApply;
-        public Func<Task<HttpServerConfig>> OnRefresh;
-        private void opbSaveApply_Click(object sender, RoutedEventArgs e)
+        //public Func<HttpServerConfig,Task<bool>> OnSaveAndApply;
+        
+        private async void opbSaveApply_Click(object sender, RoutedEventArgs e)
         {
-            this.OnSaveAndApply?.Invoke(((HttpServerConfigVM)this.DataContext).ToModel());
+
+            var httpServerConfigVM = ((HttpServerConfigVM)this.DataContext);
+            httpServerConfigVM.IsLoading = true;
+            cmHttpServerConfig.ShowMessageProcess("Saving...");
+            if (await httpServerConfigVM.OnSaveAndApply?.Invoke(httpServerConfigVM.ToModel()))
+            {                
+                cmHttpServerConfig.ShowMessageSuccess("Saved!");                
+            }
+            else cmHttpServerConfig.ShowMessageError("Save Failed!");
+            httpServerConfigVM.IsLoading = false;
+            //this.OnSaveAndApply?.Invoke(((HttpServerConfigVM)this.DataContext).ToModel());
         }
 
 
+        DateTime LastLogReadUTC = DateTime.MinValue;
+        private async void ucLogConsole_Loaded(object sender, RoutedEventArgs e)
+        {
+            var vM = (HttpServerConfigVM)this.DataContext;
+            while (true)
+            {
+                if (await (vM.CheckConnectionOK?.Invoke() ?? Task.FromResult(false)))
+                {
+                    List<LogStruct> logs = await vM.OnLogRefresh?.Invoke(LastLogReadUTC);
+                    this.AddLogs(logs);
+                    if (logs != null && logs.Count > 0) LastLogReadUTC = logs.Last().TimeStampInUTC;
+                }
+                await Task.Delay(500);
+            }
+        }
     }
 }

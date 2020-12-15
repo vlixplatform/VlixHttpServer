@@ -130,7 +130,7 @@ namespace Vlix.HttpServer
                 SSLCertificateSubjectName = certSubjectName,
                 SSLCertificateStoreName = StoreName.My
             });            
-        }
+        }        
         public HttpServer(CancellationToken cancellationToken, HttpServerConfig httpServerConfig) : base(httpServerConfig)
         {
             CommonConstructor(cancellationToken, httpServerConfig);
@@ -138,6 +138,14 @@ namespace Vlix.HttpServer
         public HttpServer(HttpServerConfig httpServerConfig) : base(httpServerConfig)
         {
             CommonConstructor((new CancellationTokenSource()).Token, httpServerConfig);
+        }
+        public HttpServer(CancellationToken cancellationToken, UtilityConfig utilityConfig) : base(new StaticFileProcessorConfig() { WWWDirectory = null, EnableCache = false })
+        {
+            CommonConstructor(cancellationToken, new HttpServerConfig(utilityConfig));
+        }
+        public HttpServer(UtilityConfig utilityConfig) : base(new StaticFileProcessorConfig() { WWWDirectory = null, EnableCache = false })
+        {
+            CommonConstructor((new CancellationTokenSource()).Token, new HttpServerConfig(utilityConfig));
         }
         private void CommonConstructor(CancellationToken cancellationToken, HttpServerConfig httpServerConfig)
         {
@@ -166,15 +174,16 @@ namespace Vlix.HttpServer
                 this.OnInfoLog?.Invoke("Unable to start as both HTTP (Port " + this.Config.HTTPPort + ") and HTTPS (Port " + this.Config.HTTPSPort + ") is disabled");
                 return false;
             }
-            if (this.Config.EnableHTTP && !this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPPort + "(HTTP), Directory = '" + this.Config.WWWDirectory + "'");
-            if (!this.Config.EnableHTTP && this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPSPort + "(HTTPS), Directory = '" + this.Config.WWWDirectory + "'");
-            if (this.Config.EnableHTTP && this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPPort + "(HTTP) and " + this.Config.HTTPSPort + "(HTTPS), Directory = '" + this.Config.WWWDirectory + "'");
+            if (this.Config.EnableHTTP && !this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPPort + "(HTTP), Directory = '" + this.Config.WWWDirectoryParsed() + "'");
+            if (!this.Config.EnableHTTP && this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPSPort + "(HTTPS), Directory = '" + this.Config.WWWDirectoryParsed() + "'");
+            if (this.Config.EnableHTTP && this.Config.EnableHTTPS) this.OnInfoLog?.Invoke("Listening to port " + this.Config.HTTPPort + "(HTTP) and " + this.Config.HTTPSPort + "(HTTPS), Directory = '" + this.Config.WWWDirectoryParsed() + "'");
 
             _listener.Start();
             _listener.BeginGetContext(OnContext, null); //The thread stops here waiting for content to come
             this.OnInfoLog?.Invoke("Vlix HTTP Server Started!");
             return true;
         }
+
         private async void OnContext(IAsyncResult result)
         {
             if (!_listener.IsListening) return;
@@ -230,10 +239,9 @@ namespace Vlix.HttpServer
                             }
                             
                             string msg = null; if (!string.IsNullOrWhiteSpace(processRuleResult.Message)) msg = processRuleResult.Message;
-                            string ruleName = rule.ResponseAction.ShortName + (string.IsNullOrWhiteSpace(rule.Name)? "": "-" + rule.Name);
-                            if (processRuleResult.LogLevel == LogLevel.Info) this.OnInfoLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > " + ruleName + " > " + msg);                                    
-                            else if (processRuleResult.LogLevel == LogLevel.Warning) this.OnWarningLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > " + ruleName + " > " + msg);
-                            else if (processRuleResult.LogLevel == LogLevel.Error) this.OnErrorLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > " + ruleName + " > " + msg);
+                            if (processRuleResult.LogLevel == LogLevel.Info) this.OnInfoLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > " + rule.Name + " > " + msg);                                    
+                            else if (processRuleResult.LogLevel == LogLevel.Warning) this.OnWarningLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > " + rule.Name + " > " + msg);
+                            else if (processRuleResult.LogLevel == LogLevel.Error) this.OnErrorLog?.Invoke(callerIP + " requested '" + absoluteURL + "' > " + rule.Name + " > " + msg);
                             if (!processRuleResult.IsSuccess) { await this.SendErrorResponsePage(context, processRuleResult.Message, processRuleResult.SendErrorResponsePage_HttpStatusCode).ConfigureAwait(false); return; }
                             if (!processRuleResult.ContinueNextRule) { context.Response?.Close(); return; }
                         }
@@ -260,7 +268,7 @@ namespace Vlix.HttpServer
 
 
                 //Process Static Files
-                HTTPStreamResult httpStreamResult = await this.ProcessRequestAsync(callerIP, absolutePath, this.Config.WWWDirectory).ConfigureAwait(false);
+                HTTPStreamResult httpStreamResult = await this.ProcessRequestAsync(callerIP, absolutePath, this.Config.WWWDirectoryParsed()).ConfigureAwait(false);
                 if (httpStreamResult.HttpStatusCode == HttpStatusCode.OK)
                 {
                     await this.SendToOutputAsync(httpStreamResult, context).ConfigureAwait(false);

@@ -57,18 +57,16 @@ namespace  Vlix.HttpServer
                     string jsonString = JsonConvert.SerializeObject(config, Formatting.Indented);
                     File.WriteAllText(configFilePath, jsonString);
                 }
-                config.LogDirectory = config.LogDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
-                config.WWWDirectory = config.WWWDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
-
+                
 
 
                 string[] myFiles = Directory.GetFiles(config.WWWDirectory);
-                if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "index.html") == null) File.Copy(Path.Combine("Sample", "index.html"), Path.Combine(config.WWWDirectory, "index.html"));
-                if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "test.html") == null) File.Copy(Path.Combine("Sample", "test.html"), Path.Combine(config.WWWDirectory, "test.html"));
+                if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "index.html") == null) File.Copy(Path.Combine("Sample", "index.html"), Path.Combine(config.WWWDirectoryParsed(), "index.html"));
+                if (myFiles.FirstOrDefault(f => Path.GetFileName(f) == "test.html") == null) File.Copy(Path.Combine("Sample", "test.html"), Path.Combine(config.WWWDirectoryParsed(), "test.html"));
 
                 Log.Logger = new LoggerConfiguration()
                     .MinimumLevel.Debug()
-                    .WriteTo.File(Path.Combine(config.LogDirectory, "HTTPServer.log"), rollingInterval: RollingInterval.Day)
+                    .WriteTo.File(Path.Combine(config.LogDirectoryParsed(), "HTTPServer.log"), rollingInterval: RollingInterval.Day)
                     .CreateLogger();
 
                 HttpServer vlixHttpServer = new HttpServer(cancellationTokenSource.Token, config);

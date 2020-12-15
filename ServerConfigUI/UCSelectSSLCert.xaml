@@ -72,11 +72,14 @@
                     <DataGridTextColumn Header="Friendly Name" Width="auto" Binding="{Binding FriendlyName}" HeaderStyle="{StaticResource dghStyle}"></DataGridTextColumn>
                 </local:OPDataGrid.Columns>
             </local:OPDataGrid>
-            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,2,0,0" HorizontalAlignment="Right">
-                <TextBlock VerticalAlignment="Center" Margin="0,0,3,2">SSL Store: </TextBlock>
-                <ComboBox Width="120" ItemsSource="{Binding Source={StaticResource StoreNameFromEnum}}" SelectedItem="{Binding StoreName}" SelectionChanged="sslStore_SelectionChanged" Margin="0,0,5,0"></ComboBox>
-                <local:OPButton Width="80" Icon="ic_refresh" Command="{Binding StoreRefreshClickCommand }">Refresh</local:OPButton>
-            </StackPanel>
+            <Grid Grid.Row="2" Margin="0,2,0,0" HorizontalAlignment="Stretch">
+                <local:OPButton Width="80"  Icon="ic_clear" HorizontalAlignment="Left" Click="opbClear_Click">Clear</local:OPButton>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock VerticalAlignment="Center" Margin="0,0,3,2">SSL Store: </TextBlock>
+                    <ComboBox Width="120" ItemsSource="{Binding Source={StaticResource StoreNameFromEnum}}" SelectedItem="{Binding StoreName}" SelectionChanged="sslStore_SelectionChanged" Margin="0,0,5,0"></ComboBox>
+                    <local:OPButton Width="80"  Icon="ic_refresh" Command="{Binding StoreRefreshClickCommand }">Refresh</local:OPButton>
+                </StackPanel>
+            </Grid>
         </Grid>
         <local:CentreMessage State="{Binding IsLoading, Converter={StaticResource BoolTrueToCentreMessageStateProcessElseNoMessageConverter}}" MessageProcess="Loading..."></local:CentreMessage>
     </Grid>

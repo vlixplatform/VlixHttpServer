@@ -24,7 +24,7 @@
                     <DiscreteObjectKeyFrame KeyTime="0:0:2" Value="{x:Static Visibility.Hidden }"/>
                 </ObjectAnimationUsingKeyFrames>
             </Storyboard>
-            <Storyboard x:Key="MessageSuccess" Duration="0:0:1">
+            <Storyboard x:Key="MessageSuccess" Duration="0:0:1.5">
                 <DoubleAnimation Storyboard.TargetName="gdCenterMessage" Storyboard.TargetProperty="(Grid.Opacity)" 
                                  From="0.0" To="2.0" Duration="0:0:0.25" AutoReverse="True" RepeatBehavior="6"  />
                 <ObjectAnimationUsingKeyFrames BeginTime="0:0:0" Storyboard.TargetName="gdCenterMessage" Storyboard.TargetProperty="(UIElement.Visibility)">

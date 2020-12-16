@@ -34,6 +34,7 @@ namespace Vlix.HttpServer
             this.ConfigHTTPSPort = webServerConfig.UtilityConfig.HTTPSPort;
             this.ConfigSSLCertificateSubjectName = webServerConfig.UtilityConfig.SSLCertificateSubjectName;
             this.ConfigSSLCertificateStoreName = webServerConfig.UtilityConfig.SSLCertificateStoreName;
+
             //this.HttpServerConfigVM.Update(webServerConfig);
         }
 
@@ -47,12 +48,12 @@ namespace Vlix.HttpServer
 
 
         // For Config Setup Window
-        public UtilityConfig ToUtilityConfig(string newPasswordHash)
+        public UtilityConfig ToUtilityConfig(bool changePassword,string newPasswordHash)
         {
             return new UtilityConfig()
             {
                 AllowLocalhostConnectionsOnlyForHttp = NewConfigLocalhostOnly,
-                ConfigPasswordHash = newPasswordHash,
+                ConfigPasswordHash = changePassword? newPasswordHash : ConfigPasswordHash,
                 ConfigUsername = NewConfigUsername,
                 SSLCertificateStoreName = NewConfigSSLCertificateStoreName,
                 SSLCertificateSubjectName = NewConfigSSLCertificateSubjectName,
@@ -86,14 +87,15 @@ namespace Vlix.HttpServer
 
 
         //Other Flow Controls
-        bool _ShowPasswordSettingsWindow = false; public bool ShowPasswordSettingsWindow { get { return _ShowPasswordSettingsWindow; } set { SetField(ref _ShowPasswordSettingsWindow, value, "ShowPasswordSettingsWindow"); } }
+        bool _ShowConfigSettingsWindow = false; public bool ShowConfigSettingsWindow { get { return _ShowConfigSettingsWindow; } set { SetField(ref _ShowConfigSettingsWindow, value, "ShowConfigSettingsWindow"); } }
         bool _ShowConfigSelectSSLCertWindow = false; public bool ShowConfigSelectSSLCertWindow { get { return _ShowConfigSelectSSLCertWindow; } set { SetField(ref _ShowConfigSelectSSLCertWindow, value, "ShowConfigSelectSSLCertWindow"); } }
         bool _ShowLoginWindow = true; public bool ShowLoginWindow { get { return _ShowLoginWindow; } set { SetField(ref _ShowLoginWindow, value, "ShowLoginWindow"); } }
         bool _LoggedIn = false; public bool LoggedIn { get { return _LoggedIn; } set { SetField(ref _LoggedIn, value, "LoggedIn"); } }
-        public ICommand SettingsLaunchClick { get { return new DelegateCommand<object>((p) => this.ShowPasswordSettingsWindow = true, (p) => true); } }
+        bool _IsSaving = false; public bool IsSaving { get { return _IsSaving; } set { SetField(ref _IsSaving, value, "IsSaving"); } }
+        public ICommand SettingsLaunchClick { get { return new DelegateCommand<object>((p) => this.ShowConfigSettingsWindow = true, (p) => true); } }
         public ICommand ConfigSelectSSLCertClick { get { return new DelegateCommand<object>((p) => this.ShowConfigSelectSSLCertWindow = true, (p) => true); } }
         public ICommand ExitClick { get { return new DelegateCommand<object>((p) => Environment.Exit(0), (p) => true); } }
-        public ICommand DisconnectClick { get { return new DelegateCommand<object>((p) => { this.LoggedIn = false; this.ShowLoginWindow = true; }, (p) => true) ; } }
+        public ICommand DisconnectClick { get { return new DelegateCommand<object>((p) => { this.LoggedIn = false; this.ShowLoginWindow = true; this.ShowConfigSelectSSLCertWindow = false; this.ShowConfigSettingsWindow = false; }, (p) => true) ; } }
 
     }
 

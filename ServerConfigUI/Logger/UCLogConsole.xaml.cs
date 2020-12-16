@@ -24,10 +24,6 @@ namespace Vlix.ServerConfigUI
 
             
         }
-        private void InUCLogConsole_Loaded(object sender, RoutedEventArgs e)
-        {
-            btnFilterButton.Content = this.FilterButtonApplyText;
-        }
 
         #region DEPENDENCY PROPERTIES
 
@@ -37,15 +33,7 @@ namespace Vlix.ServerConfigUI
         public bool ShowPause { get { return (bool)GetValue(ShowPauseProperty); } set { SetValue(ShowPauseProperty, value); } }
         public static readonly DependencyProperty ShowPauseProperty = DependencyProperty.Register("ShowPause", typeof(bool), typeof(UCLogConsole), new FrameworkPropertyMetadata(true));
 
-        public string ClearButtonText { get { return (string)GetValue(ClearButtonTextProperty); } set { SetValue(ClearButtonTextProperty, value); } }
-        public static readonly DependencyProperty ClearButtonTextProperty = DependencyProperty.Register("ClearButtonText", typeof(string), typeof(UCLogConsole), new FrameworkPropertyMetadata("Clear"));
-
-        public string FilterButtonApplyText { get { return (string)GetValue(FilterButtonApplyTextProperty); } set { SetValue(FilterButtonApplyTextProperty, value); } }
-        public static readonly DependencyProperty FilterButtonApplyTextProperty = DependencyProperty.Register("FilterButtonApplyText", typeof(string), typeof(UCLogConsole), new FrameworkPropertyMetadata("Apply"));
-
-        public string FilterButtonClearText { get { return (string)GetValue(FilterButtonClearTextProperty); } set { SetValue(FilterButtonClearTextProperty, value); } }
-        public static readonly DependencyProperty FilterButtonClearTextProperty = DependencyProperty.Register("FilterButtonClearText", typeof(string), typeof(UCLogConsole), new FrameworkPropertyMetadata("Reset"));
-
+     
         public static readonly RoutedEvent OnClearLogsEvent = EventManager.RegisterRoutedEvent("OnClearLogs", RoutingStrategy.Direct, typeof(RoutedEventHandler), typeof(UCLogConsole));
         public event RoutedEventHandler OnClearLogs
         {
@@ -92,14 +80,7 @@ namespace Vlix.ServerConfigUI
         {
             lock (PauseResumeLogLock)
             {
-                //foreach (ConsoleLogVM CLVM in TempLogsDuringPause)
-                //{
-                //    this.ucLogConsoleVM.ConsoleLogsCollection.Add(CLVM);
-                //    if (WildCardFilter!=null && WildCardFilter.IsMatch(CLVM.Entry)) this.ucLogConsoleVM.ConsoleFilteredLogsCollection.Add(CLVM);
-                //}
-                //TempLogsDuringPause.Clear();
                 ucLogConsoleVM.ConsolePause = false;
-                this.btnPauseResume.Content = "Pause";
                 this.btnPauseResume.Icon = MaterialIconType.ic_pause;
             }
         }
@@ -107,7 +88,6 @@ namespace Vlix.ServerConfigUI
         {
             lock (PauseResumeLogLock)
             {
-                this.btnPauseResume.Content = "Resume";
                 this.btnPauseResume.Icon = MaterialIconType.ic_play_arrow;
                 ucLogConsoleVM.ConsolePause = true;
             }
@@ -124,7 +104,7 @@ namespace Vlix.ServerConfigUI
                 //TempLogsDuringPause.Clear();
                 this.UILogQueue.Clear();
                 ucLogConsoleVM.ConsolePause = false;
-                this.btnPauseResume.Content = "Pause";
+               // this.btnPauseResume.Content = "Pause";
                 this.btnPauseResume.Icon = MaterialIconType.ic_pause;
                 if (ucLogConsoleVM.ConsoleLogsCollection.Count > 0) sv?.ScrollToBottom();
             }
@@ -142,7 +122,6 @@ namespace Vlix.ServerConfigUI
                 if (ucLogConsoleVM.FilterApplied) //Show filtered logs
                 {
                     tbFilter.IsEnabled = false;
-                    btnFilterButton.Content = this.FilterButtonClearText; // "Clear Filter";
                     WildCardFilter = new Wildcard("*" + ucLogConsoleVM.FilterText + "*", RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
                     this.ucLogConsoleVM.ConsoleFilteredLogsCollection = new ObservableCollection<ConsoleLogVM>();
@@ -152,7 +131,6 @@ namespace Vlix.ServerConfigUI
                 else // Show default logs
                 {
                     tbFilter.IsEnabled = true;
-                    btnFilterButton.Content = this.FilterButtonApplyText;
                     WildCardFilter = null;
                     ucLogConsoleVM.FilterText = "";
                     icLogViewer.ItemsSource = ucLogConsoleVM.ConsoleLogsCollection;

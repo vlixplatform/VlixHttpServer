@@ -228,6 +228,7 @@ namespace Vlix.HttpServer
         {
             errorMsg = null;
             absolutePath = absolutePath.TrimEnd();
+            absolutePath = Regex.Replace(absolutePath, @"\s*(?=/)", "");
             if (Regex.IsMatch(absolutePath, "^\\s+/")) absolutePath = absolutePath.TrimStart();
             if (!absolutePath.StartsWith("/")) absolutePath = "/" + absolutePath;
             if (absolutePath.Contains(".."))
@@ -238,8 +239,8 @@ namespace Vlix.HttpServer
                 return false;
             }
             string lastURLPortion = absolutePath.Split('/').Last(); //this gives=> "afile.html",          "",   "afolder"
-            var sss = lastURLPortion.Contains(".");
-            if (!lastURLPortion.Contains(".")) //handles "/afolder"
+            var lastPortionContainsDot = lastURLPortion.Contains(".");
+            if (!lastPortionContainsDot) //handles "/afolder"
             {
                 fileToRead = "";
                 string Temp = absolutePath;

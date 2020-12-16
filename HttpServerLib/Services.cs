@@ -20,6 +20,8 @@ namespace  Vlix.HttpServer
     
     public class Services
     {
+        static string _PasswordField = null;
+        public static string PasswordField { get { if (_PasswordField == null) _PasswordField = Guid.NewGuid().ToString().Substring(0, 12); return _PasswordField; } }
         public static OPHttpClient OPHttpClient = new OPHttpClient();
         public static object Config; //Place holder for Configuration Settings
         public static void SaveConfigFile<T>(string configFileName, T configObject)

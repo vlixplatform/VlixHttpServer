@@ -60,7 +60,7 @@ namespace Vlix.HttpServer
         }
         public async Task RespondWithJson(object responseObject, HttpStatusCode httpStatusCode = HttpStatusCode.OK, JsonSerializerSettings jsonSerializerSettings = null)
         {
-            if (jsonSerializerSettings == null) jsonSerializerSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented };
+            if (jsonSerializerSettings == null) jsonSerializerSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented, TypeNameHandling = TypeNameHandling.Auto };
             string responseBody = JsonConvert.SerializeObject(responseObject, jsonSerializerSettings);
             this.HttpListenerContext.Response.ContentType = "application/json";
             var mStream = CreateStream(responseBody, httpStatusCode);

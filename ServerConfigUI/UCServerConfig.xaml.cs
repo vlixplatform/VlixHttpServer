@@ -118,6 +118,8 @@ namespace Vlix.ServerConfigUI
                 if (newWebServerConfig != null)
                 {
                     configVM.Update(newWebServerConfig);
+                    pbConfigPassword.Password = Services.PasswordField;
+                    pbConfigPasswordRetype.Password = Services.PasswordField;
                     ((HttpServerConfigVM)uCHttpServerConfig.DataContext).Update(newWebServerConfig);
                     await Task.Delay(500);
                     cmServerConfig.StopMessage();
@@ -142,32 +144,32 @@ namespace Vlix.ServerConfigUI
         }
         private void opfSettingsWindow_Close(object sender, RoutedEventArgs e)
         {
-            ((ServerConfigVM)this.DataContext).ShowPasswordSettingsWindow = false;
+            ((ServerConfigVM)this.DataContext).ShowConfigSettingsWindow = false;
         }
         private async void opbNewConfigSave_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+                configVM.IsSaving = true;
                 cmConfig.ShowMessageProcess("Saving...");
                 if (pbConfigPassword.Password == pbConfigPasswordRetype.Password)
                 {
 
                     string newPasswordHash = null;
-                    if (!pbConfigPassword.Password.IsNullOrEmpty()) newPasswordHash = pbConfigPassword.Password.ToSha256();
-                    var Res = await Services.OPHttpClient.RequestStatusOnlyAsync(HttpMethod.Put, configVM.Host + "/config/saveutilitysettings", configVM.Username, configVM.Password, configVM.ToUtilityConfig(newPasswordHash));
-                    if (Res == HttpStatusCode.OK)
-                    {
-                        configVM.ConfigUsername = configVM.NewConfigUsername;
-                        configVM.ConfigPasswordHash = newPasswordHash;
-                        configVM.ConfigHTTPPort = configVM.NewConfigHTTPPort;
-                        configVM.ConfigLocalhostOnly = configVM.NewConfigLocalhostOnly;
-                        configVM.ConfigEnableHTTPS = configVM.NewConfigEnableHTTPS;
-                        configVM.ConfigHTTPSPort = configVM.NewConfigHTTPSPort;
-                        configVM.ConfigSSLCertificateSubjectName = configVM.NewConfigSSLCertificateSubjectName;
-                        configVM.ConfigSSLCertificateStoreName = configVM.NewConfigSSLCertificateStoreName;
-                        cmConfig.ShowMessageSuccess("Save Successful!");
-                    }
-                    else cmConfig.ShowMessageError("Save Failed!");
+                    bool changePassword = pbConfigPassword.Password != Services.PasswordField;
+                    if (changePassword) newPasswordHash = pbConfigPassword.Password.ToSha256();
+                    bool Res = await Services.OPHttpClient.RequestJsonAsync<bool>(HttpMethod.Put, configVM.Host + "/config/saveutilitysettings", configVM.Username, configVM.Password, configVM.ToUtilityConfig(changePassword, newPasswordHash));                    
+                    configVM.ConfigUsername = configVM.NewConfigUsername;
+                    configVM.ConfigPasswordHash = newPasswordHash;
+                    configVM.ConfigHTTPPort = configVM.NewConfigHTTPPort;
+                    configVM.ConfigLocalhostOnly = configVM.NewConfigLocalhostOnly;
+                    configVM.ConfigEnableHTTPS = configVM.NewConfigEnableHTTPS;
+                    configVM.ConfigHTTPSPort = configVM.NewConfigHTTPSPort;
+                    configVM.ConfigSSLCertificateSubjectName = configVM.NewConfigSSLCertificateSubjectName;
+                    configVM.ConfigSSLCertificateStoreName = configVM.NewConfigSSLCertificateStoreName;
+                    cmConfig.ShowMessageSuccess("Save Successful!");
+                    await Task.Delay(1500);
+                    if (Res) configVM.DisconnectClick.Execute(null); else { configVM.ShowConfigSettingsWindow = false; configVM.ShowConfigSelectSSLCertWindow = false; }
                 }
                 else cmConfig.ShowMessageError("'Password Retype' does not match 'Password'");
             }
@@ -175,6 +177,10 @@ namespace Vlix.ServerConfigUI
             {
                 cmConfig.ShowMessageError("Save Failed!");
                 MessageBox.Show(ex.ToString(), "Save Failed!", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                configVM.IsSaving = false;
             }
         }
 
@@ -186,6 +192,7 @@ namespace Vlix.ServerConfigUI
             configVM.Host = optbHost.Text;
             configVM.IsLoggingIn = true;
             configVM.LoggedIn = false;
+            configVM.Password = pbPassword.Password;
             uCHttpServerConfig.ucLogConsole.ClearLogs();
             try
             {
@@ -195,6 +202,8 @@ namespace Vlix.ServerConfigUI
                 if (newWebServerConfig != null)
                 {
                     configVM.Update(newWebServerConfig);
+                    pbConfigPassword.Password = Services.PasswordField;
+                    pbConfigPasswordRetype.Password = Services.PasswordField;
                     ((HttpServerConfigVM)uCHttpServerConfig.DataContext).Update(newWebServerConfig);
 
                     //configVM.HttpServerConfigVM.Update(newHttpServerConfig);
@@ -209,6 +218,7 @@ namespace Vlix.ServerConfigUI
 
                     httpServerConfigVM.ClientIsLocal = configVM.Host.Contains("localhost") || configVM.Host.Contains("127.0.0.1");
                     cmLogin.ShowMessageSuccess("Login Success!");
+                    await Task.Delay(1500);
                     configVM.ShowLoginWindow = false;
                     configVM.LoggedIn = true;
                 }
@@ -223,7 +233,10 @@ namespace Vlix.ServerConfigUI
                 cmLogin.ShowMessageError("Login Failed!");
                 configVM.LoggedIn = false;
             }
-            configVM.IsLoggingIn = false;
+            finally
+            {
+                configVM.IsLoggingIn = false;
+            }
         }
 
 
@@ -262,5 +275,9 @@ namespace Vlix.ServerConfigUI
             }
         }
 
+        private void miAdvanceSettings_Click(object sender, RoutedEventArgs e)
+        {
+            ((HttpServerConfigVM)uCHttpServerConfig.DataContext).ShowAdvanceSettingsClickCommand.Execute(null);
+        }
     }
 }

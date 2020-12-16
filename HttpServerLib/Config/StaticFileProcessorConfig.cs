@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace Vlix.HttpServer
@@ -9,6 +10,7 @@ namespace Vlix.HttpServer
         private string _WWWDirectory = Path.Combine("[ProgramDataDirectory]", "Vlix", "HTTPServer", "www");
 
         private string _WWWDirectoryParsed = null;
+        [DebuggerStepThrough]
         public string WWWDirectoryParsed() { if (_WWWDirectoryParsed == null) _WWWDirectoryParsed = this.WWWDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)); return _WWWDirectoryParsed; }        
         [JsonProperty(Order = 6)]
         public string WWWDirectory { get { return _WWWDirectory; } set { _WWWDirectory = value; _WWWDirectoryParsed = null; } }

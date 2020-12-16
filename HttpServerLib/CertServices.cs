@@ -24,6 +24,7 @@ using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Math;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 //using Certes;
 //using Certes.Acme;
 
@@ -43,7 +44,13 @@ namespace  Vlix.HttpServer
         }
 
 
-
+        public static bool SSLCertBinded(string thumbprint, int port, string iP="0.0.0.0")
+        {
+            var sSLCertCheckBindingCmdRes = ExecuteCommand("netsh http show sslcert " + iP + ":" + port);
+            string[] lines = sSLCertCheckBindingCmdRes.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            string foundThumbprint = sSLCertCheckBindingCmdRes.ToFirstRegex(@"(?<=Certificate Hash\s*:\s*)[a-z0-9]+");
+            return (string.Equals(foundThumbprint,thumbprint,StringComparison.InvariantCultureIgnoreCase));
+        }
         public static void RemoveSSLCertFromPort(string IP, int PortNumber, Action<string> OnInfoLog = null)
         {
             
@@ -58,7 +65,7 @@ namespace  Vlix.HttpServer
             }
         }
         
-        public async static Task<bool> TryBindSSLCertToPort(int PortNumber, string subject, StoreName storeName = StoreName.My, Action<string> OnInfoLog = null, Action<string> OnErrorLog = null, bool RemoveAnyPreviousBinding = true, string IP = "0.0.0.0")
+        public async static Task<bool> TryFindAndBindLatestSSLCertToPort(int portNumber, string subject, StoreName storeName = StoreName.My, Action<string> OnInfoLog = null, Action<string> OnErrorLog = null, bool RemoveAnyPreviousBinding = true, string IP = "0.0.0.0")
         {
             if (string.IsNullOrWhiteSpace(subject))
             {
@@ -89,20 +96,23 @@ namespace  Vlix.HttpServer
             if (applicationId == null) applicationId = Guid.NewGuid().ToString();
 
 
-            //Remove any Previously Binded SSL Sert at PORT
-            if (RemoveAnyPreviousBinding) RemoveSSLCertFromPort(IP,PortNumber, (log) => OnInfoLog?.Invoke(log));
+            if (!SSLCertificateServices.SSLCertBinded(x509Certificate.Thumbprint, portNumber))
+            {
+                //Remove any Previously Binded SSL Sert at PORT
+                if (RemoveAnyPreviousBinding) RemoveSSLCertFromPort(IP, portNumber, (log) => OnInfoLog?.Invoke(log));
 
-            try
-            {
-                string BindCommand = "netsh http add sslcert ipport=" + IP + ":" + PortNumber + " certhash=" + x509Certificate.Thumbprint + " appid={" + applicationId + "}";
-                OnInfoLog?.Invoke("Binding SSL Certificate '" + subject + "' to " + IP + ":" + PortNumber); // + " via Command=" + BindCommand)
-                string BindResultText = ExecuteCommand(BindCommand).RemoveAllNewLines().Trim(' ');
-                OnInfoLog?.Invoke(BindResultText);
-            }
-            catch (Exception ex)
-            {
-                OnErrorLog?.Invoke("Unable to bind generate SSL Certificate to Port " + PortNumber + "\r\n" + ex.ToString());
-                return false;
+                try
+                {
+                    string BindCommand = "netsh http add sslcert ipport=" + IP + ":" + portNumber + " certhash=" + x509Certificate.Thumbprint + " appid={" + applicationId + "}";
+                    OnInfoLog?.Invoke("Binding SSL Certificate '" + subject + "' to " + IP + ":" + portNumber); // + " via Command=" + BindCommand)
+                    string BindResultText = ExecuteCommand(BindCommand).RemoveAllNewLines().Trim(' ');
+                    OnInfoLog?.Invoke(BindResultText);
+                }
+                catch (Exception ex)
+                {
+                    OnErrorLog?.Invoke("Unable to bind generate SSL Certificate to Port " + portNumber + "\r\n" + ex.ToString());
+                    return false;
+                }
             }
             return true;
         }

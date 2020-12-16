@@ -3,6 +3,7 @@ using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
@@ -33,12 +34,18 @@ namespace Vlix.HttpServer
             this.HTTPPort = httpServerConfig.HTTPPort;
             this.EnableHTTPS = httpServerConfig.EnableHTTPS;
             this.HTTPSPort = httpServerConfig.HTTPSPort;
+            this.EnableCache = httpServerConfig.EnableCache;
+            this.MaximumCacheSizeInMB = httpServerConfig.MaximumCacheSizeInMB;
+            this.OnlyCacheItemsLessThenMB = httpServerConfig.OnlyCacheItemsLessThenMB;
+            this.WWWDirectory = httpServerConfig.WWWDirectory;
+            this.LogDirectory = httpServerConfig.LogDirectory;
             this.SSLCertificateSubjectName = httpServerConfig.SSLCertificateSubjectName;
             this.SSLCertificateStoreName = httpServerConfig.SSLCertificateStoreName;
             this.AllowLocalhostConnectionsOnlyForHttp = httpServerConfig.AllowLocalhostConnectionsOnlyForHttp;
         }
 
         private string _LogDirectoryParsed = null;
+        [DebuggerStepThrough]
         public string LogDirectoryParsed() { if (_LogDirectoryParsed == null) _LogDirectoryParsed = this.LogDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)); ; return _LogDirectoryParsed; }
         private string _LogDirectory = Path.Combine("[ProgramDataDirectory]", "Vlix", "HTTPServer", "Logs");
         [JsonProperty(Order = 20)]

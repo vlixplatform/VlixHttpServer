@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Vlix.ServerConfigUI" Loaded="InUCLogConsole_Loaded"
+             xmlns:local="clr-namespace:Vlix.ServerConfigUI" 
              xmlns:mi="clr-namespace:MaterialIcons;assembly=MaterialIcons"
              mc:Ignorable="d" x:Name="InUCLogConsole" d:DataContext="{d:DesignInstance {x:Type local:UCLogConsoleVMSample}, IsDesignTimeCreatable=True}" 
              d:DesignHeight="450" d:DesignWidth="800">
@@ -27,24 +27,26 @@
 
         <Grid Grid.Row="0" >
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel Margin="0,0,0,5" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top" Visibility="{Binding ElementName=InUCLogConsole, Path=ShowFilter, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}"  >
-                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="Filter" FontWeight="Bold" Margin="0,0,5,0" />
-                <TextBox  x:Name="tbFilter" VerticalAlignment="Center"  VerticalContentAlignment="Center" Height="25" Width="120" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch" />
-                <local:OPButton x:Name="btnFilterButton" IsEnabled="{Binding FilterText, Converter={StaticResource EmptyStringOrNullToBoolFalseConverter}}" VerticalAlignment="Center"  Height="25" Width="50"  Click="Button_Filter" Content="Apply" />
+
+            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,0,5"  HorizontalAlignment="Left">
+                <TextBlock Foreground="#666" FontSize="16" FontWeight="Bold">Server Logs</TextBlock>
             </StackPanel>
-            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,0,5"  HorizontalAlignment="Center">
-                <TextBlock Foreground="#333" FontSize="18" FontWeight="Bold">Server Logs</TextBlock>
+            <StackPanel Margin="0,0,0,5" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" Visibility="{Binding ElementName=InUCLogConsole, Path=ShowFilter, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}"  >
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="Filter" FontWeight="Bold" Margin="0,0,5,0" />
+                <TextBox  x:Name="tbFilter" VerticalAlignment="Center"  VerticalContentAlignment="Center" Height="23" Width="120" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch" />
+                <local:OPButton x:Name="btnFilterButton" Margin="0,0,2,0" IsEnabled="{Binding FilterText, Converter={StaticResource EmptyStringOrNullToBoolFalseConverter}}" VerticalAlignment="Center"  Height="25" Width="25"  Click="Button_Filter" Icon="ic_filter_list" IconLocation="Top" />
             </StackPanel>
 
             <StackPanel Margin="0,0,0,5" Grid.Column="2"  Orientation="Horizontal" HorizontalAlignment="Right" x:Name="spPauseClear" VerticalAlignment="Center">
-                <local:OPButton x:Name="btnPauseResume"  VerticalAlignment="Center"  Height="25" Icon="ic_pause"  Width="75" Content="Pause"  Margin="0,0,2,0" Click="Button_Click_PauseScrolling" 
+                <local:OPButton x:Name="btnPauseResume"  VerticalAlignment="Center"  Height="25" Icon="ic_pause"  Width="25" IconLocation="Top" Margin="0,0,2,0" Click="Button_Click_PauseScrolling" ToolTip="Pause / Resume"
                                 Visibility="{Binding ElementName=InUCLogConsole, Path=ShowPause, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
                 <!--<local:OPButton Grid.Row="1" Width="90" Icon="ic_file_download" >Download</local:OPButton>-->
-                <local:OPButton x:Name="btnClear"  VerticalAlignment="Center" Height="25" Width="85"  Click="Button_Click_ClearConsole" Content="{Binding ElementName=InUCLogConsole, Path=ClearButtonText, Mode=OneWay, FallbackValue=Clear (Alt+E)}" />
+                <local:OPButton x:Name="btnClear"  VerticalAlignment="Center" Height="25" Width="25"  Click="Button_Click_ClearConsole" Icon="ic_clear_all" IconLocation="Top" ToolTip="Clear Logs">
+                </local:OPButton>
             </StackPanel>
         </Grid>
         <Border Grid.Row="1" x:Name="BorderLogList">

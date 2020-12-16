@@ -157,18 +157,37 @@ namespace Vlix.HttpServer
         public async Task<bool> StartAsync()
         {
             this.OnInfoLog?.Invoke("Starting Vlix Web Server...");
+            
+            _listener = new HttpListener();
+            
+            if (this.Config.EnableHTTP) _listener.Prefixes.Add("http://*:" + this.Config.HTTPPort.ToString() + "/");
             if (this.Config.EnableHTTPS)
             {
-                if (!await SSLCertificateServices.TryBindSSLCertToPort(443, this.Config.SSLCertificateSubjectName, this.Config.SSLCertificateStoreName, (log) => this.OnInfoLog?.Invoke(log), (log) => this.OnErrorLog?.Invoke(log)).ConfigureAwait(false))
+                if (this.Config.EnableHTTP && (this.Config.HTTPPort == this.Config.HTTPSPort))
+                {
+                    this.OnErrorLog?.Invoke("Failed to start HTTPS Web Server (HTTPS Port cannot be the same as HTTP Port)!");
+                    throw new Exception("Failed to start HTTPS Web Server (HTTPS Port cannot be the same as HTTP Port)!");
+                }
+                if (!await SSLCertificateServices.TryFindAndBindLatestSSLCertToPort(this.Config.HTTPSPort, this.Config.SSLCertificateSubjectName, this.Config.SSLCertificateStoreName, (log) => this.OnInfoLog?.Invoke(log), (log) => this.OnErrorLog?.Invoke(log)).ConfigureAwait(false))
                 {
                     this.OnErrorLog?.Invoke("Failed to Start Web Server (Unable to bind SSL Cert to Port)!");
                     throw new Exception("Failed to Start Web Server (Unable to bind SSL Cert to Port)!");
                 };
+                _listener.Prefixes.Add("https://*:" + this.Config.HTTPSPort.ToString() + "/");
+                _ = Task.Run(async () =>
+                {
+                    while (true)
+                    {                        
+                        await Task.Delay(60000 * 5).ConfigureAwait(false);
+                        if (!await SSLCertificateServices.TryFindAndBindLatestSSLCertToPort(this.Config.HTTPSPort, this.Config.SSLCertificateSubjectName, this.Config.SSLCertificateStoreName, (log) => this.OnInfoLog?.Invoke(log), (log) => this.OnErrorLog?.Invoke(log)).ConfigureAwait(false))
+                        {
+                            this.OnErrorLog?.Invoke("Failed to Start Web Server (Unable to bind SSL Cert to Port)!");
+                            throw new Exception("Failed to Start Web Server (Unable to bind SSL Cert to Port)!");
+                        };
+                    }
+                });
+
             }
-            _listener = new HttpListener();
-            
-            if (this.Config.EnableHTTP) _listener.Prefixes.Add("http://*:" + this.Config.HTTPPort.ToString() + "/");
-            if (this.Config.EnableHTTPS) _listener.Prefixes.Add("https://*:" + this.Config.HTTPSPort.ToString() + "/");
             if (!this.Config.EnableHTTP && !this.Config.EnableHTTPS)
             {
                 this.OnInfoLog?.Invoke("Unable to start as both HTTP (Port " + this.Config.HTTPPort + ") and HTTPS (Port " + this.Config.HTTPSPort + ") is disabled");
@@ -180,6 +199,7 @@ namespace Vlix.HttpServer
 
             _listener.Start();
             _listener.BeginGetContext(OnContext, null); //The thread stops here waiting for content to come
+
             this.OnInfoLog?.Invoke("Vlix HTTP Server Started!");
             return true;
         }
@@ -187,11 +207,13 @@ namespace Vlix.HttpServer
         private async void OnContext(IAsyncResult result)
         {
             if (!_listener.IsListening) return;
-            HttpListenerContext context = _listener.EndGetContext(result);
-            _listener.BeginGetContext(OnContext, null);
+            HttpListenerContext context = null;
 
             try
             {
+                context = _listener.EndGetContext(result);
+                _listener.BeginGetContext(OnContext, null);
+
                 string httpMethod = context.Request.HttpMethod;
                 string callerIP = context.Request.RemoteEndPoint.Address.ToString();
                 string schemeStr = context.Request.Url.Scheme;
@@ -286,7 +308,11 @@ namespace Vlix.HttpServer
             catch (Exception ex)
             {
                 var exStr = ex.ToString();
-                await SendErrorResponsePage(context, exStr, HttpStatusCode.InternalServerError).ConfigureAwait(false);                
+                try
+                {
+                    if (context != null) await SendErrorResponsePage(context, exStr, HttpStatusCode.InternalServerError).ConfigureAwait(false);
+                }
+                catch { }
                 this.OnErrorLog?.Invoke(exStr);
             }
         }

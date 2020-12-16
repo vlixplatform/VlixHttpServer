@@ -16,7 +16,8 @@ namespace Vlix.HttpServer
             HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, uRL);
             requestMessage.Headers.Add("Authorization", "Basic " + (username + ":" + password).ToBase64());
             if (body != null) requestMessage.Content = body;
-            return await this.SendAsync(requestMessage);
+            var res = await this.SendAsync(requestMessage);
+            return res;
         }
 
         public async Task<HttpStatusCode> RequestStatusOnlyAsync(HttpMethod httpMethod, string uRL, string username, string password, StringContent body = null)
@@ -24,15 +25,17 @@ namespace Vlix.HttpServer
             HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, uRL);
             requestMessage.Headers.Add("Authorization", "Basic " + (username + ":" + password).ToBase64());
             if (body != null) requestMessage.Content = body;
-            var res = await this.SendAsync(requestMessage);            
+            var res = await this.SendAsync(requestMessage);
+            if (!res.IsSuccessStatusCode) throw new HttpRequestException("Request returned error (" + res.StatusCode + ") " + res.ReasonPhrase);
             return res.StatusCode;
         }
         public async Task<HttpStatusCode> RequestStatusOnlyAsync(HttpMethod httpMethod, string uRL, string username, string password, object jsonObject)
         {
             HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, uRL);
             requestMessage.Headers.Add("Authorization", "Basic " + (username + ":" + password).ToBase64());
-            requestMessage.Content = new StringContent(JsonConvert.SerializeObject(jsonObject), Encoding.UTF8, "application/json");
+            requestMessage.Content = new StringContent(JsonConvert.SerializeObject(jsonObject, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Auto }), Encoding.UTF8, "application/json");
             var res = await this.SendAsync(requestMessage);
+            if (!res.IsSuccessStatusCode) throw new HttpRequestException("Request returned error (" + res.StatusCode + ") " + res.ReasonPhrase);
             return res.StatusCode;
         }
         public async Task<string> RequestStringAsync(HttpMethod httpMethod, string uRL, string username, string password, StringContent body = null)
@@ -41,6 +44,7 @@ namespace Vlix.HttpServer
             requestMessage.Headers.Add("Authorization", "Basic " + (username + ":" + password).ToBase64());
             if (body != null) requestMessage.Content = body;
             var res = await this.SendAsync(requestMessage);
+            if (!res.IsSuccessStatusCode) throw new HttpRequestException("Request returned error (" + res.StatusCode + ") " + res.ReasonPhrase);
             string bodyStr = await res.Content.ReadAsStringAsync();
             return bodyStr;
         }
@@ -50,8 +54,20 @@ namespace Vlix.HttpServer
             requestMessage.Headers.Add("Authorization", "Basic " + (username + ":" + password).ToBase64());
             if (body != null) requestMessage.Content = body;
             var res = await this.SendAsync(requestMessage);
+            if (!res.IsSuccessStatusCode) throw new HttpRequestException("Request returned error (" + res.StatusCode + ") " + res.ReasonPhrase);
             string bodyStr = await res.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<T>(bodyStr);
+            return JsonConvert.DeserializeObject<T>(bodyStr, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Auto });
+        }
+
+        public async Task<T> RequestJsonAsync<T>(HttpMethod httpMethod, string uRL, string username, string password, object jsonObject)
+        {
+            HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, uRL);
+            requestMessage.Headers.Add("Authorization", "Basic " + (username + ":" + password).ToBase64());
+            requestMessage.Content = new StringContent(JsonConvert.SerializeObject(jsonObject, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Auto }), Encoding.UTF8, "application/json");
+            var res = await this.SendAsync(requestMessage);
+            if (!res.IsSuccessStatusCode) throw new HttpRequestException("Request returned error (" + res.StatusCode + ") " + res.ReasonPhrase);
+            string bodyStr = await res.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<T>(bodyStr, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Auto });
         }
     }
 }

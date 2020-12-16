@@ -27,6 +27,7 @@ namespace Vlix.ServerConfigUI
         {
         }
 
+
         public string PlaceHolder
         {
             get { return (string)GetValue(PlaceHolderProperty); }

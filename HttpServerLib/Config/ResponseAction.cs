@@ -16,10 +16,13 @@ namespace Vlix.HttpServer
     public enum ActionType { AlternativeWWWDirectory, Redirect, Deny, ReverseProxy }
 
     
-    public interface IReponseAction
+    public abstract class ReponseAction
     {
-        string ShortName { get; }
-        Task<ProcessRuleResult> ProcessAsync(string callerIP,Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers, StaticFileProcessor parent);
+        public virtual string ShortName { get; }
+        public virtual Task<ProcessRuleResult> ProcessAsync(string callerIP,Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers, StaticFileProcessor parent)
+        {
+            return null;
+        }
     }
 
 
@@ -29,19 +32,19 @@ namespace Vlix.HttpServer
     //    public ActionType ActionType { get; set; } = ActionType.Redirect;
         
     //}
-    public class DenyAction : IReponseAction
+    public class DenyAction : ReponseAction
     {
-        public string ShortName { get { return "Deny"; } }
-        public Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers,StaticFileProcessor parent) 
+        public override string ShortName { get { return "Deny"; } }
+        public override Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers,StaticFileProcessor parent) 
         { 
             return Task.FromResult(new ProcessRuleResult() { IsSuccess = true, ActionType = ActionType.Deny,Message = "Request denied!" });
         }
     }
 
 
-    public class RedirectAction : IReponseAction
+    public class RedirectAction : ReponseAction
     {
-        public string ShortName { get { return "Redirect"; } }
+        public override string ShortName { get { return "Redirect"; } }
         public bool SetScheme { get; set; } = false;
         [JsonConverter(typeof(StringEnumConverter))]
         public Scheme? Scheme { get; set; } = null;
@@ -52,7 +55,7 @@ namespace Vlix.HttpServer
         public bool SetPath { get; set; } = false;
         public string Path { get; set; } = null;
 
-        public Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers,StaticFileProcessor parent)
+        public override Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers,StaticFileProcessor parent)
         {
             string rScheme; if (this.SetScheme) rScheme = (this.Scheme ?? Scheme).ToString(); else rScheme = scheme.ToString();
             string rHost; if (this.SetHostName) rHost = (this.HostName ?? host).ToString(); else rHost = host;
@@ -63,9 +66,9 @@ namespace Vlix.HttpServer
         }
     }
 
-    public class ReverseProxyAction : IReponseAction
+    public class ReverseProxyAction : ReponseAction
     {
-        public string ShortName { get { return "RProxy"; } }
+        public override string ShortName { get { return "RProxy"; } }
         public bool SetScheme { get; set; } = false;
         [JsonConverter(typeof(StringEnumConverter))]
         public Scheme? Scheme { get; set; } = null;
@@ -76,7 +79,7 @@ namespace Vlix.HttpServer
         public bool SetPath { get; set; } = false;
         public bool UsePathVariable { get; set; } = false;
         public string PathAndQuery { get; set; } = null;
-        public async Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers,StaticFileProcessor parent)
+        public override async Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers,StaticFileProcessor parent)
         {
             string portStr = port.ToString();
             string pScheme; if (this.SetScheme) pScheme = (this.Scheme ?? Scheme).ToString(); else pScheme = scheme.ToString();
@@ -154,11 +157,11 @@ namespace Vlix.HttpServer
             }
         }
     }    
-    public class AlternativeWWWDirectoryAction : IReponseAction
+    public class AlternativeWWWDirectoryAction : ReponseAction
     {
-        public string ShortName { get { return "AltWWWDir"; } }
+        public override string ShortName { get { return "AltWWWDir"; } }
         public string AlternativeWWWDirectory { get; set; } = null;
-        public async Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers,StaticFileProcessor parent)
+        public override async Task<ProcessRuleResult> ProcessAsync(string callerIP, Scheme scheme, string host, int port, string path, string pathAndQuery, NameValueCollection query, NameValueCollection headers,StaticFileProcessor parent)
         {
             HTTPStreamResult httpStreamResult = await parent.ProcessRequestAsync(callerIP, path, this.AlternativeWWWDirectory).ConfigureAwait(false);
             if ((int)httpStreamResult.HttpStatusCode >= 200 && (int)httpStreamResult.HttpStatusCode < 300)

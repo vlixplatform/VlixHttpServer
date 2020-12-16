@@ -91,7 +91,8 @@ namespace Vlix.ServerConfigUI
             var httpServerConfigVM = ((HttpServerConfigVM)this.DataContext);
             httpServerConfigVM.IsLoading = true;
             cmHttpServerConfig.ShowMessageProcess("Saving...");
-            if (await httpServerConfigVM.OnSaveAndApply?.Invoke(httpServerConfigVM.ToModel()))
+            HttpServerConfig model = httpServerConfigVM.ToModel();
+            if (await httpServerConfigVM.OnSaveAndApply?.Invoke(model))
             {                
                 cmHttpServerConfig.ShowMessageSuccess("Saved!");                
             }
@@ -115,6 +116,37 @@ namespace Vlix.ServerConfigUI
                 }
                 await Task.Delay(500);
             }
+        }
+
+
+        public bool ShowSaveButtonTop { get { return (bool)GetValue(ShowSaveButtonTopProperty); } set { SetValue(ShowSaveButtonTopProperty, value); } }
+        public static readonly DependencyProperty ShowSaveButtonTopProperty = DependencyProperty.Register("ShowSaveButtonTop", typeof(bool), typeof(UCHttpServerConfig), new FrameworkPropertyMetadata(false));
+        public bool ShowAdvanceButtonTop { get { return (bool)GetValue(ShowAdvanceButtonTopProperty); } set { SetValue(ShowAdvanceButtonTopProperty, value); } }
+        public static readonly DependencyProperty ShowAdvanceButtonTopProperty = DependencyProperty.Register("ShowAdvanceButtonTop", typeof(bool), typeof(UCHttpServerConfig), new FrameworkPropertyMetadata(false));
+        public bool ShowSaveButtonBottomStretched { get { return (bool)GetValue(ShowSaveButtonBottomStretchedProperty); } set { SetValue(ShowSaveButtonBottomStretchedProperty, value); } }
+        public static readonly DependencyProperty ShowSaveButtonBottomStretchedProperty = DependencyProperty.Register("ShowSaveButtonBottomStretched", typeof(bool), typeof(UCHttpServerConfig), new FrameworkPropertyMetadata(false));
+        public bool ShowSaveButtonBottom { get { return (bool)GetValue(ShowSaveButtonBottomProperty); } set { SetValue(ShowSaveButtonBottomProperty, value); } }
+        public static readonly DependencyProperty ShowSaveButtonBottomProperty = DependencyProperty.Register("ShowSaveButtonBottom", typeof(bool), typeof(UCHttpServerConfig), new FrameworkPropertyMetadata(true));        
+        public bool ShowAdvanceButtonBottom { get { return (bool)GetValue(ShowAdvanceButtonBottomProperty); } set { SetValue(ShowAdvanceButtonBottomProperty, value); } }
+        public static readonly DependencyProperty ShowAdvanceButtonBottomProperty = DependencyProperty.Register("ShowAdvanceButtonBottom", typeof(bool), typeof(UCHttpServerConfig), new FrameworkPropertyMetadata(true));
+
+        private void optWWWDir_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is OPTextBox opt) opt.PlaceHolder = System.IO.Path.Combine("[ProgramDataDirectory]", "Vlix", "HTTPServer", "www");
+        }
+
+        private void optWWWDir_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is OPTextBox opt) ((HttpServerConfigVM)this.DataContext).WWWDirectory = opt.PlaceHolder;
+        }
+
+        private void optHTTPPort_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is OPTextBox opt) ((HttpServerConfigVM)this.DataContext).HTTPPort = opt.PlaceHolder.ToInt();
+        }
+        private void optHTTPSPort_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is OPTextBox opt) ((HttpServerConfigVM)this.DataContext).HTTPSPort = opt.PlaceHolder.ToInt();
         }
     }
 }

@@ -24,6 +24,8 @@
         <local:EmptyStringOrNullToVisibilityVisibleElseCollapsedConverter x:Key="EmptyStringOrNullToVisibilityVisibleElseCollapsedConverter" />
         <local:EmptyStringOrNullToVisibilityCollapsedConverter x:Key="EmptyStringOrNullToVisibilityCollapsedConverter" />
         <local:ActionTypeToFriendlyNameConverter x:Key="ActionTypeToFriendlyNameConverter" />
+        <local:BoolORToVisibilityVisibleElseCollapsedMultiConverter x:Key="BoolORToVisibilityVisibleElseCollapsedMultiConverter" />
+        <local:BoolANDToVisibilityVisibleElseCollapsedMultiConverter x:Key="BoolANDToVisibilityVisibleElseCollapsedMultiConverter" />
         <local:ActionTypeToVisibilityConverter x:Key="ActionTypeToVisibilityConverter" />
     </UserControl.Resources>
     <Grid>
@@ -43,7 +45,7 @@
                             <StackPanel IsEnabled="{Binding EnableHTTP}"  Opacity="{Binding EnableHTTP, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}">
                                 <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                                     <TextBlock Margin="20.5,0,2,0" FontWeight="Normal" VerticalAlignment="Center" >Port:</TextBlock>
-                                    <TextBox Text="{Binding HTTPPort}" Height="20" Width="60" ToolTip="The port used to accept HTTP Connections. The default port is 80"></TextBox>
+                                    <local:OPTextBox Text="{Binding HTTPPort, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceHolder="80" MouseDoubleClick="optHTTPPort_DoubleClick" Height="20" Width="60" ToolTip="The port used to accept HTTP Connections. The default port is 80"></local:OPTextBox>
                                 </StackPanel>
                                 <CheckBox Grid.Row="1" VerticalAlignment="Center"  Margin="18,2,0,0" IsChecked="{Binding AllowLocalhostConnectionsOnlyForHttp}">Localhost Only</CheckBox>
                             </StackPanel>
@@ -54,7 +56,7 @@
                             <DockPanel IsEnabled="{Binding EnableHTTPS}" Opacity="{Binding EnableHTTPS, Converter={StaticResource BoolTrueToOpacity1Else05Converter}}">
                                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,2,0,0">
                                     <TextBlock Margin="20.5,0,2,0" FontWeight="Normal"  Width="60" VerticalAlignment="Center">Port:</TextBlock>
-                                    <TextBox Text="{Binding HTTPSPort}" Height="20" Width="60" ToolTip="The port used to accept HTTPS Connections. The default port is 443"></TextBox>
+                                    <local:OPTextBox Text="{Binding HTTPSPort, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MouseDoubleClick="optHTTPSPort_DoubleClick" PlaceHolder="443" Height="20" Width="60" ToolTip="The port used to accept HTTPS Connections. The default port is 443"></local:OPTextBox>
                                 </StackPanel>
                                 <Grid Margin="0,2,0,3" HorizontalAlignment="Stretch" DockPanel.Dock="Top">
                                     <Grid.ColumnDefinitions>
@@ -98,7 +100,7 @@
                                             </StackPanel>
                                         </TextBox.ToolTip>
                                     </TextBox>
-                                    <local:OPButton Grid.Column="2" Content="Select" Margin="0,0,0,0" Command="{Binding SelectSSLCertClickCommand}" Width="70" IconLocation="Left" Height="21" Icon="ic_launch">
+                                    <local:OPButton Grid.Column="2" Command="{Binding SelectSSLCertClickCommand}" Width="21" IconLocation="Top" Height="21" Icon="ic_launch">
                                         <local:OPButton.ToolTip>
                                             <TextBlock>
                                                 <Run>For Microsoft Windows, certificates are stored in the</Run><LineBreak />
@@ -119,19 +121,35 @@
                                     <ColumnDefinition Width="*" MaxWidth="400" />
                                     <ColumnDefinition Width="auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" Height="20"  Text="{Binding WWWDirectory}"></TextBox>
-                                <local:OPButton Grid.Column="1" Visibility="{Binding ClientIsLocal, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" Width="30" IconLocation="Top" 
-                                                    Click="opbSelectWWWDirectory_Click" Height="21" Icon="ic_folder"></local:OPButton>
+                                <local:OPTextBox Grid.Column="0" Height="20" Loaded="optWWWDir_Loaded" MouseDoubleClick="optWWWDir_DoubleClick" Text="{Binding WWWDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></local:OPTextBox>
+                                <local:OPButton Grid.Column="1"  Visibility="{Binding ClientIsLocal, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" Width="22" IconLocation="Top" 
+                                                    Click="opbSelectWWWDirectory_Click" Height="22" Icon="ic_folder"></local:OPButton>
                             </Grid>
                         </StackPanel>
                     </Grid>
-                    <Border BorderBrush="#ccc" Margin="5,0,5,0" BorderThickness="1" Height="1"></Border>
+                    <Border BorderBrush="#ccc" Margin="5,0,5,0" BorderThickness="1" Height="1">
+                        <Border.Visibility>
+                            <MultiBinding Converter="{StaticResource BoolORToVisibilityVisibleElseCollapsedMultiConverter}">
+                                <Binding RelativeSource="{RelativeSource Mode=FindAncestor,AncestorType={x:Type UserControl}}" Mode="OneWay" Path="ShowAdvanceButtonTop" />
+                                <Binding RelativeSource="{RelativeSource Mode=FindAncestor,AncestorType={x:Type UserControl}}" Mode="OneWay" Path="ShowSaveButtonTop" />
+                            </MultiBinding>
+                        </Border.Visibility>
+                    </Border>
                     <Grid Margin="5,5,5,3">
-                        <local:OPButton Command="{Binding ShowAdvanceSettingsClickCommand}" Margin="0,0,2,0" HorizontalAlignment="Left" Height="23" Width="100" Icon="ic_settings">Advance</local:OPButton>
-                        <local:OPButton Click="opbSaveApply_Click" Icon="ic_save" Height="23" Width="140" HorizontalAlignment="Right" IconLocation="Left">Save and Apply</local:OPButton>
+                        <local:OPButton Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=ShowAdvanceButtonTop, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}"  Command="{Binding ShowAdvanceSettingsClickCommand}" Margin="0,0,2,0" HorizontalAlignment="Left" Height="23" Width="100" Icon="ic_settings">Advance</local:OPButton>
+                        <local:OPButton Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Path=ShowSaveButtonTop, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" Click="opbSaveApply_Click" Icon="ic_save" Height="23" Width="140" HorizontalAlignment="Right" IconLocation="Left">Save and Apply</local:OPButton>
                     </Grid>
                 </StackPanel>
             </local:OPBorder>
+            <Grid DockPanel.Dock="Bottom" Margin="0,5,0,0">
+                <local:OPButton Icon="ic_save" HorizontalAlignment="Right" Click="opbSaveApply_Click"  Width="150" Content="Save And Apply" 
+                                Visibility="{Binding Path=ShowSaveButtonBottom, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}"/>
+                <local:OPButton Command="{Binding ShowAdvanceSettingsClickCommand}" HorizontalAlignment="Left" Width="150" Icon="ic_settings" Content="Advance" 
+                                Visibility="{Binding Path=ShowAdvanceButtonBottom, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+                <local:OPButton Icon="ic_save" HorizontalAlignment="Stretch" Click="opbSaveApply_Click" Content="Save And Apply"  
+                                Visibility="{Binding Path=ShowSaveButtonBottomStretched, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Mode=OneWay, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}, FallbackValue=Collapsed}"/>
+            </Grid>
+
             <Grid DockPanel.Dock="Top" Margin="0,5,0,0">
                 <local:UCLogConsole x:Name="ucLogConsole" x:FieldModifier="public" Loaded="ucLogConsole_Loaded" />
             </Grid>

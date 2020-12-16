@@ -93,15 +93,34 @@ namespace Vlix.HttpServer.Tests
             }
         }
 
-        [Fact]
-        public async void SSLCertTest()
+        [Theory]
+        [InlineData("CN=azrin.vlix.me",StoreName.My)]
+        public async void SSLCertTest(string subjectName, StoreName storeName)
         {
             HttpServer vlixHttpServer = new HttpServer(tempWWWPath, 80, 443, "ThisSSLCERTDoesNotExist", StoreName.My, true, 10, 10, true);
             bool errorThrown = false;
             try { await vlixHttpServer.StartAsync(); } catch { errorThrown = true; }
             Assert.True(errorThrown);
-        }
 
+
+            var certs = await SSLCertificateServices.GetSSLCertificates(storeName);
+            X509Certificate2 certToUse = null;
+            foreach (var cert in certs)
+            {
+                if (cert.Subject == subjectName) certToUse = cert;
+            }
+            if (certToUse == null) { throw new Exception("This test requires the Certificate with subject = '" + subjectName + "', to exist in the system. Skip this test if needed"); }
+
+            var res = await SSLCertificateServices.TryFindAndBindLatestSSLCertToPort(443, subjectName, storeName);
+            Assert.True(res);
+
+            var certExists = SSLCertificateServices.SSLCertBinded(certToUse.Thumbprint, 443);
+            Assert.True(certExists);
+            var certExists2 = SSLCertificateServices.SSLCertBinded("some sillly thumbprint that does not exist", 443);
+            Assert.True(!certExists2);
+            var certExists3 = SSLCertificateServices.SSLCertBinded("some sillly thumbprint that does not exist", 442);//Different Port
+            Assert.True(!certExists3);
+        }    
 
 
         [Fact]
@@ -304,31 +323,17 @@ namespace Vlix.HttpServer.Tests
             using (var httpClient = new OPHttpClient())
             {
                 StoreName storeName = StoreName.My; StoreLocation storeLocation = StoreLocation.LocalMachine;
-                List<X509Certificate2> certs = await httpClient.RequestJsonAsync<List<X509Certificate2>>(HttpMethod.Get, "http://localhost:5024/config/getsslcerts?storename="+storeName + "&storelocation=" + storeLocation, "Administrator", "Admin");
+                List<SSLCertVM> certs = await httpClient.RequestJsonAsync<List<SSLCertVM>>(HttpMethod.Get, "http://localhost:5024/config/getsslcerts?storename="+storeName + "&storelocation=" + storeLocation, "Administrator", "Admin");
                 Assert.NotNull(certs);
 
                 WebServerConfig config = await httpClient.RequestJsonAsync<WebServerConfig>(HttpMethod.Get, "http://localhost:5024/config/load", "Administrator","Admin");
                 Assert.NotNull(config);
 
-
                 var req2 = await httpClient.RequestStatusOnlyAsync(HttpMethod.Put, "http://localhost:5024/config/save", "Administrator", "Admin", new StringContent(JsonConvert.SerializeObject(config), Encoding.UTF8, "application/json"));                
                 Assert.Equal(HttpStatusCode.OK, req2);
 
                 var req3 = await httpClient.RequestStatusOnlyAsync(HttpMethod.Put, "http://localhost:5024/config/save", "Administrator", "Admin", new StringContent("Some Random Data which is not a proper Json", Encoding.UTF8, "application/json"));
-               
                 Assert.Equal(HttpStatusCode.InternalServerError, req3);
-
-
-                //HttpRequestMessage requestMessage3 = new HttpRequestMessage(HttpMethod.Put, "http://localhost:5024/config/save");
-                //requestMessage3.Headers.Add("Authorization", "Basic " + "Administrator:Admin".ToBase64());
-                //requestMessage3.Content = new StringContent("Some Random Data which is not a proper Json", Encoding.UTF8, "application/json");
-                //var res3 = await httpClient.SendAsync(requestMessage3);
-
-                //HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://localhost:5024/config/load");
-                //requestMessage.Headers.Add("Authorization", "Basic " + "Administrator:Admin".ToBase64());
-                //var res = await httpClient.SendAsync(requestMessage);
-                //string bodyStr = await res.Content.ReadAsStringAsync();
-                //HttpServerConfig config = JsonConvert.DeserializeObject<HttpServerConfig>(bodyStr);
             }
         }
     }

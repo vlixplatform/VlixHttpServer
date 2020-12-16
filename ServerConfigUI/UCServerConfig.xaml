@@ -34,22 +34,24 @@
                         <MenuItem Header="_Exit" Foreground="Black" Command="{Binding ExitClick}" />
                     </MenuItem>
                     <MenuItem Header="_Settings" Foreground="White">
-                        <MenuItem Header="_Settings" Foreground="Black" Command="{Binding SettingsLaunchClick}"  />
+                        <MenuItem Header="_Login Host / User Settings" Foreground="Black" Command="{Binding SettingsLaunchClick}"  />
+                        <MenuItem Header="_Advance Settings" Foreground="Black" Click="miAdvanceSettings_Click" />
                     </MenuItem>
                 </Menu>
-                <local:UCHttpServerConfig Margin="3" x:Name="uCHttpServerConfig" />
+                <local:UCHttpServerConfig Margin="3" x:Name="uCHttpServerConfig" ShowSaveButtonTop="False" ShowAdvanceButtonTop="False" ShowSaveButtonBottom="True"  ShowAdvanceButtonBottom="True" ShowSaveButtonBottomStretched="False"/>
+                
             </DockPanel>
             
             <!--Login-->
             <Grid Background="#aa000000" Visibility="{Binding ShowLoginWindow, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-            <local:OPBorder Visibility="{Binding ShowLoginWindow, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" KeyDown="loginKeyDown" Height="320" Width="300" Margin="0,2,0,0" Background="White">
+            <local:OPBorder Visibility="{Binding ShowLoginWindow, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" KeyDown="loginKeyDown" Height="340" Width="320" Margin="0,2,0,0" Background="White">
                 <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5,0,0" >
-                    <StackPanel Orientation="Vertical" Width="220">
+                    <StackPanel Orientation="Vertical" Width="260">
                         <Image Source="vlixlogo-whitebg.png" Margin="0,0,0,0"></Image>
-                        <TextBlock HorizontalAlignment="Center" Margin="0,-5,0,10"  FontWeight="Bold" FontSize="14" Foreground="#999" >Webserver Configuration Utility</TextBlock>
+                        <TextBlock HorizontalAlignment="Center" Margin="0,-8,0,10"  FontWeight="UltraBold" FontSize="26" Foreground="#2a4c68" FontFamily="Roboto">- Web Server -</TextBlock>
                         <!--<Border Height="1" BorderBrush="#ccc" Margin="0,0,0,10" BorderThickness="1" ></Border>-->
                         <DockPanel Margin="0,5,0,5" IsEnabled="{Binding IsLoggingIn,Converter={StaticResource InvertBoolConverter}}">
-                            <TextBlock FontWeight="SemiBold" Width="30" Margin="0,0,2,0">Host:</TextBlock>
+                            <TextBlock FontWeight="SemiBold" Width="62" Margin="0,0,2,0">Login Host:</TextBlock>
                             <local:OPTextBox PlaceHolder="http://localhost:33171" x:Name="optbHost" Text="{Binding Host}"  MouseDoubleClick="optbHost_DoubleClick" />
                         </DockPanel>
                         <local:OPBorder IsEnabled="{Binding IsLoggingIn,Converter={StaticResource InvertBoolConverter}}">
@@ -70,13 +72,13 @@
                 </Grid>
             </local:OPBorder>
 
-            <!-- {Binding ShowRemoteSettingsWindow} -->
-            <Grid Background="#aa000000" Visibility="{Binding ShowPasswordSettingsWindow, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-            <local:OPFrame Shown="{Binding ShowPasswordSettingsWindow}" BorderThickness="0" InnerMargin="10"  CornerRadius="5"  TopLeftContent="Configuration Utilitity Settings" TopLeftIcon="ic_settings"
-                                    Visibility="Collapsed"  Width="500" Height="450" OnShow="opfSettingsWindow_OnShow" OnClose="opfSettingsWindow_Close">
+            <!-- {Binding ShowConfigSettingsWindow} -->
+            <Grid Background="#aa000000" Visibility="{Binding ShowConfigSettingsWindow, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+            <local:OPFrame Shown="{Binding ShowConfigSettingsWindow}" BorderThickness="0" InnerMargin="10"  CornerRadius="5"  TopLeftContent="Login Host / User Settings" TopLeftIcon="ic_settings"
+                                    Visibility="Collapsed"  Width="500" Height="400" OnShow="opfSettingsWindow_OnShow" OnClose="opfSettingsWindow_Close">
                 <local:OPBorder Margin="0,2,0,0">
                     <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-20,0,0" >
-                        <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Vertical" IsEnabled="{Binding IsSaving, Converter={StaticResource InvertBoolConverter}}">
                             <StackPanel Margin="0,5,0,0" Orientation="Horizontal">
                                 <TextBlock FontWeight="Bold" Width="65">Username:</TextBlock>
                                 <TextBox Width="120" Text="{Binding NewConfigUsername}" />
@@ -91,12 +93,12 @@
                             </StackPanel>
                             <local:OPBorder>
                                 <StackPanel Orientation="Vertical" Margin="10">
-                                    <TextBlock FontWeight="Bold" FontSize="18" Foreground="#777">Connection</TextBlock>
+                                    <TextBlock FontWeight="Bold" FontSize="18" Foreground="#777">Login Host</TextBlock>
                                     <TextBlock Foreground="#333" FontStyle="Italic" TextWrapping="Wrap">The Web Server Configuration Utility connects to the Web server on the following port:</TextBlock>
                                     <Border Height="1" HorizontalAlignment="Stretch" BorderBrush="#ccc" BorderThickness="1" Margin="0,5,0,10" />
                                     <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
                                         <TextBlock Width="65">HTTP Port:</TextBlock>
-                                        <TextBox Width="70" Text="{Binding NewConfigHTTPSPort}" />
+                                        <TextBox Width="70" Text="{Binding NewConfigHTTPPort}" />
                                         <CheckBox VerticalAlignment="Center" Margin="5,0,0,0" IsChecked="{Binding NewConfigLocalhostOnly}">Localhost Only</CheckBox>
                                     </StackPanel>
                                     <Border Height="1" HorizontalAlignment="Stretch" BorderBrush="#ccc" BorderThickness="1" Margin="0,2,0,10" />
@@ -162,7 +164,7 @@
                                     </Grid>
                                 </StackPanel>
                             </local:OPBorder>
-                            <local:OPButton Margin="0,5,0,0" Click="opbNewConfigSave_Click">Save</local:OPButton>
+                            <local:OPButton  Margin="0,5,0,0" Click="opbNewConfigSave_Click">Save</local:OPButton>
                             <local:CentreMessage x:Name="cmConfig" ShowDesignTimeMessageProcess="True" MessageFontSize="14"></local:CentreMessage>
                         </StackPanel>
                     </Grid>

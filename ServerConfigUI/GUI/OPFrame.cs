@@ -67,7 +67,7 @@ namespace Vlix.ServerConfigUI
         }
         private void _ParentWindow_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Escape) { this.RaiseOnCloseEvent(); }
+            if (e.Key == Key.Escape) { this.RaiseOnCloseEvent();  }
         }
 
         private void OnCloseMe(object sender, ExecutedRoutedEventArgs e)
@@ -227,7 +227,7 @@ namespace Vlix.ServerConfigUI
 
         public bool EnableEscapeKey { get { return (bool)GetValue(EnableEscapeKeyProperty); } set { SetValue(EnableEscapeKeyProperty, value); } }
         public static readonly DependencyProperty EnableEscapeKeyProperty = DependencyProperty.Register("EnableEscapeKey", typeof(bool),
-            typeof(OPFrame), new PropertyMetadata(true));
+            typeof(OPFrame), new PropertyMetadata(false));
 
 
         public bool ShowCloseButton { get { return (bool)GetValue(ShowCloseButtonProperty); } set { SetValue(ShowCloseButtonProperty, value); } }

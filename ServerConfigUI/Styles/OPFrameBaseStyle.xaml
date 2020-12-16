@@ -59,10 +59,9 @@
                                         <TextBlock Text="{TemplateBinding AdditionalButtonText}" FontWeight="Bold" />
                                     </OP:OPButton>
                                     <OP:OPButton Margin="1,0,1,0"  Visibility="{TemplateBinding ShowBackButton, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" 
-                                                Icon="ic_arrow_back" Command="{x:Static OP:OPFrame.CloseCommand}" Height="25" Width="120" >
+                                                Icon="ic_arrow_back" Command="{x:Static OP:OPFrame.CloseCommand}" Height="25" Width="100" >
                                         <TextBlock>
                                             <Run Text="Back" FontWeight="Bold" />
-                                            <Run Text=" [Escape]" FontWeight="Normal" />
                                         </TextBlock>
                                     </OP:OPButton>
                                     <Button Margin="1,0,1,0" Visibility="{TemplateBinding ShowCloseButton, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" 

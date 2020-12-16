@@ -78,6 +78,8 @@ namespace Vlix.HttpServer
         HttpServerConfigVM _ParentVM = null; public HttpServerConfigVM ParentVM { get { return _ParentVM; } set { SetField(ref _ParentVM, value, "ParentVM"); } }
         bool _Enable = true; public bool Enable { get { return _Enable; } set { SetField(ref _Enable, value, "Enable"); } }
         string _Name = "New Rule"; public string Name { get { return _Name; } set { SetField(ref _Name, value, "Name"); } }
+        bool _NameInEditMode = false; public bool NameInEditMode { get { return _NameInEditMode; } set { SetField(ref _NameInEditMode, value, "NameInEditMode"); } }
+        public string NameBeforeChange { get; set; } = null;
         RequestMatchVM _RequestMatchVM = new RequestMatchVM(); public RequestMatchVM RequestMatch { get { return _RequestMatchVM; } set { SetField(ref _RequestMatchVM, value, "RequestMatch"); } }
         ResponseActionVM _ResponseActionVM = new ResponseActionVM(); public ResponseActionVM ResponseAction { get { return _ResponseActionVM; } set { SetField(ref _ResponseActionVM, value, "ResponseAction"); } }
 
@@ -155,7 +157,9 @@ namespace Vlix.HttpServer
         public IEnumerable<Scheme> SchemeTypes { get { return Enum.GetValues(typeof(Scheme)).Cast<Scheme>(); } }
 
         ActionType _ActionType = ActionType.Redirect; public ActionType ActionType { get { return _ActionType; } set { SetField(ref _ActionType, value, "ActionType"); } }
-        
+
+        public string AlternativeWWWDirectoryParsed() { return this.AlternativeWWWDirectory?.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)); }
+
         //Alternative WWW Drectory 
         string _AlternativeWWWDirectory = null; public string AlternativeWWWDirectory { get { return _AlternativeWWWDirectory; } set { SetField(ref _AlternativeWWWDirectory, value, "AlternativeWWWDirectory"); } }
 

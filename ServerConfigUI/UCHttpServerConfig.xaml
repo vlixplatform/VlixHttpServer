@@ -17,6 +17,8 @@
         <local:InvertBoolConverter x:Key="InvertBoolConverter" />
         <local:BoolTrueToOpacity1Else05Converter x:Key="BoolTrueToOpacity1Else05Converter" />
         <local:BoolTrueToOpacity03Else1Converter x:Key="BoolTrueToOpacity03Else1Converter" />
+        <local:CentreMessageStateNoMessageToOpacity1Else02Converter x:Key="CentreMessageStateNoMessageToOpacity1Else02Converter" />
+        <local:CentreMessageStateNoMessageToTrueConverter x:Key="CentreMessageStateNoMessageToTrueConverter" />
         <local:BoolTrueToCentreMessageStateProcessElseNoMessageConverter x:Key="BoolTrueToCentreMessageStateProcessElseNoMessageConverter" />
         <local:BoolTrueToVisibilityVisibleElseCollapsedConverter x:Key="BoolTrueToVisibilityVisibleElseCollapsedConverter" />
         <local:BoolTrueToVisibilityCollapsedElseVisibleConverter x:Key="BoolTrueToVisibilityCollapsedElseVisibleConverter" />
@@ -29,7 +31,12 @@
         <local:ActionTypeToVisibilityConverter x:Key="ActionTypeToVisibilityConverter" />
     </UserControl.Resources>
     <Grid>
-        <DockPanel IsEnabled="{Binding IsLoading, Converter={StaticResource InvertBoolConverter}}"  Background="White" Opacity="{Binding IsLoading, Converter={StaticResource BoolTrueToOpacity03Else1Converter}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" IsEnabled="{Binding IsLoading, Converter={StaticResource InvertBoolConverter}}"  Background="White"
+                   Opacity="{Binding IsLoading, Converter={StaticResource BoolTrueToOpacity03Else1Converter}}">
             <local:OPBorder DockPanel.Dock="Top" Background="#ddd">
                 <StackPanel Orientation="Vertical">
                     <Grid Margin="10,10,10,0">
@@ -69,33 +76,33 @@
                                         <TextBox.ToolTip>
                                             <StackPanel>
                                                 <TextBlock Visibility="{Binding SSLCertificateSubjectName, Converter={StaticResource EmptyStringOrNullToVisibilityVisibleElseCollapsedConverter}}" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"  >
-                                                    <Run Text="Select a Certificate"></Run>
+                                                <Run Text="Select a Certificate"></Run>
                                                 </TextBlock>
                                                 <TextBlock Visibility="{Binding SSLCertificateSubjectName, Converter={StaticResource EmptyStringOrNullToVisibilityCollapsedConverter}}" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"  >
-                                                    <Run Text="Certificate '"/><Run Text="{Binding SSLCertificateSubjectName}"></Run><Run Text="'"/>
+                                                <Run Text="Certificate '"/><Run Text="{Binding SSLCertificateSubjectName}"></Run><Run Text="'"/>
                                                 </TextBlock>
                                                 <TextBlock>
-                                                    <Run>The (SSL/TLS) Cerificate is a document used to secure/encrypt communication.</Run><LineBreak />
-                                                    <Run>This certificate secures:</Run>
+                                                <Run>The (SSL/TLS) Cerificate is a document used to secure/encrypt communication.</Run><LineBreak />
+                                                <Run>This certificate secures:</Run>
                                                 </TextBlock>
                                                 <TextBlock Visibility="{Binding SubjectAlternativeNames.Count, Converter={StaticResource ZeroOrNullToVisibilityVisibleElseCollapsedConverter}}"  Foreground="#2a4c68" FontWeight="SemiBold">- No domains</TextBlock>
                                                 <TextBlock Foreground="#2a4c68">
-                                                    <ItemsControl ItemsSource="{Binding SubjectAlternativeNames}">
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <TextBlock FontStyle="Normal" FontWeight="SemiBold">
-                                                                    <Run Text="- https://" /><Run Text="{Binding Mode=OneWay}" /><Run>/</Run>
-                                                                </TextBlock>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                </TextBlock>
+                                                <ItemsControl ItemsSource="{Binding SubjectAlternativeNames}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock FontStyle="Normal" FontWeight="SemiBold">
+                                                                <Run Text="- https://" /><Run Text="{Binding Mode=OneWay}" /><Run>/</Run>
+                                                            </TextBlock>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </TextBlock>
                                                 <TextBlock>
-                                                    <LineBreak />
-                                                    <Run FontSize="13" FontWeight="Bold">Notes on Certificate renewal</Run><LineBreak />
-                                                    <Run>Every 5 minutes, the web server checks for the latest certificate (in the Windows</Run><LineBreak />
-                                                    certificate store '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateStoreName}"></Run>') with subject '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateSubjectName}" />'.<LineBreak />
-                                                    <Run>If a new certificate exists, it will replace the current one</Run><LineBreak />
+                                                <LineBreak />
+                                                <Run FontSize="13" FontWeight="Bold">Notes on Certificate renewal</Run><LineBreak />
+                                                <Run>Every 5 minutes, the web server checks for the latest certificate (in the Windows</Run><LineBreak />
+                                                certificate store '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateStoreName}"></Run>') with subject '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding SSLCertificateSubjectName}" />'.<LineBreak />
+                                                <Run>If a new certificate exists, it will replace the current one</Run><LineBreak />
                                                 </TextBlock>
                                             </StackPanel>
                                         </TextBox.ToolTip>
@@ -103,10 +110,10 @@
                                     <local:OPButton Grid.Column="2" Command="{Binding SelectSSLCertClickCommand}" Width="21" IconLocation="Top" Height="21" Icon="ic_launch">
                                         <local:OPButton.ToolTip>
                                             <TextBlock>
-                                                <Run>For Microsoft Windows, certificates are stored in the</Run><LineBreak />
-                                                <Run FontWeight="Bold">Windows Certificate Store.</Run>
-                                                <Run>Click here to to access this store.</Run>
-                                                <Run></Run>
+                                            <Run>For Microsoft Windows, certificates are stored in the</Run><LineBreak />
+                                            <Run FontWeight="Bold">Windows Certificate Store.</Run>
+                                            <Run>Click here to to access this store.</Run>
+                                            <Run></Run>
                                             </TextBlock>
                                         </local:OPButton.ToolTip>
                                     </local:OPButton>
@@ -123,7 +130,7 @@
                                 </Grid.ColumnDefinitions>
                                 <local:OPTextBox Grid.Column="0" Height="20" Loaded="optWWWDir_Loaded" MouseDoubleClick="optWWWDir_DoubleClick" Text="{Binding WWWDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></local:OPTextBox>
                                 <local:OPButton Grid.Column="1"  Visibility="{Binding ClientIsLocal, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" Width="22" IconLocation="Top" 
-                                                    Click="opbSelectWWWDirectory_Click" Height="22" Icon="ic_folder"></local:OPButton>
+                                                Click="opbSelectWWWDirectory_Click" Height="22" Icon="ic_folder"></local:OPButton>
                             </Grid>
                         </StackPanel>
                     </Grid>
@@ -141,28 +148,23 @@
                     </Grid>
                 </StackPanel>
             </local:OPBorder>
-            <Grid DockPanel.Dock="Bottom" Margin="0,5,0,0">
-                <local:OPButton Icon="ic_save" HorizontalAlignment="Right" Click="opbSaveApply_Click"  Width="150" Content="Save And Apply" 
-                                Visibility="{Binding Path=ShowSaveButtonBottom, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}"/>
-                <local:OPButton Command="{Binding ShowAdvanceSettingsClickCommand}" HorizontalAlignment="Left" Width="150" Icon="ic_settings" Content="Advance" 
-                                Visibility="{Binding Path=ShowAdvanceButtonBottom, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
-                <local:OPButton Icon="ic_save" HorizontalAlignment="Stretch" Click="opbSaveApply_Click" Content="Save And Apply"  
-                                Visibility="{Binding Path=ShowSaveButtonBottomStretched, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Mode=OneWay, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}, FallbackValue=Collapsed}"/>
-            </Grid>
-
             <Grid DockPanel.Dock="Top" Margin="0,5,0,0">
                 <local:UCLogConsole x:Name="ucLogConsole" x:FieldModifier="public" Loaded="ucLogConsole_Loaded" />
             </Grid>
         </DockPanel>
-        <local:OPFrame Shown="{Binding ShowSelectSSLCertWindow}" BorderThickness="0" InnerMargin="10" CornerRadius="5"  TopLeftContent="Select SSL Certificate" TopLeftIcon="ic_lock_outline" InnerWindowMargin="15" 
-                                    Visibility="Collapsed" Background="#aa000000" OnShow="opfSelectSSLCert_OnShow" OnClose="opfSelectSSLCert_OnClose">
-            <Grid Margin="0,5,0,0" >
-                <local:UCSelectSSLCert x:Name="uCSelectSSLCert" OnCertificateSelected="uCSelectSSLCert_OnCertificateSelected" Margin="5" />
-            </Grid>
-        </local:OPFrame>
-        <local:OPFrame Shown="{Binding ShowAdvanceSettingsWindow}" BorderThickness="0" InnerMargin="10" CornerRadius="5"  TopLeftContent="Advance Settings" TopLeftIcon="ic_settings" InnerWindowMargin="15" 
-                                    Visibility="Collapsed" Background="#aa000000" OnClose="opfAdvanceSettings_OnClose">
-            <Grid>
+
+        <Grid Grid.Row="1" Margin="0,5,0,0">
+            <local:OPButton Icon="ic_save" HorizontalAlignment="Right" Click="opbSaveApply_Click"  Width="150" Content="Save And Apply" 
+                            Visibility="{Binding Path=ShowSaveButtonBottom, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}"/>
+            <local:OPButton Command="{Binding ShowAdvanceSettingsClickCommand}" HorizontalAlignment="Left" Width="150" Icon="ic_settings" Content="Advance" 
+                            Visibility="{Binding Path=ShowAdvanceButtonBottom, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}},Mode=OneWay, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" />
+            <local:OPButton Icon="ic_save" HorizontalAlignment="Stretch" Click="opbSaveApply_Click" Content="Save And Apply"  
+                            Visibility="{Binding Path=ShowSaveButtonBottomStretched, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Mode=OneWay, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}, FallbackValue=Collapsed}"/>
+        </Grid>
+
+        <local:OPFrame Shown="{Binding ShowAdvanceSettingsWindow}" BorderThickness="0" InnerMargin="10" CornerRadius="5"  TopLeftContent="Advance Settings" TopLeftIcon="ic_settings" InnerWindowMargin="15" Visibility="Collapsed" Background="#aa000000" OnClose="opfAdvanceSettings_OnClose"
+                        IsEnabled="{Binding IsLoading, Converter={StaticResource InvertBoolConverter}}">
+            <Grid Opacity="{Binding IsLoading, Converter={StaticResource BoolTrueToOpacity03Else1Converter}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="auto" />
@@ -204,10 +206,12 @@
 
                                                 <DockPanel Grid.Column="0" DockPanel.Dock="Left" Margin="0,0,0,5">
                                                     <StackPanel DockPanel.Dock="Top">
-                                                        <TextBlock Foreground="#666" FontSize="14" FontWeight="SemiBold">Rule Name:</TextBlock>
-                                                        <TextBox Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding Name}" MaxLength="55" />
+                                                        <TextBlock Visibility="{Binding NameInEditMode, Converter={StaticResource BoolTrueToVisibilityCollapsedElseVisibleConverter}}" Foreground="#666" FontSize="16" FontWeight="SemiBold" Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" MouseDown="tbRuleName_MouseDown"
+                                                                   ToolTip="Double Click to change Rule Name" />
+                                                        <TextBox  Visibility="{Binding NameInEditMode, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}"
+                                                                  LostFocus="tbNameEdit_LostFocus" FontSize="16" FontWeight="SemiBold" KeyDown="tbNameEdit_KeyDown"  Background="#FFFEFEEB" DockPanel.Dock="Left" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MaxLength="55" />
                                                     </StackPanel>
-                                                    <CheckBox DockPanel.Dock="Top" VerticalAlignment="Center" Margin="0,1,0,0" Opacity="1" IsChecked="{Binding Enable}">Enable Rule</CheckBox>
+                                                    <CheckBox DockPanel.Dock="Top" VerticalAlignment="Center" Margin="0,1,0,0" Opacity="1" IsChecked="{Binding Enable}">Enable</CheckBox>
                                                     <local:OPButton Command="{Binding DeleteClickCommand}" DockPanel.Dock="Top" Width="60" FontSize="10" IconMargin="-2,0,0,0" Height="20" VerticalAlignment="Bottom" Background="Red" Icon="ic_delete" IconSize="11" HorizontalAlignment="Left">Delete</local:OPButton>
                                                 </DockPanel>
                                                 <Border Grid.Column="1" DockPanel.Dock="Left" Margin="5,0,5,0" HorizontalAlignment="Left" BorderBrush="#ddd" BorderThickness="1" Width="1"></Border>
@@ -283,7 +287,7 @@
                                                             <TextBlock DockPanel.Dock="Left"  Margin="0,1,2,0">Directory:</TextBlock>
                                                             <local:OPButton Visibility="{Binding ParentVM.ClientIsLocal, Converter={StaticResource BoolTrueToVisibilityVisibleElseCollapsedConverter}}" DockPanel.Dock="Right" Width="30" 
                                                                                     IconLocation="Top" Click="opbOpenAlternativeWWWDirectory_Click" Height="21" Icon="ic_folder"></local:OPButton>
-                                                            <TextBox DockPanel.Dock="Left" HorizontalAlignment="Stretch" Height="20" Text="{Binding ResponseAction.AlternativeWWWDirectory}"></TextBox>
+                                                            <TextBox DockPanel.Dock="Left" HorizontalAlignment="Stretch" Height="20" Text="{Binding ResponseAction.AlternativeWWWDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></TextBox>
                                                         </DockPanel>
                                                     </Grid>
 
@@ -444,6 +448,17 @@
                 </local:OPBorder>
             </Grid>
         </local:OPFrame>
+
+        
+        
+        <local:OPFrame Shown="{Binding ShowSelectSSLCertWindow}" BorderThickness="0" InnerMargin="10" CornerRadius="5"  TopLeftContent="Select SSL Certificate" TopLeftIcon="ic_lock_outline" InnerWindowMargin="15" 
+                       IsEnabled="{Binding IsLoading, Converter={StaticResource InvertBoolConverter}}"                       
+                                    Visibility="Collapsed" Background="#aa000000" OnShow="opfSelectSSLCert_OnShow" OnClose="opfSelectSSLCert_OnClose">
+            <Grid Margin="0,5,0,0" Opacity="{Binding IsLoading, Converter={StaticResource BoolTrueToOpacity03Else1Converter}}" >
+                <local:UCSelectSSLCert x:Name="uCSelectSSLCert" OnCertificateSelected="uCSelectSSLCert_OnCertificateSelected" Margin="5" />
+            </Grid>
+        </local:OPFrame>
+        
         <local:CentreMessage x:Name="cmHttpServerConfig" ShowDesignTimeMessageProcess="False"  MessageProcess="Loading.."></local:CentreMessage>
     </Grid>
 </UserControl>

@@ -17,6 +17,7 @@ namespace Vlix.ServerConfigUI
         public HttpServerConfigVMSample()
         {
             this.ShowAdvanceSettingsWindow = false;
+            this.Rules.Add(new RuleVM(new HostAlternativeWWWDirectoryRule("asd", "addd"), this));
         }
     }
     public class ServerConfigVMSample : ServerConfigVM

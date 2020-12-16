@@ -170,14 +170,8 @@
     <PackageReference Include="MaterialIcons">
       <Version>1.0.3</Version>
     </PackageReference>
-    <PackageReference Include="Microsoft.WindowsAPICodePack-Core">
-      <Version>1.1.0.2</Version>
-    </PackageReference>
     <PackageReference Include="Prism.Core">
       <Version>8.0.0.1909</Version>
-    </PackageReference>
-    <PackageReference Include="WindowsAPICodePack-Shell">
-      <Version>1.1.1</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

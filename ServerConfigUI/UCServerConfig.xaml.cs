@@ -137,10 +137,14 @@ namespace Vlix.ServerConfigUI
         {
             configVM.NewConfigEnableHTTPS = configVM.ConfigEnableHTTPS;
             configVM.NewConfigHTTPPort = configVM.ConfigHTTPPort;
+            configVM.NewConfigHTTPSPort = configVM.ConfigHTTPSPort;
             configVM.NewConfigLocalhostOnly = configVM.ConfigLocalhostOnly;
             configVM.NewConfigUsername = configVM.ConfigUsername;
             configVM.NewConfigSSLCertificateSubjectName = configVM.ConfigSSLCertificateSubjectName;
             configVM.NewConfigSSLCertificateStoreName = configVM.ConfigSSLCertificateStoreName;
+            configVM.NewConfigSubjectAlternativeNames.Clear();
+            configVM.NewConfigLocalhostOnly = configVM.ConfigLocalhostOnly;
+            foreach (var sAN in configVM.ConfigSubjectAlternativeNames) configVM.NewConfigSubjectAlternativeNames.Add(sAN);
             configVM.NewConfigHTTPSPort = configVM.ConfigHTTPSPort;
         }
         private void opfSettingsWindow_Close(object sender, RoutedEventArgs e)
@@ -169,7 +173,7 @@ namespace Vlix.ServerConfigUI
                     configVM.ConfigSSLCertificateSubjectName = configVM.NewConfigSSLCertificateSubjectName;
                     configVM.ConfigSSLCertificateStoreName = configVM.NewConfigSSLCertificateStoreName;
                     cmConfig.ShowMessageSuccess("Save Successful!");
-                    await Task.Delay(1500);
+                    await Task.Delay(1000);
                     if (Res) configVM.DisconnectClick.Execute(null); else { configVM.ShowConfigSettingsWindow = false; configVM.ShowConfigSelectSSLCertWindow = false; }
                 }
                 else cmConfig.ShowMessageError("'Password Retype' does not match 'Password'");
@@ -219,7 +223,7 @@ namespace Vlix.ServerConfigUI
 
                     httpServerConfigVM.ClientIsLocal = configVM.Host.Contains("localhost") || configVM.Host.Contains("127.0.0.1");
                     cmLogin.ShowMessageSuccess("Login Success!");
-                    await Task.Delay(1500);
+                    await Task.Delay(1000);
                     configVM.ShowLoginWindow = false;
                     configVM.LoggedIn = true;
                 }

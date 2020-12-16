@@ -46,7 +46,7 @@ namespace Vlix.HttpServer
 
         private string _LogDirectoryParsed = null;
         [DebuggerStepThrough]
-        public string LogDirectoryParsed() { if (_LogDirectoryParsed == null) _LogDirectoryParsed = this.LogDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)); ; return _LogDirectoryParsed; }
+        public string LogDirectoryParsed() { if (_LogDirectoryParsed == null) _LogDirectoryParsed = this.LogDirectory?.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)); ; return _LogDirectoryParsed; }
         private string _LogDirectory = Path.Combine("[ProgramDataDirectory]", "Vlix", "HTTPServer", "Logs");
         [JsonProperty(Order = 20)]
         public string LogDirectory { get { return _LogDirectory; } set { _LogDirectory = value; _LogDirectoryParsed = null; } }

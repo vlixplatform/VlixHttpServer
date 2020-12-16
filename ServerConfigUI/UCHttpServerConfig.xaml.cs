@@ -1,5 +1,4 @@
-﻿using Microsoft.WindowsAPICodePack.Dialogs;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,6 +15,7 @@ using System.Windows.Shapes;
 using Vlix.HttpServer;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Http;
+using System.Diagnostics;
 
 namespace Vlix.ServerConfigUI
 {
@@ -67,19 +67,15 @@ namespace Vlix.ServerConfigUI
         }
         private void opbSelectWWWDirectory_Click(object sender, RoutedEventArgs e)
         {
-            CommonOpenFileDialog dialog = new CommonOpenFileDialog();
-            dialog.InitialDirectory = "C:\\Users";
-            dialog.IsFolderPicker = true;
-            if (dialog.ShowDialog() == CommonFileDialogResult.Ok) ((HttpServerConfigVM)this.DataContext).WWWDirectory = dialog.FileName; else ((HttpServerConfigVM)this.DataContext).WWWDirectory = null;
+            try { Process.Start(((HttpServerConfigVM)this.DataContext).WWWDirectoryParsed()); }
+            catch { cmHttpServerConfig.ShowMessageError("Invalid Directory!"); }
         }
         private void opbOpenAlternativeWWWDirectory_Click(object sender, RoutedEventArgs e)
         {
             if (sender is FrameworkElement fe && fe.DataContext is RuleVM ruleVM)
             {
-                CommonOpenFileDialog dialog = new CommonOpenFileDialog();
-                dialog.InitialDirectory = "C:\\Users";
-                dialog.IsFolderPicker = true;
-                if (dialog.ShowDialog() == CommonFileDialogResult.Ok) ruleVM.ResponseAction.AlternativeWWWDirectory = dialog.FileName; else ruleVM.ResponseAction.AlternativeWWWDirectory = null;
+                try { Process.Start(ruleVM.ResponseAction.AlternativeWWWDirectoryParsed()); } 
+                catch { cmHttpServerConfig.ShowMessageError("Invalid Directory!"); }
             }
         }
 
@@ -87,17 +83,23 @@ namespace Vlix.ServerConfigUI
         
         private async void opbSaveApply_Click(object sender, RoutedEventArgs e)
         {
-
             var httpServerConfigVM = ((HttpServerConfigVM)this.DataContext);
-            httpServerConfigVM.IsLoading = true;
-            cmHttpServerConfig.ShowMessageProcess("Saving...");
-            HttpServerConfig model = httpServerConfigVM.ToModel();
-            if (await httpServerConfigVM.OnSaveAndApply?.Invoke(model))
+            try
             {                
-                cmHttpServerConfig.ShowMessageSuccess("Saved!");                
+                httpServerConfigVM.IsLoading = true;
+                cmHttpServerConfig.ShowMessageProcess("Saving...");
+                HttpServerConfig model = httpServerConfigVM.ToModel();
+                if (await httpServerConfigVM.OnSaveAndApply?.Invoke(model))
+                {
+                    cmHttpServerConfig.ShowMessageSuccess("Saved!");
+                    await Task.Delay(1000);
+                }
+                else cmHttpServerConfig.ShowMessageError("Save Failed!");
             }
-            else cmHttpServerConfig.ShowMessageError("Save Failed!");
-            httpServerConfigVM.IsLoading = false;
+            finally
+            {
+                httpServerConfigVM.IsLoading = false;
+            }
             //this.OnSaveAndApply?.Invoke(((HttpServerConfigVM)this.DataContext).ToModel());
         }
 
@@ -147,6 +149,41 @@ namespace Vlix.ServerConfigUI
         private void optHTTPSPort_DoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (sender is OPTextBox opt) ((HttpServerConfigVM)this.DataContext).HTTPSPort = opt.PlaceHolder.ToInt();
+        }
+
+        private void tbRuleName_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2 && sender is FrameworkElement fe && fe.DataContext is RuleVM vM)
+            {
+                vM.NameInEditMode = true;
+                vM.NameBeforeChange = vM.Name;
+            }            
+        }
+
+        private void tbNameEdit_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (sender is TextBox tb && tb.DataContext is RuleVM vM)
+            {
+                if (e.Key == Key.Enter)
+                {
+                    vM.NameInEditMode = false;
+                    e.Handled = true;
+                }
+                if (e.Key == Key.Escape)
+                {
+                    vM.Name = vM.NameBeforeChange;
+                    vM.NameInEditMode = false;
+                    e.Handled = true;
+                }
+            }
+        }
+        private void tbNameEdit_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBox tb && tb.DataContext is RuleVM vM)
+            {
+                vM.NameInEditMode = false;
+                e.Handled = true;
+            }
         }
     }
 }

@@ -58,7 +58,7 @@ namespace Vlix.HttpServer
         {
             string appDirectory = ConfigurationManager.AppSettings.Get("AppDirectory");
             if (appDirectory == null) appDirectory = Environment.CurrentDirectory;
-            else appDirectory = appDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
+            else appDirectory = appDirectory?.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
             Directory.CreateDirectory(appDirectory);
             string configFilePath = Path.Combine(appDirectory, configFileName);
             string jsonString = JsonConvert.SerializeObject(this, Formatting.Indented, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Auto });
@@ -70,7 +70,7 @@ namespace Vlix.HttpServer
             WebServerConfig config = new WebServerConfig();
             string appDirectory = ConfigurationManager.AppSettings.Get("AppDirectory");
             if (appDirectory == null) appDirectory = Environment.CurrentDirectory;
-            else appDirectory = appDirectory.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
+            else appDirectory = appDirectory?.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
             Directory.CreateDirectory(appDirectory);
             string configFilePath = Path.Combine(appDirectory, configFileName);
             if (File.Exists(configFilePath))

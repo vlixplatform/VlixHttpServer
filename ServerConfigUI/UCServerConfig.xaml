@@ -145,13 +145,13 @@
                                                         <LineBreak />
                                                         <Run FontSize="13" FontWeight="Bold">Notes on Certificate renewal</Run><LineBreak />
                                                         <Run>Every 5 minutes, the web server checks for the latest certificate (in the Windows</Run><LineBreak />
-                                                        certificate store '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding NewConfigSSLCertificateStoreName}"></Run>') with subject '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding NewSSLCertificateSubjectName}" />'.<LineBreak />
+                                                        certificate store '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding NewConfigSSLCertificateStoreName}"></Run>') with subject '<Run FontWeight="Bold" Foreground="#2a4c68" Text="{Binding NewConfigSSLCertificateSubjectName}" />'.<LineBreak />
                                                         <Run>If a new certificate exists, it will replace the current one</Run><LineBreak />
                                                     </TextBlock>
                                                 </StackPanel>
                                             </TextBox.ToolTip>
                                         </TextBox>
-                                        <local:OPButton Grid.Column="2" Content="Select" Margin="0,0,0,0" Command="{Binding ConfigSelectSSLCertClick}" Width="70" IconLocation="Left" Height="21" Icon="ic_launch">
+                                        <local:OPButton Grid.Column="2" Margin="0,0,0,0" Command="{Binding ConfigSelectSSLCertClick}" Width="22" IconLocation="Top" Height="22" Icon="ic_launch">
                                             <local:OPButton.ToolTip>
                                                 <TextBlock>
                                                     <Run>For Microsoft Windows, certificates are stored in the</Run><LineBreak />

@@ -61,6 +61,7 @@ namespace Vlix
                             if (req.Query.TryGetValue("storename", out string storeNameStr)) storeName = (StoreName)Enum.Parse(typeof(StoreName), storeNameStr);//(StoreName)Convert.ToInt64(storeNameStr);
                             if (req.Query.TryGetValue("storelocation", out string storeLocationStr)) storeLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), storeLocationStr); // (StoreLocation)Convert.ToInt64(storeNameStr);
                             var x509Certificate2s = await SSLCertificateServices.GetSSLCertificates(storeName);
+                            certs = new List<SSLCertVM>();
                             foreach (X509Certificate2 certificate in x509Certificate2s) if (certificate.HasPrivateKey) certs.Add(new SSLCertVM(certificate, storeName, null));
                         }
                         catch

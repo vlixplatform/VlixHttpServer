@@ -158,6 +158,8 @@ namespace Vlix.HttpServer
         string _SSLCertificateSubjectName = null; public string SSLCertificateSubjectName { get { return _SSLCertificateSubjectName; } set { SetField(ref _SSLCertificateSubjectName, value, "SSLCertificateSubjectName"); } }
         StoreName _SSLCertificateStoreName = StoreName.My; public StoreName SSLCertificateStoreName { get { return _SSLCertificateStoreName; } set { SetField(ref _SSLCertificateStoreName, value, "SSLCertificateStoreName"); } }
         public ObservableCollection<string> SubjectAlternativeNames { get; set; } = new ObservableCollection<string>();
+        public string WWWDirectoryParsed() { return this.WWWDirectory?.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)); }
+        public string LogDirectoryParsed() { return this.LogDirectory?.Replace("[ProgramDataDirectory]", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)); }
         string _WWWDirectory = Path.Combine("[ProgramDataDirectory]","Vlix","HTTPServer","www"); public string WWWDirectory { get { return _WWWDirectory; } set { SetField(ref _WWWDirectory, value, "WWWDirectory"); } }
         string _LogDirectory = Path.Combine("[ProgramDataDirectory]", "Vlix", "HTTPServer", "Logs"); public string LogDirectory { get { return _LogDirectory; } set { SetField(ref _LogDirectory, value, "LogDirectory"); } }
         bool _EnableHTTP = true; public bool EnableHTTP { get { return _EnableHTTP; } set { SetField(ref _EnableHTTP, value, "EnableHTTP"); } }        
@@ -172,8 +174,8 @@ namespace Vlix.HttpServer
         int _OnlyCacheItemsLessThenMB = 10; public int OnlyCacheItemsLessThenMB { get { return _OnlyCacheItemsLessThenMB; } set { SetField(ref _OnlyCacheItemsLessThenMB, value, "OnlyCacheItemsLessThenMB"); } }
         int _MaximumCacheSizeInMB = 250; public int MaximumCacheSizeInMB { get { return _MaximumCacheSizeInMB; } set { SetField(ref _MaximumCacheSizeInMB, value, "MaximumCacheSizeInMB"); } }
         public ObservableCollection<RuleVM> Rules { get; set; } = new ObservableCollection<RuleVM>();
-        public ICommand SelectSSLCertClickCommand { get { return new DelegateCommand<object>((p) => this.ShowSelectSSLCertWindow = true, (p) => true);}}
-        public ICommand ShowAdvanceSettingsClickCommand { get { return new DelegateCommand<object>((p) => this.ShowAdvanceSettingsWindow = true, (p) => true);}}  
+        public ICommand SelectSSLCertClickCommand { get { return new DelegateCommand<object>((p) => { this.ShowSelectSSLCertWindow = true; this.ShowAdvanceSettingsWindow = false; }, (p) => true);}}
+        public ICommand ShowAdvanceSettingsClickCommand { get { return new DelegateCommand<object>((p) => { this.ShowSelectSSLCertWindow = false; this.ShowAdvanceSettingsWindow = true; }, (p) => true);}}  
         public ICommand NewRuleClickCommand { get { return new DelegateCommand<object>((p) =>
         {
             this.Rules.Add(new RuleVM(this));

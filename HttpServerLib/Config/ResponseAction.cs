@@ -90,7 +90,7 @@ namespace Vlix.HttpServer
                 if (this.UsePathVariable)
                 {
                     // {$Path|^.sdsdd$}
-                    string newPath = this.PathAndQuery.Replace("%PATH%", this.PathAndQuery);
+                    string newPath = this.PathAndQuery?.Replace("%PATH%", this.PathAndQuery);
                     Regex regex = new Regex(@"\%[^\%]*\%", RegexOptions.IgnoreCase);
                     MatchCollection matches = regex.Matches(this.PathAndQuery);
                     foreach (Match match in matches)
@@ -98,7 +98,7 @@ namespace Vlix.HttpServer
                         string innerRegex = match.Value.Trim('%');
                         var regex2 = new Regex(innerRegex, RegexOptions.IgnoreCase);
                         string innerRegexResult = regex2.Match(pathAndQuery).Value;
-                        newPath = newPath.Replace(match.Value, innerRegexResult);
+                        newPath = newPath?.Replace(match.Value, innerRegexResult);
                     }
                     pPath = newPath;
                 }

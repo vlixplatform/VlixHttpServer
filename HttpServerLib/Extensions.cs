@@ -131,7 +131,7 @@ namespace Vlix.HttpServer
             if (StrIn.Contains("Last Custom Stuff"))
             {
             }
-            string StrOut = StrIn.Replace("\r", "").Replace("\n", "");
+            string StrOut = StrIn?.Replace("\r", "").Replace("\n", "");
             return StrOut;
         }
 
@@ -178,8 +178,8 @@ namespace Vlix.HttpServer
 
         public static string RemoveAllNewLines(this string MultipleLinesText)
         {
-            MultipleLinesText = MultipleLinesText.Replace('\r', ' ');
-            MultipleLinesText = MultipleLinesText.Replace("\n", "");
+            MultipleLinesText = MultipleLinesText?.Replace('\r', ' ');
+            MultipleLinesText = MultipleLinesText?.Replace("\n", "");
             return MultipleLinesText;
         }
 
@@ -1255,7 +1255,7 @@ namespace Vlix.HttpServer
 
         public static DateTime ToDateTimeUTC_ParseTimeStampSemantic(this string TSStr, bool DateTimeInputIsUTC = true, DateTime? LastDateTimeNow = null)
         {
-            string TSStrNoSpaces = TSStr.Replace(" ", string.Empty);
+            string TSStrNoSpaces = TSStr?.Replace(" ", string.Empty);
             DateTime DT = DateTime.MinValue;
             if (TSStrNoSpaces.Length >= 3 && TSStrNoSpaces.Substring(0, 3).ToLower() == "now")
             {
@@ -1317,11 +1317,11 @@ namespace Vlix.HttpServer
             foreach (string s in InvalidNames)
             {
                 if (FN == s) FN = "-{[" + s + "]}-";
-                FN = FN.Replace(s + ".", "-{[" + s + "]}-.");
+                FN = FN?.Replace(s + ".", "-{[" + s + "]}-.");
             }
             foreach (char c in System.IO.Path.GetInvalidFileNameChars()) //This contains the System.IO.Path.GetInvalidPathChars() Characters as well 
             {
-                FN = FN.Replace(c.ToString(), "-{[" + (int)c + "]}-");
+                FN = FN?.Replace(c.ToString(), "-{[" + (int)c + "]}-");
             }
             if (FN.Substring(0, 1) == ".")
             {

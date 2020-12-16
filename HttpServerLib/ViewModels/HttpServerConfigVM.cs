@@ -53,7 +53,7 @@ namespace Vlix.HttpServer
         //    foreach (var rule in httpServerConfig.Rules) this.Rules.Add(new RuleVM(rule, this));
         //}
 
-        public void Update(HttpServerConfig httpServerConfig)
+        public void Update(HttpServerConfig httpServerConfig, ObservableCollection<string> sANs)
         {
             this.EnableHTTP = httpServerConfig.EnableHTTP;
             this.HTTPPort = httpServerConfig.HTTPPort;
@@ -67,6 +67,8 @@ namespace Vlix.HttpServer
             this.WWWDirectory = httpServerConfig.WWWDirectory;
             this.LogDirectory = httpServerConfig.LogDirectory;
             this.AllowLocalhostConnectionsOnlyForHttp = httpServerConfig.AllowLocalhostConnectionsOnlyForHttp;
+            this.SubjectAlternativeNames.Clear();
+            foreach (var sAN in sANs) this.SubjectAlternativeNames.Add(sAN);
             this.Rules.Clear();
             foreach (var rule in httpServerConfig.Rules) this.Rules.Add(new RuleVM(rule, this));
         }
@@ -148,7 +150,7 @@ namespace Vlix.HttpServer
         public Func<StoreName, StoreLocation, Task<List<SSLCertVM>>> OnSSLCertRefresh;
 
         public Func<HttpServerConfig, Task<bool>> OnSaveAndApply;
-        public Func<Task<HttpServerConfig>> OnRefresh;
+        public Func<Task<Tuple<HttpServerConfig, SSLCertVM>>> OnRefresh;
         public Func<DateTime,Task<List<LogStruct>>> OnLogRefresh;
         public Func<Task<bool>> CheckConnectionOK;
         bool _IsLoading = false; public bool IsLoading { get { return _IsLoading; } set { SetField(ref _IsLoading, value, "IsLoading"); } }

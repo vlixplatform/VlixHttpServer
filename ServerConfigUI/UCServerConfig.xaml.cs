@@ -41,8 +41,8 @@ namespace Vlix.ServerConfigUI
             {
                 try
                 {
-                    WebServerConfig config = await Services.OPHttpClient.RequestJsonAsync<WebServerConfig>(HttpMethod.Get, configVM.Host + "/config/load", configVM.Username, configVM.Password);
-                    return config;
+                    Tuple<WebServerConfig, SSLCertVM, SSLCertVM> obj = await Services.OPHttpClient.RequestJsonAsync<Tuple<WebServerConfig, SSLCertVM, SSLCertVM>>(HttpMethod.Get, configVM.Host + "/config/load", configVM.Username, configVM.Password);
+                    return new Tuple<HttpServerConfig, SSLCertVM>(obj.Item1, obj.Item2);
                 }
                 catch (Exception ex)
                 {
@@ -114,13 +114,14 @@ namespace Vlix.ServerConfigUI
             cmServerConfig.ShowMessageProcess("Refreshing...");
             try
             {
-                WebServerConfig newWebServerConfig = await Services.OPHttpClient.RequestJsonAsync<WebServerConfig>(HttpMethod.Get, configVM.Host + "/config/load", configVM.ConfigUsername, configVM.Password);
+                Tuple<WebServerConfig, SSLCertVM, SSLCertVM> obj = await Services.OPHttpClient.RequestJsonAsync<Tuple<WebServerConfig, SSLCertVM, SSLCertVM>>(HttpMethod.Get, configVM.Host + "/config/load", configVM.ConfigUsername, configVM.Password);
+                WebServerConfig newWebServerConfig = obj.Item1;
                 if (newWebServerConfig != null)
                 {
-                    configVM.Update(newWebServerConfig);
+                    configVM.Update(newWebServerConfig, obj.Item3.SubjectAlternativeNames);
                     pbConfigPassword.Password = Services.PasswordField;
                     pbConfigPasswordRetype.Password = Services.PasswordField;
-                    ((HttpServerConfigVM)uCHttpServerConfig.DataContext).Update(newWebServerConfig);
+                    ((HttpServerConfigVM)uCHttpServerConfig.DataContext).Update(newWebServerConfig, obj.Item2.SubjectAlternativeNames);
                     await Task.Delay(500);
                     cmServerConfig.StopMessage();
                 }
@@ -197,14 +198,14 @@ namespace Vlix.ServerConfigUI
             try
             {
                 //WebServerConfig newWebServerConfig = await this.OnRefresh?.Invoke(configVM.Host, configVM.Username, pbConfigPassword.Password);
-                WebServerConfig newWebServerConfig = await Services.OPHttpClient.RequestJsonAsync<WebServerConfig>(HttpMethod.Get, configVM.Host + "/config/load", configVM.ConfigUsername, configVM.Password);
-
+                Tuple<WebServerConfig, SSLCertVM, SSLCertVM> obj = await Services.OPHttpClient.RequestJsonAsync<Tuple<WebServerConfig, SSLCertVM, SSLCertVM>>(HttpMethod.Get, configVM.Host + "/config/load", configVM.ConfigUsername, configVM.Password);
+                WebServerConfig newWebServerConfig = obj.Item1;
                 if (newWebServerConfig != null)
                 {
-                    configVM.Update(newWebServerConfig);
+                    configVM.Update(newWebServerConfig, obj.Item3.SubjectAlternativeNames);
                     pbConfigPassword.Password = Services.PasswordField;
                     pbConfigPasswordRetype.Password = Services.PasswordField;
-                    ((HttpServerConfigVM)uCHttpServerConfig.DataContext).Update(newWebServerConfig);
+                    ((HttpServerConfigVM)uCHttpServerConfig.DataContext).Update(newWebServerConfig,obj.Item2.SubjectAlternativeNames);
 
                     //configVM.HttpServerConfigVM.Update(newHttpServerConfig);
                     //configVM.HttpServerConfigVM = new HttpServerConfigVM(newHttpServerConfig);

@@ -24,7 +24,7 @@ namespace Vlix.HttpServer
             return true;
         }
         #endregion
-        public void Update(WebServerConfig webServerConfig)
+        public void Update(WebServerConfig webServerConfig, ObservableCollection<string> sANs)
         {
             this.ConfigUsername = webServerConfig.UtilityConfig.ConfigUsername;
             this.ConfigPasswordHash = webServerConfig.UtilityConfig.ConfigPasswordHash;
@@ -34,8 +34,8 @@ namespace Vlix.HttpServer
             this.ConfigHTTPSPort = webServerConfig.UtilityConfig.HTTPSPort;
             this.ConfigSSLCertificateSubjectName = webServerConfig.UtilityConfig.SSLCertificateSubjectName;
             this.ConfigSSLCertificateStoreName = webServerConfig.UtilityConfig.SSLCertificateStoreName;
-
-            //this.HttpServerConfigVM.Update(webServerConfig);
+            this.ConfigSubjectAlternativeNames.Clear();
+            foreach (var sAN in sANs) this.ConfigSubjectAlternativeNames.Add(sAN);
         }
 
         //For Login Window

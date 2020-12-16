@@ -59,11 +59,9 @@ namespace Vlix
                         try
                         {
                             if (req.Query.TryGetValue("storename", out string storeNameStr)) storeName = (StoreName)Enum.Parse(typeof(StoreName), storeNameStr);//(StoreName)Convert.ToInt64(storeNameStr);
-                        if (req.Query.TryGetValue("storelocation", out string storeLocationStr)) storeLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), storeLocationStr); // (StoreLocation)Convert.ToInt64(storeNameStr);
-                        X509Store store = new X509Store(storeName, storeLocation);
-                            store.Open(OpenFlags.ReadOnly);
-                            certs = new List<SSLCertVM>();
-                            foreach (X509Certificate2 certificate in store.Certificates) if (certificate.HasPrivateKey) certs.Add(new SSLCertVM(certificate, storeName, null));
+                            if (req.Query.TryGetValue("storelocation", out string storeLocationStr)) storeLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), storeLocationStr); // (StoreLocation)Convert.ToInt64(storeNameStr);
+                            var x509Certificate2s = await SSLCertificateServices.GetSSLCertificates(storeName);
+                            foreach (X509Certificate2 certificate in x509Certificate2s) if (certificate.HasPrivateKey) certs.Add(new SSLCertVM(certificate, storeName, null));
                         }
                         catch
                         {
@@ -75,7 +73,9 @@ namespace Vlix
                     "/config/load", async (req) =>
                     {
                         if (!CheckAuthentication(req)) { await req.RespondWithText("You are unauthorized to access this page!", HttpStatusCode.Unauthorized); return; }
-                        await req.RespondWithJson(WebServerConfig).ConfigureAwait(false);
+                        var sslCert = await SSLCertificateServices.GetSSLCertificate(this.WebServerConfig.SSLCertificateStoreName, this.WebServerConfig.SSLCertificateSubjectName);
+                        var sslCertConfig = await SSLCertificateServices.GetSSLCertificate(this.WebServerConfig.UtilityConfig.SSLCertificateStoreName, this.WebServerConfig.UtilityConfig.SSLCertificateSubjectName);
+                        await req.RespondWithJson(new Tuple<WebServerConfig, SSLCertVM, SSLCertVM>(this.WebServerConfig, new SSLCertVM(sslCert, this.WebServerConfig.SSLCertificateStoreName, null), new SSLCertVM(sslCertConfig, this.WebServerConfig.UtilityConfig.SSLCertificateStoreName, null))).ConfigureAwait(false);
                     }, "GET"));
                 this.ConfigServer.WebAPIs.Add(new WebAPIAction(
                     "/config/save", async (req) =>

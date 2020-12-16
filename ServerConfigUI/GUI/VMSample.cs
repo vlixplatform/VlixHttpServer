@@ -23,7 +23,7 @@ namespace Vlix.ServerConfigUI
     {
         public ServerConfigVMSample()
         {
-            this.ShowConfigSettingsWindow = true;
+            this.ShowConfigSettingsWindow = false;
             this.ShowLoginWindow = false;
         }
     }
